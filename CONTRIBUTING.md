@@ -26,7 +26,7 @@ The demo (`demo/demo.py`) simulates the whole environment (scan, vCenter, SNMP, 
 
 ## Releases
 
-Releases are automatic: add a `## X.Y.Z` section at the top of `CHANGELOG.md` and push to `main`; the Release workflow tags it and publishes the notes.
+Changes go under `## Unreleased` at the top of `CHANGELOG.md`. Releases are published by hand, a few times a year: rename `## Unreleased` to `## X.Y.Z`, push to `main`, then run **Actions → Release → Run workflow**, which tags the version and publishes the notes.
 
 ## Guidelines
 

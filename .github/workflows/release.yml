@@ -1,11 +1,8 @@
-# Publie automatiquement une release dès qu'une nouvelle version apparaît en tête de CHANGELOG.md.
-# Pour sortir une version : ajouter "## X.Y.Z" et ses notes en haut du CHANGELOG, puis pousser sur main.
+# Publie une release, seulement quand tu le décides (onglet Actions → Release → Run workflow).
+# Avant : renomme "## Unreleased" en "## X.Y.Z" en haut de CHANGELOG.md et pousse sur main.
 name: Release
 
 on:
-  push:
-    branches: [main]
-    paths: [CHANGELOG.md, scripts/release_notes.py, .github/workflows/release.yml]
   workflow_dispatch:
 
 permissions:
@@ -20,6 +17,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if head -20 CHANGELOG.md | grep -q '^## Unreleased'; then
+            echo "::error::Rename '## Unreleased' to '## X.Y.Z' in CHANGELOG.md first."
+            exit 1
+          fi
           version=$(grep -m1 -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md)
           tag="v${version}"
           if gh release view "$tag" >/dev/null 2>&1; then
