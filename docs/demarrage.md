@@ -53,17 +53,17 @@ L'assistant détecte tout seul le réseau de la machine, sa passerelle et ses DN
 
 ```text
   Assistant de configuration NetCockpit
-  Détecté sur cette machine : réseau 192.168.1.0/24 · passerelle 192.168.1.240 · DNS 192.168.1.20, 192.168.1.21
+  Détecté sur cette machine : réseau 192.168.10.0/24 · passerelle 192.168.10.254 · DNS 192.168.10.11, 192.168.10.12
 
 Comment appelles-tu tes emplacements ?  1) Bâtiment  2) Site  3) Agence  [1] :
-Nom du bâtiment où se trouve cette machine [Bâtiment 1] : Bâtiment 1 (serveurs)
-Réseaux de « Bâtiment 1 (serveurs) » (séparés par des virgules) [192.168.1.0/24] :
-Ajouter un autre bâtiment ? Son nom (Entrée pour terminer) : Bâtiment 2
-Réseaux de « Bâtiment 2 » (ex. 192.168.40.0/24) : 192.168.40.0/24
+Nom du bâtiment où se trouve cette machine [Bâtiment 1] : Bâtiment A
+Réseaux de « Bâtiment A » (séparés par des virgules) [192.168.10.0/24] :
+Ajouter un autre bâtiment ? Son nom (Entrée pour terminer) : Bâtiment B
+Réseaux de « Bâtiment B » (ex. 10.20.0.0/24) : 192.168.20.0/24
 Ajouter un autre bâtiment ? Son nom (Entrée pour terminer) :
-Serveurs DNS internes (contrôleurs de domaine) [192.168.1.20, 192.168.1.21] :
-Adresse de la passerelle / du firewall [192.168.1.240] :
-VMware : adresse du vCenter ou de l'ESXi (IP ou nom, Entrée pour passer) : 192.168.1.10
+Serveurs DNS internes (contrôleurs de domaine) [192.168.10.11, 192.168.10.12] :
+Adresse de la passerelle / du firewall [192.168.10.254] :
+VMware : adresse du vCenter ou de l'ESXi (IP ou nom, Entrée pour passer) : 192.168.10.5
 Utilisateur en lecture seule : supervision
 Mot de passe de cet utilisateur (rien ne s'affiche) :
 Switchs et firewall : communauté SNMP en lecture seule (Entrée pour passer) :
@@ -76,7 +76,7 @@ Ce que chaque réponse change :
 | Question | À quoi ça sert |
 |---|---|
 | Bâtiment, site ou agence | Le mot affiché partout dans l'interface (« Tous les bâtiments »). |
-| Bâtiments et réseaux | Ce qui est scanné, et comment l'inventaire et la topologie sont regroupés. Un bâtiment peut avoir plusieurs réseaux. Un réseau s'écrit `192.168.40.0/24` (ou `192.168.40.0` : le `/24` est ajouté). |
+| Bâtiments et réseaux | Ce qui est scanné, et comment l'inventaire et la topologie sont regroupés. Un bâtiment peut avoir plusieurs réseaux. Un réseau s'écrit `192.168.20.0/24` (ou `192.168.20.0` : le `/24` est ajouté). |
 | DNS internes | Les noms des machines (Active Directory) au lieu des adresses IP. Laisse vide si tu n'en as pas : les contrôleurs de domaine sont détectés tout seuls. |
 | Passerelle / firewall | Surveillée en critique : si elle tombe, tout le reste est grisé au lieu de déclencher 80 alertes. |
 | VMware, SNMP, Telegram | Optionnels : Entrée pour passer, tu pourras les ajouter plus tard. |
@@ -84,9 +84,9 @@ Ce que chaque réponse change :
 Ensuite `setup.sh` démarre tout et affiche les adresses :
 
 ```text
-  Cockpit    http://192.168.1.198:8088
-  Grafana    http://192.168.1.198:3000   admin / GRAFANA_ADMIN_PASSWORD (dans .env)
-  Zabbix     http://192.168.1.198:8081   Admin / ZABBIX_ADMIN_PASSWORD (dans .env)
+  Cockpit    http://192.168.10.50:8088
+  Grafana    http://192.168.10.50:3000   admin / GRAFANA_ADMIN_PASSWORD (dans .env)
+  Zabbix     http://192.168.10.50:8081   Admin / ZABBIX_ADMIN_PASSWORD (dans .env)
 ```
 
 Pour retrouver un mot de passe : `grep PASSWORD .env`.
@@ -119,7 +119,7 @@ cd /root/netcockpit          # ton dossier d'installation
 
 Il repart de ta configuration actuelle : Entrée garde chaque valeur, et tu ne modifies que ce qui change.
 
-**Passage à un nouvel adressage** (par exemple de `192.168.x` à `10.x`) : relance l'assistant et remplace les réseaux de chaque bâtiment. Pendant la transition, mets l'ancien et le nouveau, séparés par une virgule (`192.168.1.0/24, 10.1.0.0/24`), puis retire l'ancien une fois la bascule terminée. Les équipements qui ne répondent plus à leur ancienne adresse passent en gris (*absents*), pas en rouge.
+**Passage à un nouvel adressage** (par exemple de `192.168.x` à `10.x`) : relance l'assistant et remplace les réseaux de chaque bâtiment. Pendant la transition, mets l'ancien et le nouveau, séparés par une virgule (`192.168.10.0/24, 10.1.0.0/24`), puis retire l'ancien une fois la bascule terminée. Les équipements qui ne répondent plus à leur ancienne adresse passent en gris (*absents*), pas en rouge.
 
 Pour les réglages fins (noms forcés, équipements critiques, sites web à surveiller), édite `config/cockpit.yml` à la main, puis `docker compose restart cockpit`. Toutes les options sont décrites dans [configuration.md](configuration.md).
 
