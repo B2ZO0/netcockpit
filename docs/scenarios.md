@@ -111,7 +111,9 @@ Then run the assistant again: enter the community, then the switch and firewall 
 1. **Before the move**, run the assistant and add the new networks **next to** the old ones, for each building: `192.168.10.0/24, 10.10.0.0/24`.
 2. **During the move**, devices that change address appear under their new IP. Their old address turns grey (*absent*), with no false alert.
 3. **After the move**, run the assistant and remove the old networks. Also update DNS servers and the gateway if they changed.
-4. **If the monitoring host itself changes address**: run `./setup.sh` after the change, then reinstall the agent on the servers with the new address (or change the address in their Alloy configuration).
+4. **If the monitoring host itself changes address**: run `./setup.sh` after the change. It detects the new address and updates `PUBLIC_HOST` (links, alerts, Grafana dashboards). Server agents still send to the old address: reinstall them with the new one.
+5. **Tip, before the move**: create a DNS record for the monitoring host (for example `monitoring.example.local`) and install the agents with that name (`-Server monitoring.example.local`). On the day the IP changes, you only update the DNS record: no agent to reinstall.
+6. **Zabbix**: devices are declared by address. After the move, delete the old hosts in Zabbix (*Data collection → Hosts*, filter on the old prefix, select all, Delete); the new ones are created automatically within 30 minutes.
 
 ## Small machine or homelab
 

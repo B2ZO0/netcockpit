@@ -111,7 +111,9 @@ Puis relance l'assistant : donne la communauté, puis les IP des switchs et du f
 1. **Avant la bascule**, relance l'assistant et ajoute les nouveaux réseaux **à côté** des anciens, pour chaque bâtiment : `192.168.10.0/24, 10.10.0.0/24`.
 2. **Pendant la bascule**, les équipements qui changent d'adresse apparaissent sous leur nouvelle IP. Leur ancienne adresse passe en gris (*absent*), sans fausse alerte.
 3. **Après la bascule**, relance l'assistant et retire les anciens réseaux. Mets aussi à jour les DNS et la passerelle s'ils ont changé.
-4. **Si la machine de supervision change elle-même d'adresse** : relance `./setup.sh` après le changement, puis réinstalle l'agent sur les serveurs avec la nouvelle adresse (ou modifie l'adresse dans leur configuration Alloy).
+4. **Si la machine de supervision change elle-même d'adresse** : relance `./setup.sh` après le changement. Il détecte la nouvelle adresse et met à jour `PUBLIC_HOST` (liens, alertes, tableaux Grafana). Les agents des serveurs envoient encore vers l'ancienne adresse : réinstalle-les avec la nouvelle.
+5. **Astuce, à faire avant la bascule** : crée un enregistrement DNS pour la supervision (par exemple `supervision.mondomaine.local`) et installe les agents avec ce nom (`-Server supervision.mondomaine.local`). Le jour du changement d'IP, il suffit de modifier l'enregistrement DNS : aucun agent à réinstaller.
+6. **Zabbix** : les équipements y sont déclarés par adresse. Après la bascule, supprime les anciens hôtes dans Zabbix (*Collecte de données → Hôtes*, filtre sur l'ancien préfixe, tout sélectionner, Supprimer) ; les nouveaux sont créés automatiquement en 30 minutes.
 
 ## Petite machine ou homelab
 
