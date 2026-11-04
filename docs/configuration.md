@@ -1,8 +1,8 @@
 # Configuration
 
-## `config/netmap.yml`
+## `config/cockpit.yml`
 
-After any change: `docker compose restart netmap`.
+After any change: `docker compose restart cockpit`.
 
 | Key | Description |
 |---|---|
@@ -47,7 +47,6 @@ After any change: `./setup.sh`.
 | `DISCORD_WEBHOOK_URL` | Channel settings → Integrations → Webhooks. |
 | `ALERT_EMAIL_TO`, `SMTP_*` | Email notifications. |
 | `NOTIFY_INFO` | Send "info" alerts (new device, reboot…). |
-| `ENABLE_IPAM`, `IPAM_*` | Optional [xoriin/NetMap](https://github.com/xoriin/NetMap) module. |
 
 ### Read-only VMware account
 

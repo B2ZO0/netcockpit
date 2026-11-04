@@ -22,10 +22,10 @@ scrape_configs:
     static_configs: [{ targets: ["blackbox:9115"] }]
   - job_name: snmp_exporter
     static_configs: [{ targets: ["snmp-exporter:9116"] }]
-  - job_name: netmap
+  - job_name: cockpit
     static_configs: [{ targets: ["host.docker.internal:8088"] }]
 
-  # --- Sondes : tout ce que netmap a découvert + les équipements de config/netmap.yml ---
+  # --- Sondes : tout ce que cockpit a découvert + les équipements de config/cockpit.yml ---
   - job_name: blackbox_icmp
     metrics_path: /probe
     params: { module: [icmp] }
@@ -62,7 +62,7 @@ scrape_configs:
       - files: ["/etc/prometheus-targets/dns.json"]
     relabel_configs: *probe_relabel
 
-  # --- Ports des switchs / firewalls par SNMP (cibles écrites par le cockpit depuis config/netmap.yml)
+  # --- Ports des switchs / firewalls par SNMP (cibles écrites par le cockpit depuis config/cockpit.yml)
   - job_name: snmp
     scrape_interval: 60s
     scrape_timeout: 50s

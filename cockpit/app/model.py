@@ -554,7 +554,7 @@ def inventory(m):
         if p and n.get("link_kind") == "switch":
             sw, port = p["name"], n.get("link")
         rows.append({"id": n["id"], "status": n["status"], "name": n["name"], "dns": n.get("dns"), "netbios": n.get("netbios"),
-                     "ip": n.get("ip"), "mac": n.get("mac"), "vendor": n.get("vendor"), "type": n["role_label"],
+                     "ip": n.get("ip"), "mac": n.get("mac"), "vendor": n.get("vendor"), "type": n["role_label"], "role": n["role"],
                      "category": n["category"], "site": n.get("site"), "subnet": n.get("subnet"), "switch": sw, "port": port,
                      "os": n.get("os"), "sources": ", ".join(n["sources"]), "first_seen": n.get("first_seen"),
                      "last_seen": n.get("last_seen"), "latency_ms": n.get("latency_ms"), "new": bool(n.get("new")),

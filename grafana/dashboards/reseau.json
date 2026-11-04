@@ -268,7 +268,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_device_first_seen_timestamp_seconds) or vector(0)",
+          "expr": "count(cockpit_device_first_seen_timestamp_seconds) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -852,7 +852,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_device_first_seen_timestamp_seconds * 1000",
+          "expr": "cockpit_device_first_seen_timestamp_seconds * 1000",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -992,7 +992,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_device_info",
+          "expr": "cockpit_device_info",
           "legendFormat": "",
           "range": false,
           "instant": true,

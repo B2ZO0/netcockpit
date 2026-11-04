@@ -16,7 +16,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Output of `docker compose ps` and `docker compose logs --tail 50 netmap` (anonymised)"
+      description: "Output of `docker compose ps` and `docker compose logs --tail 50 cockpit` (anonymised)"
       render: shell
   - type: input
     id: version

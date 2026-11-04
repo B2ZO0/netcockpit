@@ -1,5 +1,10 @@
 apiVersion: 1
 
+# ancien nom de la source du cockpit (versions précédentes)
+deleteDatasources:
+  - name: Netmap
+    orgId: 1
+
 datasources:
   - name: Prometheus
     uid: prometheus
@@ -28,8 +33,8 @@ datasources:
       implementation: prometheus
       handleGrafanaManagedAlerts: false
 
-  - name: Netmap
-    uid: netmap
+  - name: Cockpit
+    uid: cockpit
     type: yesoreyeram-infinity-datasource
     access: proxy
     jsonData:

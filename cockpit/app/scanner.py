@@ -6,7 +6,7 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
-log = logging.getLogger("netmap.scan")
+log = logging.getLogger("cockpit.scan")
 
 IGNORED_IFACES = re.compile(r"^(lo|docker\d*|br-|veth|virbr|cni|flannel|cali|tun|wg|tailscale|zt)")
 

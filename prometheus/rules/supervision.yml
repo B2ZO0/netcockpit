@@ -2,7 +2,7 @@ groups:
   - name: supervision
     rules:
       - alert: ComposantSupervisionEnPanne
-        expr: up{job=~"alertmanager|loki|blackbox|netmap|snmp_exporter"} == 0
+        expr: up{job=~"alertmanager|loki|blackbox|cockpit|snmp_exporter"} == 0
         for: 3m
         labels:
           severity: critical
@@ -10,7 +10,7 @@ groups:
           summary: "Le composant de supervision {{ $labels.job }} ne répond plus"
 
       - alert: DecouverteReseauBloquee
-        expr: time() - netmap_last_scan_timestamp_seconds > 3 * 3600
+        expr: time() - cockpit_last_scan_timestamp_seconds > 3 * 3600
         labels:
           severity: warning
         annotations:

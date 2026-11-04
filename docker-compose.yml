@@ -1,4 +1,4 @@
-# Supervision : cockpit (netmap) + Prometheus + Loki + Alertmanager + Blackbox + SNMP + syslog + Grafana + Zabbix
+# Supervision : cockpit + Prometheus + Loki + Alertmanager + Blackbox + SNMP + syslog + Grafana + Zabbix
 # Lancement : ./setup.sh   (génère la config à partir de .env puis démarre tout)
 name: supervision
 
@@ -10,24 +10,24 @@ x-zbx-db: &zbx-db
 
 services:
   # ------------------------------------------------------------ cockpit
-  netmap:
-    build: ./netmap
-    image: supervision/netmap:local
+  cockpit:
+    build: ./cockpit
+    image: netcockpit/cockpit:local
     restart: unless-stopped
     network_mode: host            # voit le LAN (ARP, NetBIOS, traceroute)
     cap_add: [NET_RAW, NET_ADMIN]
     environment:
       TZ: ${TZ:-Europe/Paris}
-      NETMAP_PORT: "8088"
-      NETMAP_CONFIG: /config/netmap.yml
-      NETMAP_TARGETS_DIR: /targets
-      NETMAP_DATA_DIR: /data
+      COCKPIT_PORT: "8088"
+      COCKPIT_CONFIG: /config/cockpit.yml
+      COCKPIT_TARGETS_DIR: /targets
+      COCKPIT_DATA_DIR: /data
       PROMETHEUS_URL: http://127.0.0.1:9090
       ALERTMANAGER_URL: http://127.0.0.1:9093
       LOKI_URL: http://127.0.0.1:3100
       GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
       ALERTMANAGER_PUBLIC_URL: ${ALERTMANAGER_PUBLIC_URL:-}
-      ZABBIX_URL: ${NETMAP_ZABBIX_URL:-}
+      ZABBIX_URL: ${COCKPIT_ZABBIX_URL:-}
       ZABBIX_PUBLIC_URL: ${ZABBIX_PUBLIC_URL:-}
       ZABBIX_ADMIN_PASSWORD: ${ZABBIX_ADMIN_PASSWORD:-}
       ZABBIX_GRAFANA_PASSWORD: ${ZABBIX_GRAFANA_PASSWORD:-}
@@ -40,9 +40,9 @@ services:
       AI_MODEL: ${AI_MODEL:-}
       AI_BASE_URL: ${AI_BASE_URL:-}
     volumes:
-      - ./config/netmap.yml:/config/netmap.yml:ro
+      - ./config/cockpit.yml:/config/cockpit.yml:ro
       - ./data/targets:/targets
-      - netmap-data:/data
+      - cockpit-data:/data
       - ./agents:/app/static/agents:ro      # scripts d'agent téléchargeables : http://IP:8088/agents/...
 
   # ------------------------------------------------------------ métriques, alertes, logs
@@ -177,26 +177,11 @@ services:
       ZBX_SERVER_HOST: zabbix-server
       ZBX_SERVER_ACTIVE: zabbix-server
 
-  # ------------------------------------------------------------ xoriin/NetMap (profil "ipam", optionnel)
-  ipam:
-    image: xoriin/netmap:latest
-    restart: unless-stopped
-    profiles: [ipam]
-    environment:
-      TZ: ${TZ:-Europe/Paris}
-      SECRET_KEY: ${IPAM_SECRET_KEY:-}
-      MASTER_KEY: ${IPAM_MASTER_KEY:-}
-      SYSLOG_ENABLED: "false"
-    cap_drop: [ALL]
-    cap_add: [NET_RAW, NET_BIND_SERVICE]
-    volumes: [ipam-data:/app/data]
-    ports: ["${IPAM_PORT:-8090}:8080"]
 
 volumes:
   prometheus-data:
   alertmanager-data:
   loki-data:
-  netmap-data:
+  cockpit-data:
   grafana-data:
   zabbix-db:
-  ipam-data:

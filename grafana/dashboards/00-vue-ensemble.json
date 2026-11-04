@@ -61,7 +61,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_nodes{status=\"total\"}",
+          "expr": "cockpit_nodes{status=\"total\"}",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -126,7 +126,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_nodes{status=\"down\"}",
+          "expr": "cockpit_nodes{status=\"down\"}",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -569,7 +569,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(netmap_vmware_up)",
+          "expr": "max(cockpit_vmware_up)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -647,10 +647,10 @@
     {
       "type": "nodeGraph",
       "title": "Topologie en direct  ·  carte interactive : http://localhost:8088",
-      "description": "Généré automatiquement par netmap (scan, traceroute, vCenter CDP/LLDP, agents). Vert = OK, orange = alerte, rouge = en panne, gris = éteint/inconnu.",
+      "description": "Généré automatiquement par cockpit (scan, traceroute, vCenter CDP/LLDP, agents). Vert = OK, orange = alerte, rouge = en panne, gris = éteint/inconnu.",
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
-        "uid": "netmap"
+        "uid": "cockpit"
       },
       "options": {
         "nodes": {
@@ -663,7 +663,7 @@
           "refId": "A",
           "datasource": {
             "type": "yesoreyeram-infinity-datasource",
-            "uid": "netmap"
+            "uid": "cockpit"
           },
           "type": "json",
           "source": "url",
@@ -787,7 +787,7 @@
           "refId": "B",
           "datasource": {
             "type": "yesoreyeram-infinity-datasource",
-            "uid": "netmap"
+            "uid": "cockpit"
           },
           "type": "json",
           "source": "url",

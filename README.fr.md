@@ -30,6 +30,7 @@ NetCockpit **croise toutes les sources auxquelles tu as accès** : scan réseau,
 - 🖥️ **Vue VMware** : chaque hôte, ses VM (CPU, RAM, IP, OS), les datastores et les alarmes. Fonctionne avec un **vCenter ou un ESXi seul**.
 - 🔔 **Une seule chaîne d'alertes** : les alertes Prometheus, Loki et Zabbix passent toutes par Alertmanager, puis vers Telegram, Discord ou email. Elles sont regroupées et filtrées : si le firewall tombe, tu ne reçois pas 80 messages « injoignable ».
 - 🤖 **Diagnostic IA (option)** : un bouton « Expliquer ce problème » sur chaque équipement et un résumé de la situation, avec Claude ou un **modèle local** (Ollama : rien ne sort du réseau).
+- ✈️ **Un vrai cockpit, pas un énième template d'admin** : une phrase te dit où en est l'infra, la route vers Internet est tracée comme la ligne magenta d'un plan de vol, et toute l'interface utilise [B612](https://github.com/polarsys/b612), la police conçue par Airbus pour les écrans de cockpit. Thèmes nuit et jour, français et anglais.
 - 📦 **Une seule commande** : `./setup.sh` génère les mots de passe et les configurations, puis démarre tout. Tu peux le relancer à volonté sans perdre tes réglages.
 
 ## 📸 Captures
@@ -43,6 +44,7 @@ NetCockpit **croise toutes les sources auxquelles tu as accès** : scan réseau,
 | ![Inventaire](docs/images/inventory.png) | ![Fiche](docs/images/device-ai.png) |
 
 > Toutes les captures viennent de la démo intégrée : tous les noms et toutes les adresses IP sont fictifs.
+> L'interface suit la langue du navigateur (français ou anglais) et le thème du système ; les deux se changent depuis la barre de gauche.
 
 ## ⚡ Démo en 1 minute
 
@@ -63,7 +65,7 @@ Il faut une VM Debian 12 ou Ubuntu 24.04 avec **4 vCPU, 8 Go de RAM** (6 Go sans
 curl -fsSL https://get.docker.com | sh
 git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 ./setup.sh                    # crée .env (mots de passe aléatoires) et démarre tout
-nano config/netmap.yml        # sites, réseaux, équipements critiques, sites web
+nano config/cockpit.yml        # sites, réseaux, équipements critiques, sites web
 nano .env                     # vCenter/ESXi, notifications, IA
 ./setup.sh                    # applique
 ```
@@ -98,7 +100,7 @@ Guides détaillés (en anglais) : [installation](docs/installation.md), [configu
 
 ## 🙏 Remerciements
 
-NetCockpit assemble d'excellents projets open source, présentés dans le [README anglais](README.md#-credits) : Prometheus, Grafana, Loki, Alloy, Zabbix, Cytoscape.js, Nmap, pyVmomi, lldpd, net-snmp, et [xoriin/NetMap](https://github.com/xoriin/NetMap) en module optionnel.
+NetCockpit assemble d'excellents projets open source, présentés dans le [README anglais](README.md#-credits) : Prometheus, Grafana, Loki, Alloy, Zabbix, Cytoscape.js, la police B612 (Airbus, licence SIL OFL), Nmap, pyVmomi, lldpd et net-snmp.
 
 ## 📄 Licence
 

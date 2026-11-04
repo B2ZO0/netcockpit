@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- New interface with its own identity: icon rail, plain-language status headline, Internet route drawn as a magenta line, live mini topology, single instrument strip, B612 typeface (made for aircraft cockpit screens).
+- Night and day themes, following the system setting by default.
+- English and French interface, following the browser language by default; AI answers follow the interface language.
+- The cockpit service, folder, config file and metrics are renamed from `netmap` to `cockpit` (`config/cockpit.yml`, `cockpit_*` metrics). `./setup.sh` migrates an existing install automatically, history included.
+- Removed the optional third-party IPAM module.
+
 ## 1.0.0
 
 First public release.

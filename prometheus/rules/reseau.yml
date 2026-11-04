@@ -81,7 +81,7 @@ groups:
           summary: "Le serveur DNS {{ $labels.name }} ({{ $labels.instance }}) ne répond plus"
 
       - alert: NouvelEquipementSurLeReseau
-        expr: (time() - netmap_device_first_seen_timestamp_seconds) < 86400
+        expr: (time() - cockpit_device_first_seen_timestamp_seconds) < 86400
         labels:
           severity: info
         annotations:

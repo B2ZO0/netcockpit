@@ -1,3 +1,6 @@
+Police incluse : B612 (c) 2012 The B612 Project Authors, licence SIL Open Font License 1.1 (fonts/OFL.txt).
+Seuls B612 Regular et Bold sont inclus, en sous-ensemble latin au format WOFF.
+
 Bibliothèques tierces incluses (licence MIT) :
 - cytoscape 3.34.1 (c) The Cytoscape Consortium
 - cytoscape-fcose 2.2.0, cose-base 2.2.0, layout-base 2.0.1 (c) iVis@Bilkent

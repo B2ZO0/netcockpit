@@ -37,7 +37,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_zabbix_problem) or vector(0)",
+          "expr": "count(cockpit_zabbix_problem) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -106,7 +106,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_zabbix_problem{severity=\"critical\"}) or vector(0)",
+          "expr": "count(cockpit_zabbix_problem{severity=\"critical\"}) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -175,7 +175,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(netmap_zabbix_up)",
+          "expr": "max(cockpit_zabbix_up)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -328,7 +328,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_zabbix_problem",
+          "expr": "cockpit_zabbix_problem",
           "legendFormat": "",
           "range": false,
           "instant": true,

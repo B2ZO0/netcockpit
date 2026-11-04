@@ -3,8 +3,8 @@
 name: netcockpit-demo
 services:
   demo:
-    build: ./netmap
-    image: netcockpit/netmap:local
+    build: ./cockpit
+    image: netcockpit/cockpit:local
     command: ["python", "/demo/demo.py"]
     environment:
       DEMO_SNMP: "1"          # 0 = without the provider's SNMP access (topology from vCenter/LLDP only)

@@ -6,7 +6,7 @@ import requests
 
 import config as C
 
-log = logging.getLogger("netmap.sources")
+log = logging.getLogger("cockpit.sources")
 _http = requests.Session()
 _http.trust_env = False   # services locaux : pas de proxy
 

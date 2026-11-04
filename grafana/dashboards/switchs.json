@@ -56,7 +56,7 @@
       "title": "",
       "options": {
         "mode": "markdown",
-        "content": "Ce tableau se remplit dès que le prestataire donne un **accès SNMP en lecture seule** : renseigne `SNMP_COMMUNITY` dans `.env` et les IP des équipements dans `config/netmap.yml` (`snmp.devices`), puis relance `./setup.sh`. Le détail port par port (qui est branché où) est dans le **cockpit**, vue *Switchs*."
+        "content": "Ce tableau se remplit dès que le prestataire donne un **accès SNMP en lecture seule** : renseigne `SNMP_COMMUNITY` dans `.env` et les IP des équipements dans `config/cockpit.yml` (`snmp.devices`), puis relance `./setup.sh`. Le détail port par port (qui est branché où) est dans le **cockpit**, vue *Switchs*."
       },
       "id": 1,
       "gridPos": {

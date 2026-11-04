@@ -5,7 +5,7 @@ import logging
 import re
 import subprocess
 
-log = logging.getLogger("netmap.snmp")
+log = logging.getLogger("cockpit.snmp")
 
 OID = {
     "sysName": ".1.3.6.1.2.1.1.5.0",

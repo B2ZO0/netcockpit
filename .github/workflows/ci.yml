@@ -17,10 +17,10 @@ jobs:
       - name: Python
         run: |
           pip install pyyaml requests
-          python -m py_compile netmap/app/*.py scripts/*.py demo/demo.py
+          python -m py_compile cockpit/app/*.py scripts/*.py demo/demo.py
 
       - name: JavaScript
-        run: for f in netmap/static/*.js; do node --check "$f"; done
+        run: for f in cockpit/static/*.js; do node --check "$f"; done
 
       - name: Shell
         run: bash -n setup.sh agents/linux/install.sh
@@ -50,7 +50,7 @@ jobs:
       - name: Compose file and Alertmanager config (amtool)
         run: |
           cp .env.example .env
-          sed -i 's/__RANDOM__/ci-password/g; s/__FERNET__/ci-key/g' .env
+          sed -i 's/__RANDOM__/ci-password/g' .env
           echo "TELEGRAM_BOT_TOKEN=123:abc" >> .env && echo "TELEGRAM_CHAT_ID=-100123" >> .env
           python scripts/render_config.py
           docker compose config -q

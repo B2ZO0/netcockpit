@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetCockpit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='16' cy='16' r='13' stroke='%238A6CFF' stroke-width='3'/%3E%3Cpath d='M5 18 27 13' stroke='%238A6CFF' stroke-width='3'/%3E%3Cpath d='m10 22 6-5 6 5' stroke='%23D16BFF' stroke-width='3'/%3E%3C/svg%3E">
+<script>
+  (function () { // thème avant le premier rendu, pour éviter le flash
+    var th; try { th = JSON.parse(localStorage.getItem("cockpit.theme")); } catch (e) {}
+    if (th !== "day" && th !== "night") th = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "day" : "night";
+    document.documentElement.dataset.theme = th;
+  })();
+</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav id="rail" aria-label="Navigation">
+  <a class="mark" href="#/overview" aria-label="NetCockpit">
+    <svg viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="2.4"/><path d="M5 18 27 13" stroke="currentColor" stroke-width="2.4"/><path d="m10 22 6-5 6 5" stroke="var(--magenta)" stroke-width="2.6"/></svg>
+  </a>
+  <div id="nav">
+    <a href="#/overview" data-view="overview"><i data-icon="dashboard"></i></a>
+    <a href="#/topology" data-view="topology"><i data-icon="network"></i></a>
+    <a href="#/vmware" data-view="vmware"><i data-icon="layers"></i></a>
+    <a href="#/switches" data-view="switches"><i data-icon="switch"></i></a>
+    <a href="#/inventory" data-view="inventory"><i data-icon="list"></i></a>
+    <a href="#/alerts" data-view="alerts"><i data-icon="bell"></i><em id="nav-alerts" class="count-dot hidden">0</em></a>
+    <a href="#/services" data-view="services"><i data-icon="globe"></i></a>
+  </div>
+  <div class="rail-foot">
+    <button id="btn-sources" class="rail-btn" aria-haspopup="true"><span id="src-lamp" class="lamp"></span></button>
+    <button id="btn-rescan" class="rail-btn"><i data-icon="refresh"></i></button>
+    <button id="btn-theme" class="rail-btn"><i data-icon="moon"></i></button>
+    <button id="btn-lang" class="rail-btn lang">FR</button>
+  </div>
+</nav>
+<div id="sources-pop" class="pop hidden" role="dialog">
+  <h3 id="sources-title"></h3>
+  <div id="sources"></div>
+  <div id="scan-info" class="muted"></div>
+  <div id="ext-links"></div>
+</div>
+
+<header id="top">
+  <div class="title"><h1 id="page-title"></h1><span id="page-sub" class="muted"></span></div>
+  <div class="top-tools">
+    <div class="seg" id="site-seg"></div>
+    <div class="search-wrap">
+      <i data-icon="search"></i>
+      <input id="search" type="search" autocomplete="off" spellcheck="false">
+      <kbd>/</kbd>
+      <div id="search-results" class="hidden"></div>
+    </div>
+    <button id="btn-ai" class="ai hidden"><i data-icon="sparkle"></i><span id="btn-ai-txt"></span></button>
+    <span class="live"><span class="lamp up pulse" id="live-dot"></span><span id="live-txt"></span></span>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<aside id="drawer" class="hidden">
+  <button class="x" id="drawer-close">×</button>
+  <div id="drawer-body"></div>
+</aside>
+
+<div id="modal" class="hidden">
+  <div class="modal-box">
+    <button class="x" id="modal-close">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<div id="toast" class="hidden"></div>
+
+<script src="lib/cytoscape.min.js"></script>
+<script src="lib/layout-base.js"></script>
+<script src="lib/cose-base.js"></script>
+<script src="lib/cytoscape-fcose.js"></script>
+<script src="i18n.js"></script>
+<script src="core.js"></script>
+<script src="topo.js"></script>
+<script src="views.js"></script>
+</body>
+</html>

@@ -37,7 +37,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(netmap_vmware_host_connected)",
+          "expr": "sum(cockpit_vmware_host_connected)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -102,7 +102,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_vmware_host_connected == 0) or vector(0)",
+          "expr": "count(cockpit_vmware_host_connected == 0) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -171,7 +171,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(netmap_vmware_host_maintenance) or vector(0)",
+          "expr": "sum(cockpit_vmware_host_maintenance) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -240,7 +240,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(netmap_vmware_vm_powered_on)",
+          "expr": "sum(cockpit_vmware_vm_powered_on)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -305,7 +305,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_vmware_vm_powered_on == 0) or vector(0)",
+          "expr": "count(cockpit_vmware_vm_powered_on == 0) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -370,7 +370,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count(netmap_vmware_alarm) or vector(0)",
+          "expr": "count(cockpit_vmware_alarm) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -439,7 +439,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_vmware_host_cpu_percent",
+          "expr": "cockpit_vmware_host_cpu_percent",
           "legendFormat": "{{host}}",
           "range": true,
           "instant": false,
@@ -520,7 +520,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_vmware_host_mem_percent",
+          "expr": "cockpit_vmware_host_mem_percent",
           "legendFormat": "{{host}}",
           "range": true,
           "instant": false,
@@ -601,7 +601,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_vmware_datastore_used_percent",
+          "expr": "cockpit_vmware_datastore_used_percent",
           "legendFormat": "{{datastore}}",
           "range": false,
           "instant": true,
@@ -677,7 +677,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, netmap_vmware_vm_cpu_percent)",
+          "expr": "topk(15, cockpit_vmware_vm_cpu_percent)",
           "legendFormat": "{{vm}}",
           "range": false,
           "instant": true,
@@ -753,7 +753,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, netmap_vmware_vm_mem_percent)",
+          "expr": "topk(15, cockpit_vmware_vm_mem_percent)",
           "legendFormat": "{{vm}}",
           "range": false,
           "instant": true,
@@ -829,7 +829,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_vmware_datastore_used_percent",
+          "expr": "cockpit_vmware_datastore_used_percent",
           "legendFormat": "{{datastore}}",
           "range": true,
           "instant": false,
@@ -897,7 +897,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "netmap_vmware_alarm",
+          "expr": "cockpit_vmware_alarm",
           "legendFormat": "",
           "range": false,
           "instant": true,

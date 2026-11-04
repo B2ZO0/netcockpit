@@ -7,8 +7,8 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "grafana" / "dashboards"
 PROM = {"type": "prometheus", "uid": "prometheus"}
 LOKI = {"type": "loki", "uid": "loki"}
-NETMAP = {"type": "yesoreyeram-infinity-datasource", "uid": "netmap"}
-MAP_URL = os.environ.get("NETMAP_PUBLIC_URL", "http://localhost:8088").rstrip("/")
+COCKPIT = {"type": "yesoreyeram-infinity-datasource", "uid": "cockpit"}
+MAP_URL = os.environ.get("COCKPIT_PUBLIC_URL", "http://localhost:8088").rstrip("/")
 GREEN, ORANGE, RED, BLUE, GREY = "#22c55e", "#f59e0b", "#ef4444", "#3b82f6", "#64748b"
 
 
@@ -185,9 +185,9 @@ def diskmax(f=""):
 
 def build_overview():
     D = Dash("vue-ensemble", "Supervision · Vue d'ensemble", ["accueil"], refresh="30s", time_from="now-24h")
-    D.add(stat("Équipements surveillés", [q('netmap_nodes{status="total"}', instant=True)], color_mode="none",
+    D.add(stat("Équipements surveillés", [q('cockpit_nodes{status="total"}', instant=True)], color_mode="none",
                desc="Tout ce qui est sur la carte : serveurs, VM, réseau, postes."), 3, 4)
-    D.add(stat("En panne", [q('netmap_nodes{status="down"}', instant=True)], thresholds=steps((1, RED))), 3, 4)
+    D.add(stat("En panne", [q('cockpit_nodes{status="down"}', instant=True)], thresholds=steps((1, RED))), 3, 4)
     D.add(stat("Alertes actives", [q('count(ALERTS{alertstate="firing", severity=~"critical|warning"}) or vector(0)', instant=True)],
                thresholds=steps((1, ORANGE)), desc="Alertes critiques et warning en cours"), 3, 4)
     D.add(stat("Internet", [q('max(probe_success{job="blackbox_icmp", role="internet"})', instant=True)],
@@ -197,13 +197,13 @@ def build_overview():
     D.add(stat("Serveurs avec agent", [q('count(up{job=~"node|windows"} == 1) or vector(0)', instant=True)], color_mode="none"), 3, 4)
     D.add(stat("Agents muets", [q('count(ALERTS{alertname="AgentMuet", alertstate="firing"}) or vector(0)', instant=True)],
                thresholds=steps((1, RED))), 3, 4)
-    D.add(stat("vCenter", [q('max(netmap_vmware_up)', instant=True)], mappings=vmap((1, "OK", GREEN), (0, "INJOIGNABLE", RED)),
+    D.add(stat("vCenter", [q('max(cockpit_vmware_up)', instant=True)], mappings=vmap((1, "OK", GREEN), (0, "INJOIGNABLE", RED)),
                thresholds=steps((1, GREEN), base=RED), desc="Vide si aucun vCenter n'est configuré"), 3, 4)
 
     ng = {"type": "nodeGraph", "title": f"Topologie en direct  ·  carte interactive : {MAP_URL}",
-          "description": "Généré automatiquement par netmap (scan, traceroute, vCenter CDP/LLDP, agents). "
+          "description": "Généré automatiquement par cockpit (scan, traceroute, vCenter CDP/LLDP, agents). "
                          "Vert = OK, orange = alerte, rouge = en panne, gris = éteint/inconnu.",
-          "datasource": NETMAP, "options": {"nodes": {"mainStatUnit": "none"}, "edges": {}},
+          "datasource": COCKPIT, "options": {"nodes": {"mainStatUnit": "none"}, "edges": {}},
           "targets": []}
     cols_nodes = [("id", "string"), ("title", "string"), ("subTitle", "string"), ("mainStat", "string"),
                   ("secondaryStat", "string"), ("detail__statut", "string"), ("detail__ip", "string")]
@@ -211,7 +211,7 @@ def build_overview():
         cols_nodes += [(f"arc__{s}", "number"), (f"arc__{s}_color", "string")]
     for ref, fmt, root, cols in (("A", "node-graph-nodes", "nodes", cols_nodes),
                                  ("B", "node-graph-edges", "edges", [("id", "string"), ("source", "string"), ("target", "string"), ("mainStat", "string")])):
-        ng["targets"].append({"refId": ref, "datasource": NETMAP, "type": "json", "source": "url", "format": fmt,
+        ng["targets"].append({"refId": ref, "datasource": COCKPIT, "type": "json", "source": "url", "format": fmt,
                               "url": "http://host.docker.internal:8088/api/nodegraph?hide_devices=$masquer_postes",
                               "url_options": {"method": "GET", "data": ""}, "root_selector": root,
                               "columns": [{"selector": c, "text": c, "type": t} for c, t in cols], "filters": []})
@@ -320,7 +320,7 @@ def build_network():
     D.add(stat("Équipements qui répondent", [q('count(max by (node) (probe_success{job=~"blackbox_icmp|blackbox_tcp"}) == 1)', instant=True)], color_mode="none"), 6, 4)
     D.add(stat("Équipements surveillés en panne", [q('count(max by (node) (probe_success{job=~"blackbox_icmp|blackbox_tcp", alert="true"}) == 0) or vector(0)', instant=True)], thresholds=steps((1, RED))), 6, 4)
     D.add(stat("Sites web en panne", [q('count(probe_success{job="blackbox_http"} == 0) or vector(0)', instant=True)], thresholds=steps((1, RED))), 6, 4)
-    D.add(stat("Nouveaux équipements (24 h)", [q('count(netmap_device_first_seen_timestamp_seconds) or vector(0)', instant=True)], thresholds=steps((1, BLUE))), 6, 4)
+    D.add(stat("Nouveaux équipements (24 h)", [q('count(cockpit_device_first_seen_timestamp_seconds) or vector(0)', instant=True)], thresholds=steps((1, BLUE))), 6, 4)
     D.add({"type": "state-timeline", "title": "Disponibilité (ping ou port)", "datasource": PROM,
            "targets": [q('max by (name) (probe_success{job=~"blackbox_icmp|blackbox_tcp", node=~"$node", alert="true"})', "{{name}}")],
            "fieldConfig": {"defaults": {"mappings": UP_MAP, "thresholds": steps((1, GREEN), base=RED), "color": {"mode": "thresholds"},
@@ -341,11 +341,11 @@ def build_network():
                    ov("Value #C", rename="Certificat (jours)", decimals=0, cell="color-text", thr=steps((14, ORANGE), (30, GREEN), base=RED)),
                    ov("Value #D", rename="Code HTTP", width=100), ov("node", hidden=True)],
         transformations=[{"id": "merge", "options": {}}, HIDE_TIME]), 24, 7, newrow=True)
-    D.add(table("Nouveaux équipements détectés (24 h)", [q('netmap_device_first_seen_timestamp_seconds * 1000', instant=True, fmt="table")],
+    D.add(table("Nouveaux équipements détectés (24 h)", [q('cockpit_device_first_seen_timestamp_seconds * 1000', instant=True, fmt="table")],
                 overrides=[ov("ip", rename="IP"), ov("mac", rename="MAC"), ov("vendor", rename="Constructeur"), ov("hostname", rename="Nom"),
                            ov("Value", rename="Vu la 1re fois", unit="dateTimeAsLocal"), ov("instance", hidden=True)],
                 transformations=[HIDE_TIME]), 24, 6, newrow=True)
-    D.add(table("Inventaire du réseau (découverte automatique)", [q('netmap_device_info', instant=True, fmt="table")],
+    D.add(table("Inventaire du réseau (découverte automatique)", [q('cockpit_device_info', instant=True, fmt="table")],
                 overrides=[ov("ip", rename="IP", width=130), ov("name", rename="Nom"), ov("dns", rename="DNS"), ov("netbios", rename="NetBIOS"),
                            ov("mac", rename="MAC", width=150), ov("vendor", rename="Constructeur"), ov("role", rename="Type", width=140),
                            ov("site", rename="Site"), ov("subnet", rename="Réseau", width=140), ov("os", rename="Système"),
@@ -356,25 +356,25 @@ def build_network():
 
 def build_vmware():
     D = Dash("vmware", "Supervision · VMware vSphere", ["vmware"], time_from="now-24h")
-    D.add(stat("ESXi connectés", [q('sum(netmap_vmware_host_connected)', instant=True)], color_mode="none"), 4, 4)
-    D.add(stat("ESXi déconnectés", [q('count(netmap_vmware_host_connected == 0) or vector(0)', instant=True)], thresholds=steps((1, RED))), 4, 4)
-    D.add(stat("En maintenance", [q('sum(netmap_vmware_host_maintenance) or vector(0)', instant=True)], thresholds=steps((1, BLUE))), 4, 4)
-    D.add(stat("VM allumées", [q('sum(netmap_vmware_vm_powered_on)', instant=True)], color_mode="none"), 4, 4)
-    D.add(stat("VM éteintes", [q('count(netmap_vmware_vm_powered_on == 0) or vector(0)', instant=True)], color_mode="none"), 4, 4)
-    D.add(stat("Alarmes vCenter", [q('count(netmap_vmware_alarm) or vector(0)', instant=True)], thresholds=steps((1, ORANGE))), 4, 4)
-    D.add(ts("CPU des ESXi", [q('netmap_vmware_host_cpu_percent', "{{host}}")], unit="percent", minv=0, maxv=100, fill=8,
+    D.add(stat("ESXi connectés", [q('sum(cockpit_vmware_host_connected)', instant=True)], color_mode="none"), 4, 4)
+    D.add(stat("ESXi déconnectés", [q('count(cockpit_vmware_host_connected == 0) or vector(0)', instant=True)], thresholds=steps((1, RED))), 4, 4)
+    D.add(stat("En maintenance", [q('sum(cockpit_vmware_host_maintenance) or vector(0)', instant=True)], thresholds=steps((1, BLUE))), 4, 4)
+    D.add(stat("VM allumées", [q('sum(cockpit_vmware_vm_powered_on)', instant=True)], color_mode="none"), 4, 4)
+    D.add(stat("VM éteintes", [q('count(cockpit_vmware_vm_powered_on == 0) or vector(0)', instant=True)], color_mode="none"), 4, 4)
+    D.add(stat("Alarmes vCenter", [q('count(cockpit_vmware_alarm) or vector(0)', instant=True)], thresholds=steps((1, ORANGE))), 4, 4)
+    D.add(ts("CPU des ESXi", [q('cockpit_vmware_host_cpu_percent', "{{host}}")], unit="percent", minv=0, maxv=100, fill=8,
              thresholds=steps((90, RED)), legend="list"), 12, 8, newrow=True)
-    D.add(ts("Mémoire des ESXi", [q('netmap_vmware_host_mem_percent', "{{host}}")], unit="percent", minv=0, maxv=100, fill=8,
+    D.add(ts("Mémoire des ESXi", [q('cockpit_vmware_host_mem_percent', "{{host}}")], unit="percent", minv=0, maxv=100, fill=8,
              thresholds=steps((92, RED)), legend="list"), 12, 8)
-    D.add(bargauge("Datastores (espace utilisé)", [q('netmap_vmware_datastore_used_percent', "{{datastore}}", instant=True)],
+    D.add(bargauge("Datastores (espace utilisé)", [q('cockpit_vmware_datastore_used_percent', "{{datastore}}", instant=True)],
                    thresholds=steps((80, ORANGE), (90, RED))), 8, 9, newrow=True)
-    D.add(bargauge("Top 15 VM · CPU", [q('topk(15, netmap_vmware_vm_cpu_percent)', "{{vm}}", instant=True)],
+    D.add(bargauge("Top 15 VM · CPU", [q('topk(15, cockpit_vmware_vm_cpu_percent)', "{{vm}}", instant=True)],
                    thresholds=steps((70, ORANGE), (90, RED))), 8, 9)
-    D.add(bargauge("Top 15 VM · mémoire", [q('topk(15, netmap_vmware_vm_mem_percent)', "{{vm}}", instant=True)],
+    D.add(bargauge("Top 15 VM · mémoire", [q('topk(15, cockpit_vmware_vm_mem_percent)', "{{vm}}", instant=True)],
                    thresholds=steps((85, ORANGE), (95, RED))), 8, 9)
-    D.add(ts("Datastores : évolution", [q('netmap_vmware_datastore_used_percent', "{{datastore}}")], unit="percent",
+    D.add(ts("Datastores : évolution", [q('cockpit_vmware_datastore_used_percent', "{{datastore}}")], unit="percent",
              minv=0, maxv=100, fill=0, legend="list", desc="Pour anticiper un remplissage."), 12, 8, newrow=True)
-    D.add(table("Alarmes vCenter en cours", [q('netmap_vmware_alarm', instant=True, fmt="table")],
+    D.add(table("Alarmes vCenter en cours", [q('cockpit_vmware_alarm', instant=True, fmt="table")],
                 overrides=[ov("status", rename="Niveau", cell="color-background", mappings=vmap(("red", "CRITIQUE", RED), ("yellow", "ATTENTION", ORANGE)), width=110),
                            ov("alarm", rename="Alarme"), ov("entity", rename="Objet"), ov("Value", hidden=True), ov("instance", hidden=True)],
                 transformations=[HIDE_TIME]), 12, 8)
@@ -389,7 +389,7 @@ def build_switches():
     D = Dash("switchs", "Supervision · Switchs et ports (SNMP)", ["réseau", "snmp"], [var], time_from="now-6h")
     D.add({"type": "text", "title": "", "options": {"mode": "markdown", "content":
            "Ce tableau se remplit dès que le prestataire donne un **accès SNMP en lecture seule** : renseigne `SNMP_COMMUNITY` dans `.env` "
-           "et les IP des équipements dans `config/netmap.yml` (`snmp.devices`), puis relance `./setup.sh`. "
+           "et les IP des équipements dans `config/cockpit.yml` (`snmp.devices`), puis relance `./setup.sh`. "
            "Le détail port par port (qui est branché où) est dans le **cockpit**, vue *Switchs*."}}, 24, 3)
     D.add(stat("Équipements SNMP qui répondent", [q('count(up{job="snmp"} == 1) or vector(0)', instant=True)], color_mode="none"), 6, 4, newrow=True)
     D.add(stat("Ports actifs", [q('count(ifOperStatus{job="snmp", instance=~"$switch"} == 1) or vector(0)', instant=True)], color_mode="none"), 6, 4)
@@ -417,9 +417,9 @@ def build_switches():
 def build_zabbix():
     D = Dash("zabbix", "Supervision · Problèmes Zabbix", ["zabbix"], time_from="now-24h")
     ZDS = {"type": "alexanderzobnin-zabbix-datasource", "uid": "zabbix"}
-    D.add(stat("Problèmes Zabbix en cours", [q('count(netmap_zabbix_problem) or vector(0)', instant=True)], thresholds=steps((1, ORANGE))), 8, 4)
-    D.add(stat("Critiques", [q('count(netmap_zabbix_problem{severity="critical"}) or vector(0)', instant=True)], thresholds=steps((1, RED))), 8, 4)
-    D.add(stat("Zabbix", [q('max(netmap_zabbix_up)', instant=True)], mappings=UP_MAP, thresholds=steps((1, GREEN), base=RED)), 8, 4)
+    D.add(stat("Problèmes Zabbix en cours", [q('count(cockpit_zabbix_problem) or vector(0)', instant=True)], thresholds=steps((1, ORANGE))), 8, 4)
+    D.add(stat("Critiques", [q('count(cockpit_zabbix_problem{severity="critical"}) or vector(0)', instant=True)], thresholds=steps((1, RED))), 8, 4)
+    D.add(stat("Zabbix", [q('max(cockpit_zabbix_up)', instant=True)], mappings=UP_MAP, thresholds=steps((1, GREEN), base=RED)), 8, 4)
     D.add({"type": "alexanderzobnin-zabbix-triggers-panel", "title": "Problèmes (VMware natif, SNMP, agents Zabbix)", "datasource": ZDS,
            "targets": [{"refId": "A", "queryType": "5", "datasource": ZDS, "group": {"filter": "/.*/"}, "host": {"filter": "/.*/"},
                         "proxy": {"filter": ""}, "application": {"filter": ""}, "trigger": {"filter": ""}, "tags": {"filter": ""},
@@ -427,7 +427,7 @@ def build_zabbix():
                                                                 "showDisabledItems": False, "hostsInMaintenance": False, "limit": 1001}}],
            "options": {"layout": "table", "pageSize": 15, "showTags": True, "hostField": True, "severityField": True,
                        "statusField": True, "ackField": True, "ageField": True, "descriptionField": True}}, 24, 14, newrow=True)
-    D.add(table("Problèmes (vus par le cockpit)", [q('netmap_zabbix_problem', instant=True, fmt="table")],
+    D.add(table("Problèmes (vus par le cockpit)", [q('cockpit_zabbix_problem', instant=True, fmt="table")],
                 overrides=[ov("severity", rename="Gravité", cell="color-background", mappings=SEV_MAP, width=110),
                            ov("problem", rename="Problème"), ov("host", rename="Hôte"), ov("priority", hidden=True),
                            ov("Value", hidden=True), ov("instance", hidden=True)], transformations=[HIDE_TIME]), 24, 8, newrow=True)

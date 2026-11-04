@@ -6,7 +6,7 @@ import requests
 
 import config as C
 
-log = logging.getLogger("netmap.zabbix")
+log = logging.getLogger("cockpit.zabbix")
 
 SEVERITY = {0: "info", 1: "info", 2: "warning", 3: "warning", 4: "critical", 5: "critical"}
 SEVERITY_LABEL = {0: "Non classé", 1: "Information", 2: "Avertissement", 3: "Moyen", 4: "Élevé", 5: "Désastre"}

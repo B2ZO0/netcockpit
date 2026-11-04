@@ -3,14 +3,14 @@ groups:
     rules:
       # Les problèmes Zabbix (VMware natif, SNMP...) passent par Alertmanager : mêmes notifications, même anti-spam
       - alert: ZabbixProbleme
-        expr: netmap_zabbix_problem == 1
+        expr: cockpit_zabbix_problem == 1
         for: 1m
         annotations:
           summary: "Zabbix : {{ $labels.problem }}"
           description: "Hôte {{ $labels.host }}"
 
       - alert: ZabbixInjoignable
-        expr: netmap_zabbix_up == 0
+        expr: cockpit_zabbix_up == 0
         for: 10m
         labels: { severity: warning }
         annotations:

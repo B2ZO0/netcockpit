@@ -7,7 +7,7 @@ import requests
 
 import config as C
 
-log = logging.getLogger("netmap.ai")
+log = logging.getLogger("cockpit.ai")
 _cache = {}
 
 SYSTEM = (
@@ -36,13 +36,18 @@ def info():
     return {"provider": C.AI_PROVIDER, "model": model}
 
 
-def _call(prompt):
+EN = (" IMPORTANT: the reader uses the English interface. Write the whole answer in English and translate the section titles "
+      "(### Diagnosis, ### Checks, ### Impact; for a situation briefing: ### In short, ### Priorities, ### To watch).")
+
+
+def _call(prompt, lang="fr"):
     model = info()["model"]
+    system = SYSTEM + (EN if lang == "en" else "")
     if C.AI_PROVIDER == "anthropic":
         r = requests.post(C.AI_BASE_URL or "https://api.anthropic.com/v1/messages", timeout=90,
                           headers={"x-api-key": C.AI_API_KEY, "anthropic-version": "2023-06-01",
                                    "content-type": "application/json"},
-                          json={"model": model, "max_tokens": 1500, "system": SYSTEM,
+                          json={"model": model, "max_tokens": 1500, "system": system,
                                 "messages": [{"role": "user", "content": prompt}]})
         r.raise_for_status()
         return "".join(b.get("text", "") for b in r.json().get("content", []) if b.get("type") == "text")
@@ -52,19 +57,20 @@ def _call(prompt):
         headers["authorization"] = f"Bearer {C.AI_API_KEY}"
     r = requests.post(f"{base}/chat/completions", timeout=120, headers=headers,
                       json={"model": model, "temperature": 0.2,
-                            "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]})
+                            "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]})
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
 
-def ask(key, prompt, ttl=300):
+def ask(key, prompt, ttl=300, lang="fr"):
+    key = f"{lang}:{key}"
     if not enabled():
         return {"error": "Analyse IA non configurée (AI_PROVIDER / AI_API_KEY dans .env)."}
     hit = _cache.get(key)
     if hit and time.time() - hit[0] < ttl:
         return {"text": hit[1], "cached": True, **info()}
     try:
-        text = _call(prompt)
+        text = _call(prompt, lang)
     except requests.HTTPError as e:
         body = e.response.text[:300] if e.response is not None else ""
         log.warning("IA : %s %s", e, body)
@@ -76,7 +82,7 @@ def ask(key, prompt, ttl=300):
     return {"text": text, "cached": False, **info()}
 
 
-def explain_node(detail):
+def explain_node(detail, lang="fr"):
     data = {k: detail.get(k) for k in ("name", "ip", "role_label", "status", "site", "subnet", "os", "vendor", "mac",
                                        "dns", "netbios", "ports", "latency_ms", "metrics", "sources", "details")}
     data["alertes"] = detail.get("alerts")
@@ -95,10 +101,10 @@ def explain_node(detail):
             time.strftime("%d/%m %H:%M:%S", time.localtime(l["ts"])) + f" [{l.get('level') or '-'}] {l['line']}" for l in logs[:40]) + "\n```\n"
     if not detail.get("alerts") and detail.get("status") in ("up",):
         prompt += "\nAucune alerte en cours : fais un bilan de santé rapide et signale les points de vigilance."
-    return ask(f"node:{detail.get('id')}:{detail.get('status')}:{len(detail.get('alerts') or [])}", prompt)
+    return ask(f"node:{detail.get('id')}:{detail.get('status')}:{len(detail.get('alerts') or [])}", prompt, lang=lang)
 
 
-def summarize(overview, alerts):
+def summarize(overview, alerts, lang="fr"):
     data = {"compteurs": overview.get("stats"), "sites": [{k: s.get(k) for k in ("name", "stats", "alerts")} for s in overview.get("sites", [])],
             "chemin_internet": overview.get("internet_path"),
             "alertes": [{k: a.get(k) for k in ("severity", "name", "summary", "node_name", "node_ip", "site", "source", "since")} for a in alerts[:40]],
@@ -108,4 +114,4 @@ def summarize(overview, alerts):
               "Format : ### En bref (3 lignes max), ### Priorités, ### À surveiller.\n\n"
               f"```json\n{json.dumps(data, ensure_ascii=False, default=str, indent=1)[:12000]}\n```")
     key = "summary:" + ",".join(sorted(f"{a.get('name')}@{a.get('node')}" for a in alerts))
-    return ask(key, prompt, ttl=600)
+    return ask(key, prompt, ttl=600, lang=lang)

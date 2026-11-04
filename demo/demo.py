@@ -12,14 +12,14 @@ from urllib.parse import urlparse, parse_qs
 random.seed(7)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-APP = next(p for p in (os.environ.get("NETMAP_APP_DIR"), "/app/app", os.path.join(ROOT, "netmap", "app")) if p and os.path.isdir(p))
-CONFIG_SRC = next(p for p in ("/config/netmap.yml", os.path.join(ROOT, "config", "netmap.yml")) if os.path.isfile(p))
+APP = next(p for p in (os.environ.get("COCKPIT_APP_DIR"), "/app/app", os.path.join(ROOT, "cockpit", "app")) if p and os.path.isdir(p))
+CONFIG_SRC = next(p for p in ("/config/cockpit.yml", os.path.join(ROOT, "config", "cockpit.yml")) if os.path.isfile(p))
 WORK = tempfile.mkdtemp(prefix="netcockpit-demo-")
 WITH_SNMP = os.environ.get("DEMO_SNMP", "1") == "1"
-PORT = os.environ.get("NETMAP_PORT", "8088")
+PORT = os.environ.get("COCKPIT_PORT", "8088")
 FAKE = "http://127.0.0.1:19090"
-os.environ.update(NETMAP_PORT=PORT, NETMAP_CONFIG=f"{WORK}/netmap.yml", NETMAP_TARGETS_DIR=f"{WORK}/targets",
-                  NETMAP_DATA_DIR=f"{WORK}/data", PROMETHEUS_URL=FAKE, ALERTMANAGER_URL=FAKE, LOKI_URL=FAKE,
+os.environ.update(COCKPIT_PORT=PORT, COCKPIT_CONFIG=f"{WORK}/cockpit.yml", COCKPIT_TARGETS_DIR=f"{WORK}/targets",
+                  COCKPIT_DATA_DIR=f"{WORK}/data", PROMETHEUS_URL=FAKE, ALERTMANAGER_URL=FAKE, LOKI_URL=FAKE,
                   GRAFANA_PUBLIC_URL="http://localhost:3000", ZABBIX_URL=FAKE, ZABBIX_PUBLIC_URL="http://localhost:8081",
                   ZABBIX_ADMIN_PASSWORD="demo-password", ZABBIX_GRAFANA_PASSWORD="demo",
                   VCENTER_URL="https://vcenter.example.local/sdk", VCENTER_USER="readonly@vsphere.local", VCENTER_PASSWORD="demo",
@@ -29,7 +29,7 @@ if WITH_SNMP:
     cfg = cfg.replace('community: ""          # or', 'community: "demo"      # or').replace(
         "devices: []            # IPs", "devices: [10.10.0.250, 10.10.0.251, 10.20.0.250]   # IPs")
 cfg = cfg.replace("http_checks:\n", 'http_checks:\n  - { name: Intranet, url: "https://intranet.example.local" }\n  - { name: Public website, url: "https://www.example.com" }\n')
-open(f"{WORK}/netmap.yml", "w", encoding="utf-8").write(cfg)
+open(f"{WORK}/cockpit.yml", "w", encoding="utf-8").write(cfg)
 
 sys.path.insert(0, APP)
 import scanner, snmp
@@ -202,13 +202,14 @@ MET = {a[0]: {"cpu": round(random.uniform(4, 60), 1), "mem": round(random.unifor
               "uptime": 86400 * random.randint(2, 50)} for a in AGENTS}
 MET["FILESRV01"]["disk"] = 93.4; MET["RDS01"]["cpu"] = 87.2; MET["SQL01"]["mem"] = 91.5
 NOW = time.time()
+ago = lambda minutes: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(NOW - minutes * 60))
 AM = [
-  {"labels": {"alertname": "AgentMuet", "severity": "critical", "instance": "PRINTSRV01", "os": "windows"}, "annotations": {"summary": "PRINTSRV01 n'envoie plus de données", "description": "Serveur éteint, planté, ou agent Alloy arrêté."}, "startsAt": "2026-11-03T10:52:00Z", "fingerprint": "a1"},
-  {"labels": {"alertname": "EquipementInjoignable", "severity": "warning", "node": "ip:10.10.0.24", "name": "PRINTSRV01", "role": "vm"}, "annotations": {"summary": "PRINTSRV01 (vm) ne répond plus"}, "startsAt": "2026-11-03T10:53:00Z", "fingerprint": "a2"},
-  {"labels": {"alertname": "DisquePleinWindows", "severity": "warning", "instance": "FILESRV01", "volume": "D:"}, "annotations": {"summary": "Disque D: plein à 93 % sur FILESRV01"}, "startsAt": "2026-11-03T07:10:00Z", "fingerprint": "a3"},
-  {"labels": {"alertname": "CertificatExpireBientot", "severity": "warning", "instance": "https://intranet.example.local", "name": "Intranet"}, "annotations": {"summary": "Certificat de Intranet expire dans 9 jours"}, "startsAt": "2026-11-02T08:00:00Z", "fingerprint": "a4"},
-  {"labels": {"alertname": "NouvelEquipementSurLeReseau", "severity": "info", "ip": "10.20.0.153", "vendor": "Yealink"}, "annotations": {"summary": "Nouvel équipement détecté : 10.20.0.153 (Yealink)"}, "startsAt": "2026-11-03T09:40:00Z", "fingerprint": "a5"},
-  {"labels": {"alertname": "Watchdog", "severity": "none"}, "annotations": {}, "startsAt": "2026-11-03T08:00:00Z", "fingerprint": "w"},
+  {"labels": {"alertname": "AgentSilent", "severity": "critical", "instance": "PRINTSRV01", "os": "windows"}, "annotations": {"summary": "PRINTSRV01 stopped sending data", "description": "Server off, crashed, or the Alloy agent is stopped."}, "startsAt": ago(38), "fingerprint": "a1"},
+  {"labels": {"alertname": "DeviceUnreachable", "severity": "warning", "node": "ip:10.10.0.24", "name": "PRINTSRV01", "role": "vm"}, "annotations": {"summary": "PRINTSRV01 (vm) does not answer ping"}, "startsAt": ago(37), "fingerprint": "a2"},
+  {"labels": {"alertname": "WindowsDiskFull", "severity": "warning", "instance": "FILESRV01", "volume": "D:"}, "annotations": {"summary": "Disk D: is 93% full on FILESRV01"}, "startsAt": ago(190), "fingerprint": "a3"},
+  {"labels": {"alertname": "CertificateExpiresSoon", "severity": "warning", "instance": "https://intranet.example.local", "name": "Intranet"}, "annotations": {"summary": "Intranet certificate expires in 9 days"}, "startsAt": ago(1500), "fingerprint": "a4"},
+  {"labels": {"alertname": "NewDeviceOnNetwork", "severity": "info", "ip": "10.20.0.153", "vendor": "Yealink"}, "annotations": {"summary": "New device on the network: 10.20.0.153 (Yealink)"}, "startsAt": ago(25), "fingerprint": "a5"},
+  {"labels": {"alertname": "Watchdog", "severity": "none"}, "annotations": {}, "startsAt": ago(600), "fingerprint": "w"},
 ]
 ZPROB = [{"triggerid": "1", "description": "Datastore DS-SSD-02: Free space is low (less than 15%)", "priority": "3", "lastchange": str(int(NOW - 7200)),
           "hosts": [{"host": "vcenter", "name": "vCenter"}], "lastEvent": {"eventid": "901", "acknowledged": "0", "clock": str(int(NOW - 7200))}},
@@ -217,7 +218,7 @@ ZPROB = [{"triggerid": "1", "description": "Datastore DS-SSD-02: Free space is l
 
 def targets(name):
     try:
-        return json.load(open(os.path.join(os.environ["NETMAP_TARGETS_DIR"], f"{name}.json")))
+        return json.load(open(os.path.join(os.environ["COCKPIT_TARGETS_DIR"], f"{name}.json")))
     except Exception:
         return []
 
@@ -308,12 +309,19 @@ class Fake(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
         if u.path == "/v1/chat/completions":
-            txt = ("### Diagnostic\nPRINTSRV01 ne répond plus au ping **et** son agent est muet depuis 10:52, alors que vCenter le voit allumé : "
+            en = "English" in json.dumps(body.get("messages", []))
+            txt = ("### Diagnosis\nPRINTSRV01 no longer answers ping **and** its agent went silent at the same time, while vCenter still sees it powered on: "
+                   "the VM is most likely **frozen** (guest OS hung) or its network adapter is disconnected.\n\n### Checks\n"
+                   "1. Open the VM console in vCenter (`esx02`) and see whether Windows responds.\n"
+                   "2. Check that the network adapter is **connected** in the VM settings.\n"
+                   "3. The logs show *Print Spooler stopped* just before: restart the `Spooler` service if the VM answers.\n"
+                   "4. Otherwise: `Restart Guest OS`, then a hard reset if needed.\n\n### Impact\nPrinting is blocked on both sites.") if en else (
+                   "### Diagnostic\nPRINTSRV01 ne répond plus au ping **et** son agent s'est tu au même moment, alors que vCenter le voit allumé : "
                    "la VM est probablement **figée** (OS planté) ou sa carte réseau est déconnectée.\n\n### Vérifications\n"
                    "1. Ouvrir la console de la VM dans vCenter (`esx02`) et vérifier si Windows répond.\n"
                    "2. Vérifier que la carte réseau est **connectée** dans les paramètres de la VM.\n"
-                   "3. Dans les logs : *Spouleur d'impression arrêté* juste avant → redémarrer le service `Spooler` si la VM répond.\n"
-                   "4. Sinon : redémarrage invité (`Restart Guest OS`), puis dur si besoin.\n\n### Impact\nPrinting is blocked on both sites.")
+                   "3. Les logs montrent *Spouleur d'impression arrêté* juste avant : redémarrer le service `Spooler` si la VM répond.\n"
+                   "4. Sinon : redémarrage de l'invité (`Restart Guest OS`), puis arrêt forcé si besoin.\n\n### Impact\nL'impression est bloquée sur les deux sites.")
             return self._j({"choices": [{"message": {"content": txt}}]})
         if u.path == "/api_jsonrpc.php":
             m = body["method"]; p = body.get("params") or {}

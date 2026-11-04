@@ -1,4 +1,4 @@
-"""Chargement de la configuration (config/netmap.yml + variables d'environnement)."""
+"""Chargement de la configuration (config/cockpit.yml + variables d'environnement)."""
 import ipaddress
 import logging
 import os
@@ -6,13 +6,13 @@ from pathlib import Path
 
 import yaml
 
-log = logging.getLogger("netmap.config")
+log = logging.getLogger("cockpit.config")
 
 ENV = os.environ.get
-PORT = int(ENV("NETMAP_PORT", "8088"))
-CONFIG_PATH = Path(ENV("NETMAP_CONFIG", "/config/netmap.yml"))
-TARGETS_DIR = Path(ENV("NETMAP_TARGETS_DIR", "/targets"))
-DATA_DIR = Path(ENV("NETMAP_DATA_DIR", "/data"))
+PORT = int(ENV("COCKPIT_PORT", "8088"))
+CONFIG_PATH = Path(ENV("COCKPIT_CONFIG", "/config/cockpit.yml"))
+TARGETS_DIR = Path(ENV("COCKPIT_TARGETS_DIR", "/targets"))
+DATA_DIR = Path(ENV("COCKPIT_DATA_DIR", "/data"))
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 PROM_URL = ENV("PROMETHEUS_URL", "http://127.0.0.1:9090").rstrip("/")
@@ -37,7 +37,7 @@ AI_API_KEY = ENV("AI_API_KEY", "")
 AI_MODEL = ENV("AI_MODEL", "")
 AI_BASE_URL = ENV("AI_BASE_URL", "").rstrip("/")
 
-SCAN_OVERRIDE = ENV("NETMAP_SCAN")  # "0" pour désactiver (tests)
+SCAN_OVERRIDE = ENV("COCKPIT_SCAN")  # "0" pour désactiver (tests)
 
 
 def _list(v):

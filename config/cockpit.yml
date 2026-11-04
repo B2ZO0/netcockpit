@@ -1,6 +1,6 @@
 # ============================================================
 #  NetCockpit : what to discover and monitor
-#  After editing:  docker compose restart netmap
+#  After editing:  docker compose restart cockpit
 #  (example values: replace them with your own networks)
 # ============================================================
 

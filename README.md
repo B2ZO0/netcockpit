@@ -37,6 +37,7 @@ NetCockpit takes another approach: it **combines every source you do have access
 - 🖥️ **VMware view**: every host, its VMs (CPU, RAM, IPs, OS), datastores and vCenter alarms. Works with **vCenter or a standalone ESXi**.
 - 🔔 **One alert pipeline**: Prometheus, Loki (logs) and Zabbix problems all go through Alertmanager → Telegram, Discord or email, with grouping and inhibition (if the firewall dies, you don't get 80 "device unreachable" messages).
 - 🤖 **Optional AI diagnosis**: "Explain this problem" on any device and a situation summary, with Claude or a **local model** (Ollama, nothing leaves your network).
+- ✈️ **A real cockpit, not another admin template**: one sentence tells you how things are, the route to the Internet is drawn like the magenta line of a flight plan, and the whole UI uses [B612](https://github.com/polarsys/b612), the typeface Airbus designed for cockpit screens. Night and day themes, English and French.
 - 📦 **One command**: `./setup.sh` generates passwords and configs and starts everything. Re-run it any time; it never breaks your settings.
 
 ## 📸 Screenshots
@@ -50,7 +51,7 @@ NetCockpit takes another approach: it **combines every source you do have access
 | ![Inventory](docs/images/inventory.png) | ![Device](docs/images/device-ai.png) |
 
 > All screenshots come from the built-in demo: every name and IP address is fictitious.
-> The interface is currently in French (English translation welcome, see [Contributing](CONTRIBUTING.md)).
+> The interface follows your browser language (English or French) and your system theme; switch both from the left rail.
 
 ## ⚡ Try it in 1 minute (demo)
 
@@ -78,7 +79,6 @@ Open **http://localhost:8088**. Without Docker: `pip install pyyaml requests && 
 | **Zabbix** | Auto-configured: VMware template, SNMP discovery, and every important device found by the cockpit is declared in Zabbix, grouped by site and type |
 | **Grafana** | 7 provisioned dashboards: overview (with node graph), server, network & inventory, VMware, switches (SNMP), Zabbix, logs |
 | **AI (optional)** | Claude API or any OpenAI-compatible endpoint (Ollama, LM Studio…) |
-| **Extras** | Optional [xoriin/NetMap](https://github.com/xoriin/NetMap) module for IPAM and firewall log analysis |
 
 ## 🧭 How the topology is built without network access
 
@@ -117,7 +117,7 @@ flowchart LR
 curl -fsSL https://get.docker.com | sh            # if Docker is not installed
 git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 ./setup.sh                                         # creates .env (random passwords) and starts everything
-nano config/netmap.yml                             # your sites, networks, critical equipment, websites
+nano config/cockpit.yml                             # your sites, networks, critical equipment, websites
 nano .env                                          # vCenter/ESXi, notifications, AI
 ./setup.sh                                         # apply
 ```
@@ -149,7 +149,7 @@ curl -fsSL http://<host>:8088/agents/linux/install.sh | sudo bash -s <host>
 ```mermaid
 flowchart TB
   subgraph Host["Monitoring VM (docker compose)"]
-    NM["Cockpit (netmap)<br/>Python · Cytoscape.js<br/>:8088"]
+    NM["Cockpit<br/>Python · Cytoscape.js<br/>:8088"]
     PR[Prometheus :9090]
     AM[Alertmanager :9093]
     LK[Loki :3100]
@@ -184,7 +184,8 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ## 🗺️ Roadmap
 
-- [ ] English UI (i18n)
+- [x] English and French UI, night and day themes
+- [ ] More languages (one block to add in `cockpit/static/i18n.js`)
 - [ ] Several vCenter / ESXi endpoints
 - [ ] SNMPv3
 - [ ] Hyper-V and Proxmox inventory
@@ -201,13 +202,13 @@ NetCockpit is glue and UI on top of excellent open-source projects:
 - [Grafana](https://grafana.com), [Loki](https://grafana.com/oss/loki/), [Grafana Alloy](https://grafana.com/oss/alloy/)
 - [Grafana Zabbix plugin](https://github.com/grafana/grafana-zabbix) and [Infinity datasource](https://github.com/grafana/grafana-infinity-datasource)
 - [Zabbix](https://www.zabbix.com)
-- [Cytoscape.js](https://js.cytoscape.org) and [cytoscape-fcose](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) (iVis@Bilkent), bundled under the MIT licence in `netmap/static/lib/`
+- [Cytoscape.js](https://js.cytoscape.org) and [cytoscape-fcose](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) (iVis@Bilkent), bundled under the MIT licence in `cockpit/static/lib/`
+- [B612](https://github.com/polarsys/b612) typeface by Airbus, Intactile Design and ENAC, bundled under the SIL Open Font License in `cockpit/static/lib/fonts/`
 - [Nmap](https://nmap.org), [pyVmomi](https://github.com/vmware/pyvmomi), [lldpd](https://lldpd.github.io), [net-snmp](http://www.net-snmp.org)
-- [xoriin/NetMap](https://github.com/xoriin/NetMap) by xoriin, optional IPAM / firewall-log module (pulled as a Docker image, GPL-3.0, not bundled)
 
 ## 📄 License
 
-[MIT](LICENSE). Third-party components keep their own licences (see `netmap/static/lib/LICENSES.txt`).
+[MIT](LICENSE). Third-party components keep their own licences (see `cockpit/static/lib/LICENSES.txt`).
 
 <div align="center">
 

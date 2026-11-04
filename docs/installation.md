@@ -29,7 +29,7 @@ On the first run `setup.sh`:
 
 Then edit the two configuration files and run `./setup.sh` again:
 
-- `config/netmap.yml`: sites, networks, critical equipment, websites, SNMP devices ([reference](configuration.md#confignetmapyml));
+- `config/cockpit.yml`: sites, networks, critical equipment, websites, SNMP devices ([reference](configuration.md#configcockpityml));
 - `.env`: vCenter/ESXi, notifications, AI, Zabbix on/off ([reference](configuration.md#env)).
 
 `setup.sh` is idempotent. When a new version adds settings to `.env.example`, it appends them to your `.env` without touching existing values.
@@ -45,7 +45,7 @@ Then edit the two configuration files and run `./setup.sh` again:
 
 ```bash
 docker compose ps
-docker compose logs -f netmap
+docker compose logs -f cockpit
 ```
 
 ## Upgrading
@@ -73,4 +73,3 @@ docker compose down -v     # stop and delete all data (volumes)
 | 3100 | Loki (agents push logs) |
 | 514 UDP+TCP | Syslog receiver |
 | 10051 | Zabbix trapper (optional Zabbix agents) |
-| 8090 | Optional IPAM module (`ENABLE_IPAM=true`) |

@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-log = logging.getLogger("netmap.vcenter")
+log = logging.getLogger("cockpit.vcenter")
 
 try:
     from pyVim.connect import Disconnect, SmartConnect

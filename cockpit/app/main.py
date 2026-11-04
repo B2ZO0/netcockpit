@@ -1,4 +1,4 @@
-"""Netmap / Cockpit : découverte réseau, modèle unifié, API web, métriques Prometheus."""
+"""NetCockpit : découverte réseau, modèle unifié, API web, métriques Prometheus."""
 import csv
 import io
 import ipaddress
@@ -21,7 +21,7 @@ from vcenter import VCenter
 from zabbix import Zabbix
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-log = logging.getLogger("netmap")
+log = logging.getLogger("cockpit")
 
 CFG = C.load()
 LOCK = threading.RLock()
@@ -462,8 +462,8 @@ def _line(name, labels, value):
 
 
 def metrics_text():
-    out = [_line("netmap_last_scan_timestamp_seconds", {}, SCAN.get("last_scan") or 0),
-           _line("netmap_scan_duration_seconds", {}, SCAN.get("scan_duration") or 0)]
+    out = [_line("cockpit_last_scan_timestamp_seconds", {}, SCAN.get("last_scan") or 0),
+           _line("cockpit_scan_duration_seconds", {}, SCAN.get("scan_duration") or 0)]
     mdl, _ = current()
     per = {}
     for n in mdl.nodes.values():
@@ -471,58 +471,58 @@ def metrics_text():
             continue
         per[(n.get("site") or "", n.get("subnet") or "")] = per.get((n.get("site") or "", n.get("subnet") or ""), 0) + 1
         if n.get("ip"):
-            out.append(_line("netmap_device_info", {"ip": n["ip"], "name": n["name"], "mac": n.get("mac"), "vendor": n.get("vendor"),
+            out.append(_line("cockpit_device_info", {"ip": n["ip"], "name": n["name"], "mac": n.get("mac"), "vendor": n.get("vendor"),
                                                      "dns": n.get("dns"), "netbios": n.get("netbios"), "role": n["role_label"],
                                                      "site": n.get("site"), "subnet": n.get("subnet"), "os": n.get("os")}, 1))
         if n.get("new") and n.get("ip"):
             dev = SCAN["devices"].get(n["ip"], {})
-            out.append(_line("netmap_device_first_seen_timestamp_seconds",
+            out.append(_line("cockpit_device_first_seen_timestamp_seconds",
                              {"ip": n["ip"], "mac": n.get("mac"), "vendor": n.get("vendor") or "inconnu",
                               "hostname": n["name"], "site": n.get("site")}, dev.get("new_since") or 0))
         val = {"up": 1, "warning": 1, "critical": 1, "down": 0, "off": 0, "absent": 0}.get(n["status"], -1)
-        out.append(_line("netmap_node_up", {"node": n["id"], "name": n["name"], "role": n["role"], "status": n["status"],
+        out.append(_line("cockpit_node_up", {"node": n["id"], "name": n["name"], "role": n["role"], "status": n["status"],
                                             "site": n.get("site"), "critical": str(n["critical"]).lower()}, val))
     for (site, subnet), c in per.items():
-        out.append(_line("netmap_devices", {"site": site, "subnet": subnet}, c))
+        out.append(_line("cockpit_devices", {"site": site, "subnet": subnet}, c))
     for k, v in M.stats(mdl).items():
-        out.append(_line("netmap_nodes", {"status": k}, v))
+        out.append(_line("cockpit_nodes", {"status": k}, v))
     if VC:
         st = VC.state
-        out.append(_line("netmap_vmware_up", {"error": st.get("error")}, 1 if st["up"] else 0))
+        out.append(_line("cockpit_vmware_up", {"error": st.get("error")}, 1 if st["up"] else 0))
         if st["up"]:
             for h in st["hosts"]:
                 lab = {"host": h["name"], "cluster": h.get("cluster") or ""}
-                out.append(_line("netmap_vmware_host_connected", dict(lab, state=h["state"]), 1 if h["state"] == "connected" else 0))
-                out.append(_line("netmap_vmware_host_maintenance", lab, 1 if h["maintenance"] else 0))
+                out.append(_line("cockpit_vmware_host_connected", dict(lab, state=h["state"]), 1 if h["state"] == "connected" else 0))
+                out.append(_line("cockpit_vmware_host_maintenance", lab, 1 if h["maintenance"] else 0))
                 if h.get("cpu_pct") is not None:
-                    out.append(_line("netmap_vmware_host_cpu_percent", lab, h["cpu_pct"]))
+                    out.append(_line("cockpit_vmware_host_cpu_percent", lab, h["cpu_pct"]))
                 if h.get("mem_pct") is not None:
-                    out.append(_line("netmap_vmware_host_mem_percent", lab, h["mem_pct"]))
+                    out.append(_line("cockpit_vmware_host_mem_percent", lab, h["mem_pct"]))
             for v in st["vms"]:
                 lab = {"vm": v["name"], "host": v.get("host") or ""}
-                out.append(_line("netmap_vmware_vm_powered_on", lab, 1 if v["power"] == "poweredOn" else 0))
+                out.append(_line("cockpit_vmware_vm_powered_on", lab, 1 if v["power"] == "poweredOn" else 0))
                 if v.get("cpu_pct") is not None and v["power"] == "poweredOn":
-                    out.append(_line("netmap_vmware_vm_cpu_percent", lab, v["cpu_pct"]))
+                    out.append(_line("cockpit_vmware_vm_cpu_percent", lab, v["cpu_pct"]))
                 if v.get("mem_pct") is not None and v["power"] == "poweredOn":
-                    out.append(_line("netmap_vmware_vm_mem_percent", lab, v["mem_pct"]))
+                    out.append(_line("cockpit_vmware_vm_mem_percent", lab, v["mem_pct"]))
             for d in st.get("datastores") or []:
                 lab = {"datastore": d["name"]}
                 if d.get("used_pct") is not None:
-                    out.append(_line("netmap_vmware_datastore_used_percent", lab, d["used_pct"]))
-                    out.append(_line("netmap_vmware_datastore_free_bytes", lab, d["free_gb"] * 1073741824))
+                    out.append(_line("cockpit_vmware_datastore_used_percent", lab, d["used_pct"]))
+                    out.append(_line("cockpit_vmware_datastore_free_bytes", lab, d["free_gb"] * 1073741824))
             seen = set()
             for a in st["alarms"]:
                 if (a["entity"], a["alarm"]) in seen:
                     continue
                 seen.add((a["entity"], a["alarm"]))
-                out.append(_line("netmap_vmware_alarm", {"entity": a["entity"], "alarm": a["alarm"], "status": a["status"]}, 1))
+                out.append(_line("cockpit_vmware_alarm", {"entity": a["entity"], "alarm": a["alarm"], "status": a["status"]}, 1))
     if ZBX:
-        out.append(_line("netmap_zabbix_up", {}, 1 if ZBX.state["up"] else 0))
+        out.append(_line("cockpit_zabbix_up", {}, 1 if ZBX.state["up"] else 0))
         for p in ZBX.state["problems"]:
-            out.append(_line("netmap_zabbix_problem", {"host": p["host"], "problem": p["problem"], "severity": p["severity"],
+            out.append(_line("cockpit_zabbix_problem", {"host": p["host"], "problem": p["problem"], "severity": p["severity"],
                                                        "priority": p["priority"]}, 1))
     if CFG["snmp"]["community"]:
-        out.append(_line("netmap_snmp_devices", {}, len(SNMP_STATE["devices"])))
+        out.append(_line("cockpit_snmp_devices", {}, len(SNMP_STATE["devices"])))
     return "\n".join(out) + "\n"
 
 
@@ -541,7 +541,7 @@ def inventory_csv():
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "netmap/2.0"
+    server_version = "cockpit/2.0"
 
     def log_message(self, fmt, *args):
         log.debug("%s - %s", self.address_string(), fmt % args)
@@ -630,10 +630,10 @@ class Handler(BaseHTTPRequestHandler):
                 d = node_detail(body.get("id", ""))
                 if not d:
                     return self._send(404, {"error": "équipement introuvable"})
-                return self._send(200, ai.explain_node(d))
+                return self._send(200, ai.explain_node(d, "en" if body.get("lang") == "en" else "fr"))
             if url.path == "/api/ai/summary":
                 mdl, live = current()
-                return self._send(200, ai.summarize(overview(), M.alerts_view(mdl, live["alerts"])))
+                return self._send(200, ai.summarize(overview(), M.alerts_view(mdl, live["alerts"]), "en" if body.get("lang") == "en" else "fr"))
             return self._send(404, {"error": "introuvable"})
         except Exception as e:
             log.exception("erreur HTTP POST %s", self.path)
