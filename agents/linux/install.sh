@@ -10,7 +10,8 @@ NAME="${2:-$(hostname -s)}"
 [[ -z "$SERVER" ]] && { echo "Usage : sudo bash $0 <IP_DU_SERVEUR_DE_SUPERVISION> [nom]"; exit 1; }
 [[ $EUID -ne 0 ]] && { echo "Lance ce script avec sudo."; exit 1; }
 
-IP=$(ip -4 route get "$SERVER" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
+TARGET=$(getent ahostsv4 "$SERVER" 2>/dev/null | awk 'NR==1{print $1}'); TARGET=${TARGET:-$SERVER}   # IP ou nom DNS
+IP=$(ip -4 route get "$TARGET" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
 . /etc/os-release
 echo "==> ${PRETTY_NAME} · nom '${NAME}' · IP ${IP:-?} · supervision ${SERVER}"
 
