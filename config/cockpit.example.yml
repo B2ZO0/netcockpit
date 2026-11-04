@@ -1,5 +1,7 @@
 # ============================================================
 #  NetCockpit : what to discover and monitor
+#  This is the TEMPLATE. setup.sh copies it once to config/cockpit.yml:
+#  edit config/cockpit.yml (never versioned, never overwritten by an upgrade).
 #  After editing:  docker compose restart cockpit
 #  (example values: replace them with your own networks)
 # ============================================================

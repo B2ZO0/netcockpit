@@ -1,5 +1,7 @@
 # Secrets and generated files
 .env
+config/cockpit.yml
+backups/
 alertmanager/alertmanager.yml
 snmp/auth.yml
 data/

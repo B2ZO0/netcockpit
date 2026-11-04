@@ -1,4 +1,4 @@
-"""Analyse IA optionnelle (Claude via l'API Anthropic, ou toute API compatible OpenAI : Ollama, LM Studio...)."""
+"""Analyse IA optionnelle (API Anthropic, ou toute API compatible OpenAI : OpenAI, Mistral, Ollama, LM Studio...)."""
 import json
 import logging
 import time

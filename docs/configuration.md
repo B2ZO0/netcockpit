@@ -41,7 +41,7 @@ After any change: `./setup.sh`.
 | `VCENTER_URL` | `https://vcenter.example.local/sdk` **or** a standalone ESXi: `https://10.10.0.5/sdk`. |
 | `VCENTER_USER`, `VCENTER_PASSWORD` | Read-only account (see below). Quote values containing `$`: `'pa$$word'`. |
 | `SNMP_COMMUNITY` | Read-only SNMP v2c community. |
-| `AI_PROVIDER` | `anthropic` (Claude) or `openai` (any OpenAI-compatible API, e.g. Ollama). Empty = disabled. |
+| `AI_PROVIDER` | `anthropic` (Anthropic API) or `openai` (any OpenAI-compatible API, e.g. Ollama). Empty = disabled. |
 | `AI_API_KEY`, `AI_MODEL`, `AI_BASE_URL` | e.g. Ollama: `AI_PROVIDER=openai`, `AI_BASE_URL=http://10.10.0.60:11434/v1`, `AI_MODEL=llama3.1`. |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Bot from @BotFather; chat id from `https://api.telegram.org/bot<TOKEN>/getUpdates`. |
 | `DISCORD_WEBHOOK_URL` | Channel settings → Integrations → Webhooks. |

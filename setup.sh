@@ -24,6 +24,17 @@ if [[ -n "$PROJ" ]] && docker volume inspect "${PROJ}_netmap-data" >/dev/null 2>
   docker run --rm -v "${PROJ}_netmap-data:/from:ro" -v "${PROJ}_cockpit-data:/to" alpine sh -c 'cp -a /from/. /to/' >/dev/null 2>&1 && ok "Historique du cockpit repris" || true
 fi
 
+# Ta configuration (config/cockpit.yml) n'est jamais versionnée : elle est créée une fois depuis le modèle, puis plus jamais touchée
+if [[ ! -f config/cockpit.yml ]]; then cp config/cockpit.example.yml config/cockpit.yml; ok "config/cockpit.yml créé depuis le modèle : décris-y tes sites et tes réseaux"; fi
+
+# Sauvegarde de tes réglages avant chaque lancement (10 dernières gardées dans backups/)
+if [[ -f .env ]]; then
+  BK="backups/$(date +%Y%m%d-%H%M%S)"; mkdir -p "$BK"; chmod 700 backups
+  cp -a .env config/*.yml "$BK"/ 2>/dev/null || true
+  ls -1d backups/*/ 2>/dev/null | head -n -10 | xargs -r rm -rf
+  ok "Réglages sauvegardés dans $BK"
+fi
+
 # 1. .env : création, ou ajout des nouvelles variables (mise à jour depuis une version précédente)
 [[ -f .env ]] || { touch .env; chmod 600 .env; FIRST_RUN=1; }
 added=0

@@ -13,7 +13,7 @@ random.seed(7)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 APP = next(p for p in (os.environ.get("COCKPIT_APP_DIR"), "/app/app", os.path.join(ROOT, "cockpit", "app")) if p and os.path.isdir(p))
-CONFIG_SRC = next(p for p in ("/config/cockpit.yml", os.path.join(ROOT, "config", "cockpit.yml")) if os.path.isfile(p))
+CONFIG_SRC = next(p for p in ("/config/cockpit.example.yml", os.path.join(ROOT, "config", "cockpit.example.yml")) if os.path.isfile(p))
 WORK = tempfile.mkdtemp(prefix="netcockpit-demo-")
 WITH_SNMP = os.environ.get("DEMO_SNMP", "1") == "1"
 PORT = os.environ.get("COCKPIT_PORT", "8088")

@@ -48,12 +48,25 @@ docker compose ps
 docker compose logs -f cockpit
 ```
 
-## Upgrading
+## Upgrading (your settings are never lost)
 
 ```bash
-git pull            # or unzip the new release over the folder (your .env is kept)
+git pull            # or unzip the new release over the folder
 ./setup.sh
 ```
+
+What is yours stays yours:
+
+| Your data | Where it lives | On upgrade |
+|---|---|---|
+| Passwords, vCenter, notifications, AI | `.env` | Never overwritten. New settings are appended with their default value. |
+| Sites, networks, equipment, websites, SNMP | `config/cockpit.yml` | Not versioned, never overwritten. The repository only ships `config/cockpit.example.yml`. |
+| History (metrics, logs, scans), Zabbix database, Grafana | Docker volumes | Kept. `docker compose down` keeps them too; only `down -v` deletes them. |
+
+Before doing anything, `./setup.sh` copies `.env` and `config/*.yml` to `backups/<date>/` (the last 10 are kept). To roll back a setting: `cp backups/<date>/.env .`.
+
+> Dashboards are provisioned from `grafana/dashboards/` and regenerated on every run: to customise one, use **Save as** in Grafana to keep your own copy.
+> Upgrading from 1.0 (when the cockpit was called `netmap`)? `./setup.sh` renames `config/netmap.yml` to `config/cockpit.yml` and moves the history volume for you. If `git pull` refuses because you edited `config/netmap.yml`, run `mv config/netmap.yml config/cockpit.yml` first.
 
 ## Uninstalling
 
