@@ -49,7 +49,7 @@ NetCockpit **croise toutes les sources auxquelles tu as accès** : scan réseau,
 La démo simule un réseau complet sur deux sites : firewall, 2 ESXi, 11 VM, switchs, bornes Wi-Fi, imprimantes, téléphones IP, PC, et quelques pannes. **Rien n'est scanné, aucun identifiant n'est nécessaire.**
 
 ```bash
-git clone https://github.com/<toi>/netcockpit.git && cd netcockpit
+git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 docker compose -f docker-compose.demo.yml up --build
 ```
 
@@ -61,7 +61,7 @@ Il faut une VM Debian 12 ou Ubuntu 24.04 avec **4 vCPU, 8 Go de RAM** (6 Go sans
 
 ```bash
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/<toi>/netcockpit.git && cd netcockpit
+git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 ./setup.sh                    # crée .env (mots de passe aléatoires) et démarre tout
 nano config/netmap.yml        # sites, réseaux, équipements critiques, sites web
 nano .env                     # vCenter/ESXi, notifications, IA

@@ -15,7 +15,7 @@ The monitoring VM must reach every network you want to see (ICMP + a few TCP por
 
 ```bash
 curl -fsSL https://get.docker.com | sh
-git clone https://github.com/<you>/netcockpit.git
+git clone https://github.com/B2ZO0/netcockpit.git
 cd netcockpit
 ./setup.sh
 ```

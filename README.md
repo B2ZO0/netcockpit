@@ -57,7 +57,7 @@ NetCockpit takes another approach: it **combines every source you do have access
 The demo simulates a complete two-site network (firewall, 2 ESXi, 11 VMs, switches, Wi-Fi access points, printers, IP phones, PCs, some failures). **Nothing is scanned, no credentials needed.**
 
 ```bash
-git clone https://github.com/<you>/netcockpit.git && cd netcockpit
+git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 docker compose -f docker-compose.demo.yml up --build
 ```
 
@@ -115,7 +115,7 @@ flowchart LR
 
 ```bash
 curl -fsSL https://get.docker.com | sh            # if Docker is not installed
-git clone https://github.com/<you>/netcockpit.git && cd netcockpit
+git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 ./setup.sh                                         # creates .env (random passwords) and starts everything
 nano config/netmap.yml                             # your sites, networks, critical equipment, websites
 nano .env                                          # vCenter/ESXi, notifications, AI
