@@ -53,17 +53,17 @@ The assistant detects the host's network, gateway and DNS servers, then asks a f
 
 ```text
   NetCockpit setup assistant
-  Detected on this machine: network 192.168.1.0/24 · gateway 192.168.1.240 · DNS 192.168.1.20, 192.168.1.21
+  Detected on this machine: network 192.168.10.0/24 · gateway 192.168.10.254 · DNS 192.168.10.11, 192.168.10.12
 
 What do you call your locations?  1) Building  2) Site  3) Branch  [1]:
 Name of the building where this machine is [Building 1]: HQ
-Networks of "HQ" (comma-separated) [192.168.1.0/24]:
+Networks of "HQ" (comma-separated) [192.168.10.0/24]:
 Add another building? Its name (Enter to finish): Warehouse
-Networks of "Warehouse" (e.g. 192.168.40.0/24): 192.168.40.0/24
+Networks of "Warehouse" (e.g. 10.20.0.0/24): 192.168.20.0/24
 Add another building? Its name (Enter to finish):
-Internal DNS servers (domain controllers), comma-separated [192.168.1.20, 192.168.1.21]:
-Gateway / firewall address [192.168.1.240]:
-VMware: vCenter or ESXi address (IP or name, Enter to skip): 192.168.1.10
+Internal DNS servers (domain controllers), comma-separated [192.168.10.11, 192.168.10.12]:
+Gateway / firewall address [192.168.10.254]:
+VMware: vCenter or ESXi address (IP or name, Enter to skip): 192.168.10.5
 Read-only user: monitoring
 Password of that user (nothing is shown):
 Switches and firewall: read-only SNMP community (Enter to skip):
@@ -76,7 +76,7 @@ What each answer changes:
 | Question | What it is for |
 |---|---|
 | Building, site or branch | The word shown everywhere in the interface ("All buildings"). |
-| Buildings and networks | What gets scanned, and how inventory and topology are grouped. A building can have several networks. Write a network as `192.168.40.0/24` (or `192.168.40.0`: `/24` is added). |
+| Buildings and networks | What gets scanned, and how inventory and topology are grouped. A building can have several networks. Write a network as `192.168.20.0/24` (or `192.168.20.0`: `/24` is added). |
 | Internal DNS | Machine names (Active Directory) instead of IP addresses. Leave empty if you have none: domain controllers are detected anyway. |
 | Gateway / firewall | Monitored as critical: if it goes down, everything behind it turns grey instead of firing 80 alerts. |
 | VMware, SNMP, Telegram | Optional: press Enter to skip, you can add them later. |
@@ -84,9 +84,9 @@ What each answer changes:
 Then `setup.sh` starts everything and prints the addresses:
 
 ```text
-  Cockpit    http://192.168.1.198:8088
-  Grafana    http://192.168.1.198:3000   admin / GRAFANA_ADMIN_PASSWORD (in .env)
-  Zabbix     http://192.168.1.198:8081   Admin / ZABBIX_ADMIN_PASSWORD (in .env)
+  Cockpit    http://192.168.10.50:8088
+  Grafana    http://192.168.10.50:3000   admin / GRAFANA_ADMIN_PASSWORD (in .env)
+  Zabbix     http://192.168.10.50:8081   Admin / ZABBIX_ADMIN_PASSWORD (in .env)
 ```
 
 To find a password again: `grep PASSWORD .env`.
@@ -119,7 +119,7 @@ cd /opt/netcockpit           # your installation folder
 
 It starts from your current configuration: Enter keeps each value, you only change what changes.
 
-**Moving to a new addressing plan** (for example from `192.168.x` to `10.x`): re-run the assistant and replace each building's networks. During the transition, list both, comma-separated (`192.168.1.0/24, 10.1.0.0/24`), then remove the old one once the move is done. Devices that no longer answer on their old address turn grey (*absent*), not red.
+**Moving to a new addressing plan** (for example from `192.168.x` to `10.x`): re-run the assistant and replace each building's networks. During the transition, list both, comma-separated (`192.168.10.0/24, 10.1.0.0/24`), then remove the old one once the move is done. Devices that no longer answer on their old address turn grey (*absent*), not red.
 
 For fine-tuning (forced names, critical equipment, websites to watch), edit `config/cockpit.yml` by hand, then `docker compose restart cockpit`. Every option is described in [configuration.md](configuration.md).
 
