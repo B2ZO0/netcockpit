@@ -23,7 +23,12 @@ $admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 if (-not $admin) { Write-Error "Lance PowerShell en tant qu'administrateur."; exit 1 }
 
 # IP utilisée pour joindre la supervision
-$ip = (Find-NetRoute -RemoteIPAddress $Server -ErrorAction SilentlyContinue |
+# -Server accepte une IP ou un nom DNS (pratique pour changer d'adresse sans réinstaller)
+$target = $Server
+if ($Server -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+  try { $target = ([System.Net.Dns]::GetHostAddresses($Server) | Where-Object { $_.AddressFamily -eq 'InterNetwork' } | Select-Object -First 1).IPAddressToString } catch { }
+}
+$ip = (Find-NetRoute -RemoteIPAddress $target -ErrorAction SilentlyContinue |
   Where-Object { $_.IPAddress } | Select-Object -First 1).IPAddress
 Write-Host "==> $Name ($ip) -> supervision $Server"
 
