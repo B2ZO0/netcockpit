@@ -56,6 +56,8 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 | ![VMware](docs/images/vmware.png) | ![Switchs](docs/images/switches.png) |
 | **Inventaire (export CSV)** | **Fiche équipement + analyse IA** |
 | ![Inventaire](docs/images/inventory.png) | ![Fiche](docs/images/device-ai.png) |
+| **Mise en route (se coche toute seule)** | **Alertes de toutes les sources** |
+| ![Mise en route](docs/images/setup.png) | ![Alertes](docs/images/alerts.png) |
 
 L'interface suit la langue du navigateur et le thème du système ; les deux se changent depuis la barre de gauche.
 
@@ -85,6 +87,7 @@ Ouvre ensuite **http://localhost:8088**. Sans Docker : `pip install pyyaml reque
 | **Zabbix** | Configuré automatiquement : modèle VMware, découverte SNMP, et chaque équipement important trouvé par le cockpit est déclaré dans Zabbix, rangé par site et par type |
 | **Grafana** | 7 tableaux de bord fournis : vue d'ensemble (avec graphe), serveur, réseau et inventaire, VMware, switchs (SNMP), Zabbix, logs |
 | **IA (option)** | API Anthropic ou toute API compatible OpenAI (OpenAI, Mistral, Ollama, LM Studio…), réponses dans la langue de l'interface |
+| **Mise en route** | Une liste de contrôle qui se coche toute seule (bâtiments, noms, VMware, agents, notifications, Zabbix, SNMP), avec quoi faire et les commandes prêtes à copier |
 | **Interface** | Français et anglais, thèmes nuit et jour, recherche au clavier (`/`), fonctionne hors ligne (aucun CDN, polices incluses) |
 
 ## 🧭 Comment la topologie est construite sans accès au réseau
@@ -128,7 +131,7 @@ git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 
 L'assistant détecte le réseau local, la passerelle et les DNS, puis te demande tes bâtiments (ou sites), tes autres réseaux, VMware, le SNMP et Telegram. Chaque question a une valeur par défaut : Entrée suffit. Relance-le quand tu veux avec `./setup.sh --configure`.
 
-👉 **Première installation ? Suis le [guide pas à pas](docs/demarrage.md)** : installation, bâtiments, compte VMware en lecture seule, Zabbix, agents, Telegram, switchs (Ubiquiti UniFi compris), dépannage.
+👉 **Première installation ? Suis le [guide pas à pas](docs/demarrage.md)** : installation, bâtiments, compte VMware en lecture seule, Zabbix, agents, Telegram, switchs (Ubiquiti UniFi compris), dépannage. Ta situation est différente (plusieurs sites, sans AD, sans VMware, réseau chez un prestataire, homelab) ? Vois les **[cas pratiques](docs/cas-pratiques.md)**. Une fois lancé, l'écran **Mise en route** du cockpit suit ce qu'il reste à faire, avec les commandes prêtes à copier.
 
 | Service | Adresse |
 |---|---|

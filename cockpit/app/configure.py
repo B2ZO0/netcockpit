@@ -23,6 +23,15 @@ SKIP_IFACES = re.compile(r"^(lo|docker\d*|br-|veth|virbr|cni|flannel|cali|tun|ta
 T = {
     "fr": {
         "title": "Assistant de configuration NetCockpit",
+        "h_word": "Le mot affiché partout dans l'interface (« Tous les bâtiments »).",
+        "h_nets": "Astuce : sur un PC de ce bâtiment, tape ipconfig. Adresse IPv4 192.168.5.37 et masque 255.255.255.0 donnent le réseau 192.168.5.0/24. Les étendues de la console DHCP les listent aussi. Plusieurs réseaux (VLAN serveurs, téléphonie, Wi-Fi) : sépare-les par des virgules.",
+        "h_more": "Un autre bâtiment ou site relié (VPN, fibre, MPLS) ? Cette machine doit pouvoir le joindre : vérifie avec ping vers une adresse de là-bas.",
+        "h_dns": "Astuce : ipconfig /all sur un PC du domaine, ligne « Serveurs DNS ». Sans Active Directory, laisse vide.",
+        "h_gw": "Astuce : ipconfig, ligne « Passerelle par défaut ». C'est souvent le firewall ou la box.",
+        "h_vc": "L'adresse que tu ouvres dans le navigateur pour gérer ton vCenter ou ton ESXi. Il faut un compte en lecture seule (guide docs/demarrage.md, section 6). Pas de VMware : Entrée.",
+        "h_snmp": "La communauté SNMP est un mot de passe partagé en lecture seule, donné par ton prestataire ou réglé dans tes switchs (UniFi : Settings, CyberSecure, Traffic Logging). Pas d'accès : Entrée.",
+        "h_tg": "Jeton donné par @BotFather dans Telegram (commande /newbot). Détails : docs/demarrage.md, section 9.",
+        "h_zbx": "Zabbix ajoute la supervision VMware native et la découverte SNMP. Si cette machine a moins de 8 Go de RAM, réponds n.",
         "intro": "Valeur proposée entre crochets : Entrée pour l'accepter.",
         "detected": "Détecté sur cette machine",
         "net": "réseau", "gw": "passerelle", "dns": "DNS",
@@ -55,6 +64,15 @@ T = {
     },
     "en": {
         "title": "NetCockpit setup assistant",
+        "h_word": "The word shown everywhere in the interface (\"All buildings\").",
+        "h_nets": "Tip: on a PC in this building, run ipconfig. IPv4 address 192.168.5.37 with mask 255.255.255.0 means network 192.168.5.0/24. Your DHCP scopes list them too. Several networks (server VLAN, phones, Wi-Fi): separate them with commas.",
+        "h_more": "Another building or site linked by VPN, fibre or MPLS? This machine must reach it: check with a ping to an address over there.",
+        "h_dns": "Tip: ipconfig /all on a domain PC, line \"DNS Servers\". No Active Directory: leave empty.",
+        "h_gw": "Tip: ipconfig, line \"Default Gateway\". Usually your firewall or router.",
+        "h_vc": "The address you open in your browser to manage vCenter or ESXi. A read-only account is needed (docs/getting-started.md, section 6). No VMware: press Enter.",
+        "h_snmp": "The SNMP community is a shared read-only password, given by your provider or set on your switches (UniFi: Settings, CyberSecure, Traffic Logging). No access: press Enter.",
+        "h_tg": "Token given by @BotFather in Telegram (/newbot command). Details: docs/getting-started.md, section 9.",
+        "h_zbx": "Zabbix adds native VMware monitoring and SNMP discovery. If this machine has less than 8 GB of RAM, answer n.",
         "intro": "Suggested value in brackets: press Enter to accept it.",
         "detected": "Detected on this machine",
         "net": "network", "gw": "gateway", "dns": "DNS",
@@ -179,6 +197,14 @@ class Ask:
             return default
         return input(text).strip() or default
 
+    def hint(self, key):
+        """Astuce affichée (en gris) avant une question, pour savoir où trouver la réponse."""
+        shown = self.__dict__.setdefault("_shown", set())
+        if self.i and key not in shown:
+            shown.add(key)
+            import textwrap
+            print("\n" + "\n".join("\033[2m  › " + l + "\033[0m" for l in textwrap.wrap(self.s[key], 92)))
+
     def secret(self, key):
         return getpass.getpass(self.s[key]) if self.i else ""
 
@@ -241,6 +267,7 @@ def main():
     cur_word = (cfg.get("site_word") or {}).get("one")
     rev = {v[0]: k for k, v in s["words"].items()}
     dflt = rev.get(cur_word, "1")
+    ask.hint("h_word")
     choice = ask.raw(s["word"].format(d=dflt), dflt)
     one, many = s["words"].get(choice, s["words"][dflt])
     w = one.lower()
@@ -248,6 +275,7 @@ def main():
     # emplacements et réseaux
     old_sites = [x for x in (cfg.get("sites") or []) if x.get("subnets")]
     sites = []
+    ask.hint("h_nets")
     if old_sites:
         for x in old_sites:
             name = ask("rename", x["name"], w=w)
@@ -260,6 +288,7 @@ def main():
         nets, _ = parse_nets(ask("nets", ", ".join(det["nets"]), n=name), s)
         sites.append({"name": name, "subnets": nets or det["nets"]})
     while interactive:
+        ask.hint("h_more")
         name = ask.raw(s["more"].format(w=w))
         if not name:
             break
@@ -271,9 +300,11 @@ def main():
 
     # DNS et passerelle
     old_dns = [str(x) for x in ((cfg.get("names") or {}).get("dns_servers") or [])]
+    ask.hint("h_dns")
     dns = parse_ips(ask("dnsq", ", ".join(old_dns or det["dns"]))) or old_dns or det["dns"]
     watch = list(cfg.get("watch") or [])
     gw_old = next((x for x in watch if x.get("role") in ("firewall", "router", "gateway")), None)
+    ask.hint("h_gw")
     gw_ip = ask("gwq", (gw_old or {}).get("ip") or det["gw"] or "")
     try:
         gw_ip = str(ipaddress.ip_address(gw_ip)) if gw_ip else None
@@ -283,6 +314,7 @@ def main():
     # VMware, notifications, Zabbix (.env)
     env_new = {}
     vc_cur = env.get("VCENTER_URL", "")
+    ask.hint("h_vc")
     host = ask("vc_keep", "", v=vc_cur) if vc_cur else ask("vc")
     if host:
         url = host if host.startswith("http") else f"https://{host}"
@@ -293,6 +325,7 @@ def main():
         if pw:
             env_new["VCENTER_PASSWORD"] = pw
     snmp_cfg = cfg.get("snmp") or {}
+    ask.hint("h_snmp")
     community = ask("snmp", env.get("SNMP_COMMUNITY", "") or str(snmp_cfg.get("community") or ""))
     if community:
         if community != env.get("SNMP_COMMUNITY"):
@@ -301,11 +334,13 @@ def main():
         snmp_cfg["devices"] = parse_ips(ask("snmpd", ", ".join(map(str, snmp_cfg.get("devices") or []))))
         snmp_cfg.setdefault("try_discovered", True)
         cfg["snmp"] = snmp_cfg
+    ask.hint("h_tg")
     tg = ask("tg", env.get("TELEGRAM_BOT_TOKEN", ""))
     if tg and tg != env.get("TELEGRAM_BOT_TOKEN"):
         env_new["TELEGRAM_BOT_TOKEN"] = tg
         env_new["TELEGRAM_CHAT_ID"] = ask("tgc", env.get("TELEGRAM_CHAT_ID", ""))
     zcur = env.get("ENABLE_ZABBIX", "true") == "true"
+    ask.hint("h_zbx")
     z = ask("zbx", ("o" if lang == "fr" else "y") if zcur else "n").lower()
     env_new["ENABLE_ZABBIX"] = "true" if z in s["yes"] else "false"
 

@@ -20,7 +20,8 @@
   let graphCache = { t: 0, site: null, d: null };
   App.register("overview", {
     async render(el) {
-      const d = await api("api/overview");
+      const [d, su] = await Promise.all([api("api/overview"), api("api/setup").catch(() => null)]);
+      const left = su ? App.setupBadge(su) : 0;
       App.setFeatures(d.features); App.setAlertCount(d.alerts_count);
       const s = d.stats, ac = d.alerts_count;
       $("#page-sub").textContent = App.state.site ? I18n.name(App.state.site) : App.allSites();
@@ -91,7 +92,8 @@
       const und = (d.undeclared || []).filter((u) => !autoNets.includes(u.subnet));
       const todo = d.features.auto_sites ? t("ov.auto", { nets: autoNets.map(esc).join(", ") || "?" })
         : und.length ? t("ov.undeclared", { list: und.map((u) => `<b class="mono">${esc(u.subnet)}</b> (${t("ov.devices_n", { n: u.count })})`).join(", ") }) : "";
-      const notice = todo ? `<div class="notice todo">${todo} <a href="${App.guideUrl()}" target="_blank" rel="noopener">${t("ov.guide")} ↗</a></div>` : "";
+      const setupLine = left ? `${t("su.remaining", { n: left })} <a href="#/setup">${t("su.see")}</a>` : "";
+      const notice = todo || setupLine ? `<div class="notice todo">${todo ? `${todo} <a href="${App.guideUrl()}" target="_blank" rel="noopener">${t("ov.guide")} ↗</a>` : ""}${todo && setupLine ? "<br>" : ""}${setupLine}</div>` : "";
       el.innerHTML = `${verdict}${notice}
         <div class="hero">
           <div class="panel"><h2>${t("ov.route")}<span class="hint">${t("ov.routeHint")}</span></h2><div class="route">${route}</div></div>
@@ -281,6 +283,100 @@
           : `<div class="muted">${t("svc.noHttp")}</div>`}</div>
         <div class="stack"><div class="panel"><h2>${t("svc.dns")}</h2><table class="t"><tbody>${d.dns.map((x) => `<tr><td><b>${esc(x.name)}</b> <span class="muted mono">${esc(x.ip)}</span></td><td>${st(x.up)}</td><td class="num">${x.duration_ms != null ? x.duration_ms + " ms" : "—"}</td></tr>`).join("") || `<tr><td class="muted">${t("svc.none")}</td></tr>`}</tbody></table></div>
         <div class="panel"><h2>${t("svc.inet")}</h2><table class="t"><tbody>${d.internet.map((x) => `<tr><td><b>${esc(x.name)}</b> <span class="muted mono">${esc(x.ip)}</span></td><td>${st(x.up)}</td><td class="num">${fmt.ms(x.latency_ms)}</td></tr>`).join("")}</tbody></table></div></div></div>`;
+    },
+  });
+
+
+  // ================================================================ MISE EN ROUTE
+  const ANCHORS = {
+    fr: { sites: "5-ajouter-un-bâtiment-ou-changer-dadressage", vmware: "6-connecter-vmware-vcenter-ou-esxi-seul", zabbix: "7-zabbix",
+      agents: "8-installer-les-agents-sur-les-serveurs", notif: "9-recevoir-les-alertes-sur-telegram", snmp: "10-voir-les-ports-des-switchs-snmp-ubiquiti-unifi", trouble: "12-dépannage" },
+    en: { sites: "5-add-a-building-or-change-addressing", vmware: "6-connect-vmware-vcenter-or-standalone-esxi", zabbix: "7-zabbix",
+      agents: "8-install-the-server-agents", notif: "9-get-alerts-on-telegram", snmp: "10-see-switch-ports-snmp-ubiquiti-unifi", trouble: "12-troubleshooting" },
+  };
+  // étapes calculées depuis /api/setup ; essential = compte dans la progression
+  function setupSteps(d) {
+    const host = location.hostname;
+    const dir = d.install_dir || (I18n.lang === "fr" ? "<dossier de NetCockpit>" : "<NetCockpit folder>");
+    const cmd = (c) => `<pre class="cmd">${esc(c)}</pre>`;
+    const conf = cmd(`cd ${dir} && ./setup.sh --configure`);
+    const W = App.words();
+    const S = [];
+    const add = (o) => S.push(o);
+    const und = d.undeclared || [];
+    add({ key: "sites", essential: true, title: t("su.sites.t", { w: W.many.toLowerCase() }),
+      state: d.auto_sites ? "todo" : und.length ? "warn" : "done",
+      sum: d.auto_sites ? t("su.sites.auto", { nets: (d.sites[0] || {}).subnets ? d.sites[0].subnets.join(", ") : "?" })
+        : und.length ? t("su.sites.und", { list: und.map((u) => `${u.subnet} (${t("ov.devices_n", { n: u.count })})`).join(", ") })
+        : d.sites.map((s) => `${I18n.name(s.name)} : ${s.subnets.join(", ")}`).join(" · "),
+      how: `<p>${t("su.sites.how")}</p>${conf}` });
+    const nm = d.names || {};
+    add({ key: "names", essential: true, title: t("su.names.t"),
+      state: !nm.total ? "todo" : nm.named / nm.total >= 0.6 ? "done" : "warn",
+      sum: t("su.names.s", { named: nm.named || 0, total: nm.total || 0 }), how: `<p>${t("su.names.how")}</p>${conf}` });
+    const vm = d.vmware || {};
+    add({ key: "vmware", essential: !!vm.configured, optional: !vm.configured, title: t("su.vm.t"),
+      state: vm.up ? "done" : vm.configured ? "warn" : "todo",
+      sum: vm.up ? t("su.vm.ok", { h: vm.hosts, v: vm.vms }) : vm.configured ? t("su.vm.err", { e: vm.error || "?" }) : t("su.vm.none"),
+      how: `<p>${t("su.vm.how")}</p>${conf}` });
+    const ag = d.agents || {};
+    add({ key: "agents", essential: true, title: t("su.ag.t"),
+      state: !ag.total ? "todo" : ag.silent && ag.silent.length ? "warn" : "done",
+      sum: !ag.total ? t("su.ag.none") : ag.silent && ag.silent.length ? t("su.ag.silent", { list: ag.silent.join(", "), host }) : t("su.ag.ok", { n: ag.alive }),
+      how: `<p>${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host}`)}
+        <p>${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | sudo bash -s ${host}`)}<p class="muted">${t("su.ag.not")}</p>` });
+    const ch = d.notifications || [];
+    add({ key: "notif", essential: true, title: t("su.no.t"), state: ch.length ? "done" : "todo",
+      sum: ch.length ? t("su.no.ok", { list: ch.map((c) => c[0].toUpperCase() + c.slice(1)).join(", ") }) : t("su.no.none"),
+      how: `<p>${t("su.no.how")}</p>${conf}` });
+    const zb = d.zabbix || {};
+    add({ key: "zabbix", essential: !!zb.enabled, optional: !zb.enabled, title: t("su.zb.t"),
+      state: !zb.enabled ? "off" : zb.up ? "done" : "warn",
+      sum: !zb.enabled ? t("su.zb.off") : zb.up ? t("su.zb.ok") : t("su.zb.err", { e: zb.error || "?" }), how: `<p>${t("su.zb.how")}</p>` });
+    const sn = d.snmp || {};
+    add({ key: "snmp", optional: true, title: t("su.sn.t"), state: sn.configured ? (sn.errors ? "warn" : "done") : "todo",
+      sum: sn.configured ? t("su.sn.ok", { n: sn.devices, e: sn.errors ? t("su.sn.errs", { n: sn.errors }) : "" }) : t("su.sn.none"),
+      how: `<p>${t("su.sn.how")}</p>${conf}` });
+    add({ key: "web", optional: true, title: t("su.web.t"), state: d.http_checks ? "done" : "todo",
+      sum: d.http_checks ? t("su.web.ok", { n: d.http_checks }) : t("su.web.none"),
+      how: `<p>${t("su.web.how")}</p>${cmd('http_checks:\n  - { name: Intranet, url: "https://intranet.example.local" }\n  - { name: Webmail, url: "https://mail.example.com" }')}` });
+    add({ key: "ai", optional: true, title: t("su.ai.t"), state: d.ai ? "done" : "todo", sum: d.ai ? t("su.ai.ok") : t("su.ai.none"),
+      how: `<p>${t("su.ai.how")}</p>` });
+    return S;
+  }
+  function setupRemaining(d) { return setupSteps(d).filter((s) => s.essential && s.state !== "done").length; }
+  function setupBadge(d) {
+    const n = setupRemaining(d), b = $("#nav-setup");
+    if (b) { b.textContent = n; b.classList.toggle("hidden", !n); }
+    return n;
+  }
+  App.setupRemaining = setupRemaining; App.setupBadge = setupBadge;
+
+  App.register("setup", {
+    async render(el) {
+      const d = await api("api/setup");
+      setupBadge(d);
+      const steps = setupSteps(d);
+      const ess = steps.filter((s) => s.essential);
+      const done = ess.filter((s) => s.state === "done").length;
+      const anchors = ANCHORS[I18n.lang] || ANCHORS.en;
+      const COL = { done: "var(--up)", todo: "var(--line2)", warn: "var(--warning)", off: "var(--off)" };
+      let num = 0;
+      const items = steps.map((s) => {
+        num++;
+        const ic = s.state === "done" ? icon("check") : s.state === "warn" ? "!" : s.state === "off" ? "–" : num;
+        const guide = anchors[s.key] ? ` <a href="${App.guideUrl()}#${anchors[s.key]}" target="_blank" rel="noopener">${t("su.guide")} ↗</a>` : "";
+        const how = `<div class="st-how">${s.how}${guide ? `<p>${guide}</p>` : ""}</div>`;
+        return `<div class="panel step"><span class="st-ic" style="--c:${COL[s.state]}">${ic}</span>
+          <div><h3>${esc(s.title)}${s.optional ? `<span class="st-opt">${t("su.optional")}</span>` : ""}</h3><div class="st-sum">${esc(s.sum)}</div>
+          ${s.state === "done" || s.state === "off" ? `<details><summary>${t("su.review")}</summary>${how}</details>` : how}</div>
+          <span class="badge b-${s.state === "done" ? "up" : s.state === "warn" ? "warning" : s.state === "off" ? "off" : "info"}">${t(`su.state.${s.state}`)}</span></div>`;
+      }).join("");
+      el.innerHTML = `<div class="setup-head"><h2>${t("su.progress", { d: done, n: ess.length })}</h2>
+          ${segBar([{ v: done, c: "var(--up)" }, { v: ess.length - done, c: "var(--line2)" }])}</div>
+        <div class="muted">${done === ess.length ? t("su.done") : t("su.intro")}</div>
+        <div class="steps">${items}</div>`;
+      App.hydrateIcons(el);
     },
   });
 

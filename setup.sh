@@ -78,7 +78,7 @@ fi
 # ------------------------------------------------------------------ 1. .env : création, ou ajout des nouveaux réglages (tes valeurs ne sont jamais modifiées)
 FIRST_RUN=""
 [[ -f .env ]] || { touch .env; chmod 600 .env; FIRST_RUN=1; }
-MANAGED='COMPOSE_PROFILES|GRAFANA_PUBLIC_URL|COCKPIT_PUBLIC_URL|ALERTMANAGER_PUBLIC_URL|ZABBIX_PUBLIC_URL|COCKPIT_ZABBIX_URL'
+MANAGED='COMPOSE_PROFILES|GRAFANA_PUBLIC_URL|COCKPIT_PUBLIC_URL|ALERTMANAGER_PUBLIC_URL|ZABBIX_PUBLIC_URL|COCKPIT_ZABBIX_URL|COCKPIT_INSTALL_DIR'
 sed -i -E "/^# --- (géré par setup.sh|managed by setup.sh)/d; /^(${MANAGED})=/d" .env
 added=0
 while IFS= read -r line; do
@@ -132,6 +132,7 @@ ZURL=""; [[ " ${profiles[*]} " == *" zabbix "* ]] && ZURL="http://127.0.0.1:${ZP
   echo "ALERTMANAGER_PUBLIC_URL=http://${PUBLIC_HOST}:9093"
   echo "ZABBIX_PUBLIC_URL=$([[ -n "$ZURL" ]] && echo "http://${PUBLIC_HOST}:${ZPORT}")"
   echo "COCKPIT_ZABBIX_URL=${ZURL}"
+  echo "COCKPIT_INSTALL_DIR=${HERE}"
 } >> .env
 
 # ------------------------------------------------------------------ 4. configurations générées
@@ -157,7 +158,8 @@ $([[ -n "$ZURL" ]] && echo "  Zabbix                                            
 
   Premier scan : 2 à 5 minutes. Zabbix : 2 à 3 minutes de plus au premier démarrage.
   Ajouter un bâtiment, changer d'adressage, connecter VMware ou Telegram :  ./setup.sh --configure
-  Guide pas à pas : docs/demarrage.md
+  Guide pas à pas : docs/demarrage.md · selon ta situation : docs/cas-pratiques.md
+  Dans le cockpit, l'écran « Mise en route » (le drapeau) montre ce qu'il reste à faire.
 EOF
 else cat <<EOF
 
@@ -167,6 +169,7 @@ $([[ -n "$ZURL" ]] && echo "  Zabbix                                            
 
   First scan: 2 to 5 minutes. Zabbix: 2 to 3 more minutes on first start.
   Add a building, change addressing, connect VMware or Telegram:  ./setup.sh --configure
-  Step-by-step guide: docs/getting-started.md
+  Step-by-step guide: docs/getting-started.md · by situation: docs/scenarios.md
+  In the cockpit, the "Setup" screen (the flag) shows what is left to do.
 EOF
 fi

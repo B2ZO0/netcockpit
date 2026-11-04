@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- Setup screen in the cockpit (flag in the rail): a checklist that ticks itself (buildings and networks, real names, VMware, server agents, notifications, Zabbix, SNMP, websites, AI), with what to do and commands ready to copy, including the install folder. The overview reminds how many essential steps are left.
+- The setup assistant shows a tip under each question: where to find the value (ipconfig, DHCP console, provider, UniFi menu…).
+- Scenario guides in English and French: one network, several buildings or VLANs, multi-site over VPN, provider-managed network, no Active Directory, no VMware (Hyper-V, Proxmox, physical), several ESXi hosts, switches (UniFi, Cisco, others), re-addressing, homelab, monitoring host placement and flows, wall screen.
+- Fix: Windows servers showed no RAM. Recent Alloy versions no longer enable the memory collector by default; the agent installer now enables it, and until servers are updated the cockpit uses the memory reported by VMware.
+
 ## 1.2.0
 
 - Setup assistant: `./setup.sh` detects the local network, gateway and DNS servers and asks for buildings, other networks, VMware, SNMP, Telegram and Zabbix, with defaults (Enter). Re-run it with `./setup.sh --configure`; `--yes` for unattended installs. No YAML to write, and the demo's example networks are never used as a real configuration.

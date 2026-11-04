@@ -1,6 +1,7 @@
 # Documentation
 
 **New here? Start with the step-by-step guide: [English](getting-started.md) · [Français](demarrage.md).**
+**Your situation is different (multi-site, no AD, no VMware, provider-managed network, homelab…)? [Scenarios](scenarios.md) · [Cas pratiques](cas-pratiques.md).**
 
 - [Installation](installation.md): requirements, first run, upgrade, ports
 - [Configuration](configuration.md): `config/cockpit.yml` and `.env` reference, read-only VMware account

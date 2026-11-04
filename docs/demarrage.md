@@ -2,7 +2,9 @@
 
 De la VM vide au cockpit qui affiche tes bâtiments, ton VMware et tes alertes sur Telegram. Compte une heure, la plupart du temps passé à attendre le premier scan.
 
-> 🇬🇧 English version: [getting-started.md](getting-started.md)
+> 🇬🇧 English version: [getting-started.md](getting-started.md) · Ta situation est différente (plusieurs sites, sans AD, sans VMware, homelab…) ? [Cas pratiques](cas-pratiques.md)
+>
+> Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche) suit ta progression et donne les commandes prêtes à copier.
 
 **Sommaire**
 

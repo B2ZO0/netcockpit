@@ -56,6 +56,8 @@ It does not replace Prometheus, Grafana or Zabbix: it **ships them, configures t
 | ![VMware](docs/images/vmware.png) | ![Switches](docs/images/switches.png) |
 | **Inventory (CSV export)** | **Device sheet + AI analysis** |
 | ![Inventory](docs/images/inventory.png) | ![Device](docs/images/device-ai.png) |
+| **Setup checklist (ticks itself)** | **Alerts from every source** |
+| ![Setup](docs/images/setup.png) | ![Alerts](docs/images/alerts.png) |
 
 The interface follows your browser language and your system theme; switch both from the left rail.
 
@@ -85,6 +87,7 @@ Open **http://localhost:8088**. Without Docker: `pip install pyyaml requests && 
 | **Zabbix** | Auto-configured: VMware template, SNMP discovery, and every important device found by the cockpit is declared in Zabbix, grouped by site and type |
 | **Grafana** | 7 provisioned dashboards: overview (with node graph), server, network & inventory, VMware, switches (SNMP), Zabbix, logs |
 | **AI (optional)** | Anthropic API or any OpenAI-compatible endpoint (OpenAI, Mistral, Ollama, LM Studio…), answers in the interface language |
+| **Setup screen** | A checklist that ticks itself (buildings, names, VMware, agents, notifications, Zabbix, SNMP), with what to do and commands ready to copy |
 | **Interface** | English and French, night and day themes, keyboard search (`/`), works offline (no CDN, fonts bundled) |
 
 ## 🧭 How the topology is built without network access
@@ -128,7 +131,7 @@ git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
 
 The setup assistant detects the local network, gateway and DNS servers, then asks for your buildings (or sites), your other networks, VMware, SNMP and Telegram. Every question has a default: press Enter. Re-run it any time with `./setup.sh --configure`.
 
-👉 **First time? Follow the [step-by-step guide](docs/getting-started.md)**: install, buildings, VMware read-only account, Zabbix, agents, Telegram, switches (including Ubiquiti UniFi), troubleshooting.
+👉 **First time? Follow the [step-by-step guide](docs/getting-started.md)**: install, buildings, VMware read-only account, Zabbix, agents, Telegram, switches (including Ubiquiti UniFi), troubleshooting. Different situation (multi-site, no AD, no VMware, provider-managed network, homelab)? See the **[scenarios](docs/scenarios.md)**. Once running, the cockpit's **Setup** screen tracks what is left to do, with commands ready to copy.
 
 | Service | URL |
 |---|---|

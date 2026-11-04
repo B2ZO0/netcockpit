@@ -170,6 +170,33 @@ def overview(site=None):
     }
 
 
+def setup_status():
+    """État de la mise en route : ce qui est fait, ce qui reste, pour l'écran « Mise en route »."""
+    mdl, live = current()
+    devices = [n for n in mdl.nodes.values() if n.get("ip") and n["role"] not in ("site", "subnet", "internet", "isp", "group")]
+    named = [n for n in devices if n.get("name") and n["name"] != n.get("ip")]
+    vc = VC.state if VC else None
+    return {
+        "sites": [{"name": s["name"], "subnets": s["subnets"]} for s in CFG["sites"]],
+        "auto_sites": any(s.get("auto") for s in CFG["sites"]),
+        "site_word": CFG.get("site_word"),
+        "undeclared": undeclared(mdl),
+        "scan": {"last": SCAN.get("last_scan"), "running": SCANNING.is_set(), "devices": len(devices)},
+        "names": {"total": len(devices), "named": len(named), "dns": CFG["names"]["dns_servers"]},
+        "vmware": {"configured": bool(VC), "up": bool(vc and vc["up"]), "error": vc and vc.get("error"),
+                   "hosts": len(vc["hosts"]) if vc else 0, "vms": len(vc["vms"]) if vc else 0},
+        "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"]),
+                   "silent": sorted(a["instance"] for a in live["agents"] if not a["alive"])[:10]},
+        "notifications": SRC.alertmanager_channels(),
+        "zabbix": {"enabled": bool(ZBX), "up": bool(ZBX and ZBX.state["up"]), "error": ZBX and ZBX.state["error"]},
+        "snmp": {"configured": bool(CFG["snmp"]["community"]), "devices": len(CFG["snmp"]["devices"]),
+                 "errors": len(SNMP_STATE.get("errors") or {}) if isinstance(SNMP_STATE, dict) else 0},
+        "http_checks": len(CFG["http_checks"]),
+        "ai": bool(ai.info()),
+        "install_dir": C.INSTALL_DIR or None,
+    }
+
+
 def undeclared(mdl):
     """Réseaux privés où des équipements ont été vus, mais qui ne sont rattachés à aucun site/bâtiment."""
     nets = {}
@@ -616,6 +643,8 @@ class Handler(BaseHTTPRequestHandler):
             if p == "/api/node":
                 d = node_detail(qs.get("id", ""))
                 return self._send(200, d) if d else self._send(404, {"error": "équipement introuvable"})
+            if p == "/api/setup":
+                return self._send(200, setup_status())
             if p == "/api/features":
                 return self._send(200, features())
             if p == "/api/nodegraph":

@@ -45,7 +45,10 @@ $cfgDir = Join-Path $env:ProgramFiles "GrafanaLabs\Alloy"
 $cfg = @'
 // Généré par install.ps1 : supervision __SERVER__
 
-prometheus.exporter.windows "default" { }
+// "memory" n'est plus activé par défaut dans les versions récentes d'Alloy : sans lui, pas de RAM
+prometheus.exporter.windows "default" {
+  enabled_collectors = ["cpu", "logical_disk", "memory", "net", "os", "service", "system"]
+}
 
 discovery.relabel "win" {
   targets = prometheus.exporter.windows.default.targets
