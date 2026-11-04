@@ -27,7 +27,7 @@ In the cockpit, the **Setup** screen (the flag in the left rail) always tells yo
 
 ## Small organisation, one network
 
-*One network (for example 192.168.1.0/24), a router or firewall, a few servers.*
+*One network (for example 192.168.10.0/24), a router or firewall, a few servers.*
 
 - **In the assistant**: press Enter to almost everything. The detected network, gateway and DNS servers are right. Name your site ("HQ", "Office"…), then Enter at "Add another …?".
 - **Then**: install the agent on your servers (*Setup* screen, step 4) and connect Telegram (step 5).
@@ -35,9 +35,9 @@ In the cockpit, the **Setup** screen (the flag in the left rail) always tells yo
 
 ## Several buildings or VLANs on one site
 
-*Building A on 192.168.1.0/24, building B on 192.168.40.0/24, or one VLAN per use (servers, workstations, phones, Wi-Fi).*
+*Building A on 192.168.10.0/24, building B on 192.168.20.0/24, or one VLAN per use (servers, workstations, phones, Wi-Fi).*
 
-- **In the assistant**: pick **1) Building**. For the building the host is in, keep the detected network and add that building's other VLANs, comma-separated (`192.168.1.0/24, 192.168.2.0/24`). Then "Add another building?": its name and networks.
+- **In the assistant**: pick **1) Building**. For the building the host is in, keep the detected network and add that building's other VLANs, comma-separated (`192.168.10.0/24, 192.168.11.0/24`). Then "Add another building?": its name and networks.
 - **How to find the networks**: `ipconfig` on a PC in each building (IPv4 address and mask), or the scope list in the DHCP console.
 - **Check** from the monitoring host: `ping <an address in the other building>`. If it does not answer, a firewall between VLANs blocks ping: ask for it to be opened from the monitoring host's IP.
 - **You will see**: a building filter at the top of the cockpit, one branch per building in the topology, and devices grouped by building in Zabbix.
@@ -74,8 +74,8 @@ In the cockpit, the **Setup** screen (the flag in the left rail) always tells yo
 - **For the rest** (printers, cameras, NAS), name them by hand in `config/cockpit.yml`:
   ```yaml
   overrides:
-    192.168.1.30: { name: NAS-Backup, role: nas }
-    192.168.1.50: { name: Printer-Reception, role: printer }
+    192.168.10.30: { name: NAS-Backup, role: nas }
+    192.168.10.60: { name: Printer-Reception, role: printer }
   ```
   then `docker compose restart cockpit`.
 
@@ -108,7 +108,7 @@ Then run the assistant again: enter the community, then the switch and firewall 
 
 *Example: moving from 192.168.x.x to 10.x.x.x.*
 
-1. **Before the move**, run the assistant and add the new networks **next to** the old ones, for each building: `192.168.1.0/24, 10.1.0.0/24`.
+1. **Before the move**, run the assistant and add the new networks **next to** the old ones, for each building: `192.168.10.0/24, 10.10.0.0/24`.
 2. **During the move**, devices that change address appear under their new IP. Their old address turns grey (*absent*), with no false alert.
 3. **After the move**, run the assistant and remove the old networks. Also update DNS servers and the gateway if they changed.
 4. **If the monitoring host itself changes address**: run `./setup.sh` after the change, then reinstall the agent on the servers with the new address (or change the address in their Alloy configuration).

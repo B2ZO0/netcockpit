@@ -27,7 +27,7 @@ Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche)
 
 ## Petite structure, un seul réseau
 
-*Un seul réseau (par exemple 192.168.1.0/24), une box ou un firewall, quelques serveurs.*
+*Un seul réseau (par exemple 192.168.10.0/24), une box ou un firewall, quelques serveurs.*
 
 - **Dans l'assistant** : Entrée à presque tout. Le réseau, la passerelle et les DNS détectés sont les bons. Nomme ton site (« Siège », « Bureau »…), puis Entrée à « Ajouter un autre … ? ».
 - **Ensuite** : installe l'agent sur tes serveurs (écran *Mise en route*, étape 4) et branche Telegram (étape 5).
@@ -35,9 +35,9 @@ Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche)
 
 ## Plusieurs bâtiments ou VLAN sur un même site
 
-*Bâtiment A en 192.168.1.0/24, bâtiment B en 192.168.40.0/24, ou un VLAN par usage (serveurs, postes, téléphonie, Wi-Fi).*
+*Bâtiment A en 192.168.10.0/24, bâtiment B en 192.168.20.0/24, ou un VLAN par usage (serveurs, postes, téléphonie, Wi-Fi).*
 
-- **Dans l'assistant** : choisis **1) Bâtiment**. Pour le bâtiment où est la machine, garde le réseau détecté et ajoute les autres VLAN de ce bâtiment, séparés par des virgules (`192.168.1.0/24, 192.168.2.0/24`). Puis « Ajouter un autre bâtiment ? » : son nom et ses réseaux.
+- **Dans l'assistant** : choisis **1) Bâtiment**. Pour le bâtiment où est la machine, garde le réseau détecté et ajoute les autres VLAN de ce bâtiment, séparés par des virgules (`192.168.10.0/24, 192.168.11.0/24`). Puis « Ajouter un autre bâtiment ? » : son nom et ses réseaux.
 - **Comment trouver les réseaux** : `ipconfig` sur un PC de chaque bâtiment (adresse IPv4 et masque), ou la liste des étendues dans la console DHCP.
 - **Vérifie** depuis la machine de supervision : `ping <une adresse de l'autre bâtiment>`. Si ça ne répond pas, un firewall entre les VLAN bloque le ping : demande l'ouverture depuis l'IP de la supervision.
 - **Tu verras** : un filtre par bâtiment en haut du cockpit, une branche par bâtiment dans la topologie, et un regroupement par bâtiment dans Zabbix.
@@ -74,8 +74,8 @@ Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche)
 - **Pour les autres** (imprimantes, caméras, NAS), donne-leur un nom à la main dans `config/cockpit.yml` :
   ```yaml
   overrides:
-    192.168.1.30: { name: NAS-Sauvegarde, role: nas }
-    192.168.1.50: { name: Imprimante-Accueil, role: printer }
+    192.168.10.30: { name: NAS-Sauvegarde, role: nas }
+    192.168.10.60: { name: Imprimante-Accueil, role: printer }
   ```
   puis `docker compose restart cockpit`.
 
@@ -108,7 +108,7 @@ Puis relance l'assistant : donne la communauté, puis les IP des switchs et du f
 
 *Exemple : passage de 192.168.x.x à 10.x.x.x.*
 
-1. **Avant la bascule**, relance l'assistant et ajoute les nouveaux réseaux **à côté** des anciens, pour chaque bâtiment : `192.168.1.0/24, 10.1.0.0/24`.
+1. **Avant la bascule**, relance l'assistant et ajoute les nouveaux réseaux **à côté** des anciens, pour chaque bâtiment : `192.168.10.0/24, 10.10.0.0/24`.
 2. **Pendant la bascule**, les équipements qui changent d'adresse apparaissent sous leur nouvelle IP. Leur ancienne adresse passe en gris (*absent*), sans fausse alerte.
 3. **Après la bascule**, relance l'assistant et retire les anciens réseaux. Mets aussi à jour les DNS et la passerelle s'ils ont changé.
 4. **Si la machine de supervision change elle-même d'adresse** : relance `./setup.sh` après le changement, puis réinstalle l'agent sur les serveurs avec la nouvelle adresse (ou modifie l'adresse dans leur configuration Alloy).
