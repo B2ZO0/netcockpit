@@ -1,0 +1,30 @@
+# Applique la description, le site, les topics et les Discussions décrits dans .github/repo-settings.json.
+# Nécessite un secret REPO_ADMIN_TOKEN : jeton "fine-grained" limité à ce dépôt, permission Administration en écriture.
+name: Repository settings
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/repo-settings.json, .github/workflows/repo-settings.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply .github/repo-settings.json
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::No REPO_ADMIN_TOKEN secret: settings not applied. See the comment at the top of this workflow."
+            exit 0
+          fi
+          f=.github/repo-settings.json
+          jq '{description, homepage, has_discussions}' "$f" | gh api -X PATCH "repos/$GITHUB_REPOSITORY" --input - >/dev/null
+          jq '{names: .topics}' "$f" | gh api -X PUT "repos/$GITHUB_REPOSITORY/topics" --input - >/dev/null
+          echo "::notice::Description, website, topics and Discussions applied."

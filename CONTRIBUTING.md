@@ -24,6 +24,10 @@ The demo (`demo/demo.py`) simulates the whole environment (scan, vCenter, SNMP, 
 | `demo/` | Simulated environment |
 | `docs/` | Documentation |
 
+## Releases
+
+Releases are automatic: add a `## X.Y.Z` section at the top of `CHANGELOG.md` and push to `main`; the Release workflow tags it and publishes the notes.
+
 ## Guidelines
 
 - Keep the "no access to network gear" use case first: every feature must degrade gracefully when a source is missing.

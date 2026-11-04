@@ -248,6 +248,8 @@ NetCockpit is glue and UI on top of excellent open-source projects:
 
 <div align="center">
 
+Made by [Enzo Marechal](https://enzomarechal.fr) ([@B2ZO0](https://github.com/B2ZO0)), junior system and network administrator.
+
 ### ⭐ If NetCockpit saves you time, a star helps other admins find it.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=B2ZO0/netcockpit&type=Date)](https://star-history.com/#B2ZO0/netcockpit&Date)

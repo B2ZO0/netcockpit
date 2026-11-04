@@ -211,6 +211,8 @@ NetCockpit assemble d'excellents projets open source, détaillés dans le [READM
 
 <div align="center">
 
+Créé par [Enzo Marechal](https://enzomarechal.fr) ([@B2ZO0](https://github.com/B2ZO0)), administrateur systèmes et réseaux junior.
+
 ### ⭐ Si NetCockpit te fait gagner du temps, une étoile aide d'autres admins à le trouver.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=B2ZO0/netcockpit&type=Date)](https://star-history.com/#B2ZO0/netcockpit&Date)

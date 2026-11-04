@@ -6,6 +6,7 @@
 - Night and day themes, following the system setting by default.
 - English and French interface, following the browser language by default; AI answers follow the interface language.
 - The cockpit service, folder, config file and metrics are renamed from `netmap` to `cockpit` (`config/cockpit.yml`, `cockpit_*` metrics). `./setup.sh` migrates an existing install automatically, history included.
+- Safe upgrades: `config/cockpit.yml` is no longer versioned (the repository ships `config/cockpit.example.yml`, copied once by `setup.sh`), and `setup.sh` backs up `.env` and `config/*.yml` to `backups/` before every run.
 - Removed the optional third-party IPAM module.
 
 ## 1.0.0
