@@ -1,12 +1,15 @@
 # ============================================================
 #  NetCockpit : what to discover and monitor
-#  This is the TEMPLATE. setup.sh copies it once to config/cockpit.yml:
-#  edit config/cockpit.yml (never versioned, never overwritten by an upgrade).
-#  After editing:  docker compose restart cockpit
-#  (example values: replace them with your own networks)
+#  REFERENCE EXAMPLE (used by the demo). Your real file, config/cockpit.yml, is written
+#  by the setup assistant:  ./setup.sh --configure   (re-run it any time).
+#  You can also edit config/cockpit.yml by hand, then:  docker compose restart cockpit
 # ============================================================
 
+# Word shown in the interface for your locations (Building, Site, Branch...)
+# site_word: { one: Building, many: Buildings }
+
 # Sites (buildings) and their networks. The cockpit can filter by site.
+# Empty = the cockpit monitors the local network it detects.
 sites:
   - name: Site A (servers)
     subnets: [10.10.0.0/24]

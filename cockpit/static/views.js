@@ -23,18 +23,18 @@
       const d = await api("api/overview");
       App.setFeatures(d.features); App.setAlertCount(d.alerts_count);
       const s = d.stats, ac = d.alerts_count;
-      $("#page-sub").textContent = App.state.site || t("top.allSites");
+      $("#page-sub").textContent = App.state.site ? I18n.name(App.state.site) : App.allSites();
       const inetHop = d.internet_path.find((h) => h.role === "isp") || d.internet_path[d.internet_path.length - 2];
       const inetUp = (d.internet_path.find((h) => h.role === "internet") || {}).status;
       const ok = s.up + s.warning;
-      const nSites = d.sites.filter((x) => !App.state.site || x.name === App.state.site).length;
+      const nSites = d.sites.filter((x) => x.name !== "Autres réseaux" && (!App.state.site || x.name === App.state.site)).length || 1;
 
       // 1. verdict
       const problems = ac.critical + ac.warning;
       const mood = inetUp === "down" || ac.critical ? "bad" : problems ? "warn" : "ok";
       const headline = inetUp === "down" ? t("ov.outage") : problems ? t("ov.problems", { n: problems }) : t("ov.nominal");
       const verdict = `<div class="verdict ${mood}"><span class="beacon"></span><div><h2>${esc(headline)}</h2>
-        <div class="facts">${t("ov.facts", { total: s.total, n: nSites, t: fmt.time(d.features.last_scan) })}</div></div></div>`;
+        <div class="facts">${t("ov.facts", { total: s.total, n: nSites, w: (nSites === 1 ? App.words().one : App.words().many).toLowerCase(), t: fmt.time(d.features.last_scan) })}</div></div></div>`;
 
       // 2. route vers Internet (la « magenta line »)
       const path = d.internet_path.slice();
@@ -70,7 +70,7 @@
         const tt = st.stats;
         const cats = st.categories.map((c) => `<div class="cat">${icon(CAT_ICON[c.key] || "monitor")}<div><b>${c.total}</b><small>${esc(t(`cat.${c.key}`) || c.label)}</small>${c.down ? `<span class="warnc">${t("cat.down", { n: c.down })}</span>` : c.warning ? `<span class="warnc" style="color:var(--warning)">${t("cat.warn", { n: c.warning })}</span>` : c.absent ? `<small>${t("cat.absent", { n: c.absent })}</small>` : ""}</div></div>`).join("");
         return `<div class="site" data-site="${esc(st.name)}" title="${esc(t("site.open"))}"><div class="site-head">${roleIcon("site")}
-          <div style="min-width:0"><h3>${esc(st.name)}</h3><div class="nets mono">${st.subnets.map(esc).join("  ") || t("site.noNets")}</div></div>
+          <div style="min-width:0"><h3>${esc(I18n.name(st.name))}</h3><div class="nets mono">${st.subnets.map(esc).join("  ") || t("site.noNets")}</div></div>
           <div class="right"><span class="badge b-up">${lamp("up")}${t("site.online", { n: tt.up + tt.warning })}</span>${tt.down ? `<span class="badge b-down">${t("site.down", { n: tt.down })}</span>` : ""}${st.alerts ? `<span class="badge b-warning">${t("site.alerts", { n: st.alerts })}</span>` : ""}</div></div>
           <div class="cats">${cats}</div></div>`;
       }).join("");
@@ -86,7 +86,13 @@
         <span class="muted">${x.duration_ms != null ? x.duration_ms + " ms" : ""}</span><span class="${x.cert_days != null && x.cert_days < 15 ? "badge b-warning" : "muted"}">${x.cert_days != null ? t("ov.cert", { n: x.cert_days }) : ""}</span></div>`).join("")
         : `<div class="muted">${t("ov.noWeb")}</div>`;
 
-      el.innerHTML = `${verdict}
+      // ce qui reste à déclarer : affiché tant que la config ne couvre pas ce que le cockpit voit
+      const autoNets = d.features.auto_sites ? (d.sites[0] || {}).subnets || [] : [];
+      const und = (d.undeclared || []).filter((u) => !autoNets.includes(u.subnet));
+      const todo = d.features.auto_sites ? t("ov.auto", { nets: autoNets.map(esc).join(", ") || "?" })
+        : und.length ? t("ov.undeclared", { list: und.map((u) => `<b class="mono">${esc(u.subnet)}</b> (${t("ov.devices_n", { n: u.count })})`).join(", ") }) : "";
+      const notice = todo ? `<div class="notice todo">${todo} <a href="${App.guideUrl()}" target="_blank" rel="noopener">${t("ov.guide")} ↗</a></div>` : "";
+      el.innerHTML = `${verdict}${notice}
         <div class="hero">
           <div class="panel"><h2>${t("ov.route")}<span class="hint">${t("ov.routeHint")}</span></h2><div class="route">${route}</div></div>
           <div class="panel"><h2>${t("ov.mini")}<span class="right"><a href="#/topology">${t("ov.openTopo")}</a></span></h2><div class="mini-wrap"><div id="mini"></div></div></div>
@@ -98,7 +104,7 @@
             <div class="panel"><h2>${t("ov.busiest")}<span class="right"><a href="#/inventory">${t("ov.inventory")}</a></span></h2>${srvHtml}</div>
           </div>
           <div class="stack">
-            <div class="panel"><h2>${t("ov.sites")}</h2>${sites}</div>
+            <div class="panel"><h2>${esc(App.words().many)}</h2>${sites}</div>
             <div class="panel"><h2>${t("ov.new")}</h2>${news}</div>
             <div class="panel"><h2>${t("ov.web")}</h2>${svc}</div>
           </div>

@@ -15,7 +15,7 @@
 ![Docker Compose](https://img.shields.io/badge/deploy-docker%20compose-2496ED?logo=docker&logoColor=white)
 ![UI: English | Français](https://img.shields.io/badge/UI-English%20%7C%20Fran%C3%A7ais-4cc9f0)
 
-**English** · [Français](README.fr.md) · [Try the demo](#-try-it-in-one-minute) · [Install](#-installation) · [Docs](docs/)
+**English** · [Français](README.fr.md) · [Try the demo](#-try-it-in-one-minute) · [Step-by-step guide](docs/getting-started.md) · [Docs](docs/)
 
 <img src="docs/images/demo.gif" alt="NetCockpit demo: status headline, device sheet with AI analysis, topology, VMware, switches, day theme" width="100%">
 
@@ -43,7 +43,7 @@ It does not replace Prometheus, Grafana or Zabbix: it **ships them, configures t
 - 🔔 **One alert pipeline.** Prometheus, Loki and Zabbix all go through Alertmanager to Telegram, Discord or email, grouped and de-duplicated: if the firewall dies, you get one message, not 80.
 - 🤖 **AI diagnosis, optional.** "Explain this problem" on any device and a situation briefing, with a cloud LLM API or a **local model** (Ollama: nothing leaves your network).
 - ✈️ **A real cockpit, not another admin template.** One sentence tells you how things are, the route to the Internet is drawn like the magenta line of a flight plan, and the UI uses [B612](https://github.com/polarsys/b612), the typeface Airbus designed for cockpit screens. Night and day themes, English and French.
-- 📦 **One command.** `./setup.sh` generates passwords and configs, backs up your settings and starts everything. Re-run it any time.
+- 📦 **One command, no YAML to write.** `./setup.sh` detects your network, asks a few questions with sensible defaults, backs up your settings and starts everything. Re-run it any time.
 
 ## 📸 Screenshots
 
@@ -123,11 +123,12 @@ flowchart LR
 ```bash
 curl -fsSL https://get.docker.com | sh            # if Docker is not installed
 git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
-./setup.sh                                         # creates .env (random passwords), config/cockpit.yml, starts everything
-nano config/cockpit.yml                            # your sites, networks, critical equipment, websites
-nano .env                                          # vCenter/ESXi, notifications, AI
-./setup.sh                                         # apply
+./setup.sh                                         # detects your network, asks a few questions, starts everything
 ```
+
+The setup assistant detects the local network, gateway and DNS servers, then asks for your buildings (or sites), your other networks, VMware, SNMP and Telegram. Every question has a default: press Enter. Re-run it any time with `./setup.sh --configure`.
+
+👉 **First time? Follow the [step-by-step guide](docs/getting-started.md)**: install, buildings, VMware read-only account, Zabbix, agents, Telegram, switches (including Ubiquiti UniFi), troubleshooting.
 
 | Service | URL |
 |---|---|

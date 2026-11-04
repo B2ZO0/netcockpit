@@ -15,7 +15,7 @@
 ![Docker Compose](https://img.shields.io/badge/d%C3%A9ploiement-docker%20compose-2496ED?logo=docker&logoColor=white)
 ![Interface : English | Français](https://img.shields.io/badge/interface-English%20%7C%20Fran%C3%A7ais-4cc9f0)
 
-[English](README.md) · **Français** · [Essayer la démo](#-démo-en-une-minute) · [Installation](#-installation) · [Documentation](docs/)
+[English](README.md) · **Français** · [Essayer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Documentation](docs/)
 
 <img src="docs/images/demo.gif" alt="Démo NetCockpit : verdict, fiche équipement avec analyse IA, topologie, VMware, switchs, thème jour" width="100%">
 
@@ -43,7 +43,7 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 - 🔔 **Une seule chaîne d'alertes.** Prometheus, Loki et Zabbix passent tous par Alertmanager vers Telegram, Discord ou email, regroupés et dédoublonnés : si le firewall tombe, tu reçois un message, pas 80.
 - 🤖 **Diagnostic IA, en option.** Un bouton « Analyser » sur chaque équipement et un briefing de la situation, avec une API d'IA dans le cloud ou un **modèle local** (Ollama : rien ne sort du réseau).
 - ✈️ **Un vrai cockpit, pas un énième template d'admin.** Une phrase te dit où en est l'infra, la route vers Internet est tracée comme la ligne magenta d'un plan de vol, et l'interface utilise [B612](https://github.com/polarsys/b612), la police conçue par Airbus pour les écrans de cockpit. Thèmes nuit et jour, français et anglais.
-- 📦 **Une seule commande.** `./setup.sh` génère les mots de passe et les configurations, sauvegarde tes réglages et démarre tout. Relançable à volonté.
+- 📦 **Une seule commande, aucun YAML à écrire.** `./setup.sh` détecte ton réseau, pose quelques questions avec des valeurs par défaut, sauvegarde tes réglages et démarre tout. Relançable à volonté.
 
 ## 📸 Captures
 
@@ -123,11 +123,12 @@ flowchart LR
 ```bash
 curl -fsSL https://get.docker.com | sh            # si Docker n'est pas installé
 git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
-./setup.sh                                         # crée .env (mots de passe aléatoires), config/cockpit.yml, démarre tout
-nano config/cockpit.yml                            # tes sites, réseaux, équipements critiques, sites web
-nano .env                                          # vCenter/ESXi, notifications, IA
-./setup.sh                                         # applique
+./setup.sh                                         # détecte ton réseau, pose quelques questions, démarre tout
 ```
+
+L'assistant détecte le réseau local, la passerelle et les DNS, puis te demande tes bâtiments (ou sites), tes autres réseaux, VMware, le SNMP et Telegram. Chaque question a une valeur par défaut : Entrée suffit. Relance-le quand tu veux avec `./setup.sh --configure`.
+
+👉 **Première installation ? Suis le [guide pas à pas](docs/demarrage.md)** : installation, bâtiments, compte VMware en lecture seule, Zabbix, agents, Telegram, switchs (Ubiquiti UniFi compris), dépannage.
 
 | Service | Adresse |
 |---|---|
@@ -149,7 +150,7 @@ iwr http://<IP>:8088/agents/windows/install.ps1 -OutFile $env:TEMP\install.ps1 -
 curl -fsSL http://<IP>:8088/agents/linux/install.sh | sudo bash -s <IP>
 ```
 
-➡️ Guides détaillés (en anglais) : [installation](docs/installation.md) · [configuration](docs/configuration.md) · [agents](docs/agents.md) · [topologie](docs/topology.md) · [alertes](docs/alerts.md) · [dépannage](docs/troubleshooting.md)
+➡️ Guides détaillés : [guide pas à pas en français](docs/demarrage.md) · en anglais : [installation](docs/installation.md) · [configuration](docs/configuration.md) · [agents](docs/agents.md) · [topologie](docs/topology.md) · [alertes](docs/alerts.md) · [dépannage](docs/troubleshooting.md)
 
 ### Une mise à jour ne touche jamais à tes réglages
 

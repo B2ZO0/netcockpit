@@ -23,13 +23,15 @@ cd netcockpit
 On the first run `setup.sh`:
 
 1. creates `.env` from `.env.example`, with random passwords and your IP as `PUBLIC_HOST`;
-2. renders `alertmanager/alertmanager.yml` and `snmp/auth.yml` from `.env`;
-3. generates the Grafana dashboards with the right links;
+2. starts the **setup assistant**, which detects the local network, gateway and DNS servers and asks for your buildings, other networks, VMware, SNMP, Telegram and Zabbix (walkthrough: [getting-started.md](getting-started.md#3-answer-the-setup-assistant));
+3. renders `alertmanager/alertmanager.yml` and `snmp/auth.yml` from `.env`, and the Grafana dashboards;
 4. builds the cockpit image and starts the stack (`docker compose up -d`).
 
-Then edit the two configuration files and run `./setup.sh` again:
+Re-run the assistant at any time with `./setup.sh --configure` (add a building, change addressing, connect VMware). `./setup.sh --yes` skips the questions and uses the detected values.
 
-- `config/cockpit.yml`: sites, networks, critical equipment, websites, SNMP devices ([reference](configuration.md#configcockpityml));
+Advanced settings live in two files, both yours and never overwritten:
+
+- `config/cockpit.yml`: buildings, networks, critical equipment, websites, SNMP devices ([reference](configuration.md#configcockpityml));
 - `.env`: vCenter/ESXi, notifications, AI, Zabbix on/off ([reference](configuration.md#env)).
 
 `setup.sh` is idempotent. When a new version adds settings to `.env.example`, it appends them to your `.env` without touching existing values.

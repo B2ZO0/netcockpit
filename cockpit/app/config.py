@@ -88,7 +88,9 @@ def load():
     snmp["devices"] = [str(x) for x in _list(snmp.get("devices"))]
     snmp.setdefault("try_discovered", False)
 
+    word = cfg.get("site_word") or {}
     out = {
+        "site_word": {"one": str(word["one"]), "many": str(word.get("many") or word["one"])} if word.get("one") else None,
         "sites": sites,
         "scan": scan,
         "names": names,

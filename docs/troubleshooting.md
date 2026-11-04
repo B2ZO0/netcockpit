@@ -1,7 +1,12 @@
 # Troubleshooting
 
+More cases with step-by-step fixes: [getting-started.md](getting-started.md#12-troubleshooting) · [demarrage.md](demarrage.md#12-dépannage).
+
 | Symptom | What to check |
 |---|---|
+| The cockpit shows "Site A", "10.10.0.x", DC01, DC02 | That is the demo's example configuration: run `./setup.sh --configure`. |
+| Zabbix red for more than 5 minutes | The password in `.env` no longer matches the Zabbix database (`.env` recreated, e.g. installed in another folder): restore the previous `.env` from `backups/<date>/`, then `./setup.sh`. |
+| `setup.sh` stops: "already running from …" | It was started from another folder: go to the folder shown and run it there. |
 | Empty map | First scan takes 2–5 min: `docker compose logs -f cockpit`. |
 | Devices shown by IP | No reverse DNS zone: set `names.dns_servers`; Windows PCs get NetBIOS names anyway; use `overrides:` for the rest. |
 | No switch on the map | You need one of: vCenter/ESXi (CDP/LLDP seen by hosts), lldpd on physical Linux servers, or SNMP read access. |
