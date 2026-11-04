@@ -1,0 +1,15 @@
+# NetCockpit demo: simulated two-site network, nothing is scanned, no credentials needed.
+#   docker compose -f docker-compose.demo.yml up --build     ->  http://localhost:8088
+name: netcockpit-demo
+services:
+  demo:
+    build: ./netmap
+    image: netcockpit/netmap:local
+    command: ["python", "/demo/demo.py"]
+    environment:
+      DEMO_SNMP: "1"          # 0 = without the provider's SNMP access (topology from vCenter/LLDP only)
+    volumes:
+      - ./demo:/demo:ro
+      - ./config:/config:ro
+    ports:
+      - "8088:8088"

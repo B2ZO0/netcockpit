@@ -1,0 +1,63 @@
+# ============================================================
+#  NetCockpit : what to discover and monitor
+#  After editing:  docker compose restart netmap
+#  (example values: replace them with your own networks)
+# ============================================================
+
+# Sites (buildings) and their networks. The cockpit can filter by site.
+sites:
+  - name: Site A (servers)
+    subnets: [10.10.0.0/24]
+  - name: Site B
+    subnets: [10.20.0.0/24]
+
+scan:
+  enabled: true
+  interval_minutes: 30
+  netbios: true          # Windows machine names (even across routers)
+  # Ports used to identify the device type (fast, only these ports)
+  ports: [22, 23, 53, 80, 88, 135, 161, 389, 443, 445, 902, 3389, 5985, 8006, 8080, 8443, 9100]
+  exclude: []            # IPs that must never be scanned
+
+# Name resolution
+names:
+  dns_servers: [10.10.0.10, 10.10.0.11]   # internal DNS (Active Directory). Empty = domain controllers auto-detected
+  strip_domain: true                       # show FILESRV01 instead of filesrv01.example.local
+
+# Switch topology through SNMP (read-only). Fill in once you have access.
+snmp:
+  community: ""          # or SNMP_COMMUNITY in .env
+  devices: []            # IPs of switches / firewalls / routers to poll, e.g. [10.10.0.250, 10.10.0.251]
+  try_discovered: false  # true = also try every discovered network device
+
+# Path to the Internet and "Internet" targets
+traceroute_targets: [1.1.1.1]
+internet_targets:
+  - { name: Cloudflare, ip: 1.1.1.1 }
+  - { name: Google, ip: 8.8.8.8 }
+
+# Critical equipment: critical alert if it goes down (even if you have no access to it).
+# role: firewall | router | switch | wifi | server | dc | nas | esxi | printer | other
+watch:
+  - { name: Gateway / Firewall, ip: 10.10.0.254, role: firewall }
+  - { name: DC01 (AD / DNS / DHCP), ip: 10.10.0.10, role: dc, port: 53 }
+  - { name: DC02 (AD / DNS), ip: 10.10.0.11, role: dc, port: 53 }
+
+# Websites and web applications (availability + certificate expiry)
+http_checks:
+  # - { name: Intranet, url: "https://intranet.example.local" }
+
+# DNS servers that must answer
+dns_checks:
+  - { name: DNS DC01, ip: 10.10.0.10 }
+  - { name: DNS DC02, ip: 10.10.0.11 }
+
+# Manual corrections per IP: displayed name and/or type
+overrides:
+  # 10.10.0.5: { name: ESX-01, role: esxi }
+  # 10.10.0.250: { name: SW-CORE, role: switch }
+
+# Friendly network names
+subnet_names:
+  10.10.0.0/24: Server LAN
+  10.20.0.0/24: Site B LAN

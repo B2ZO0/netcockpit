@@ -1,0 +1,25 @@
+groups:
+  - name: supervision
+    rules:
+      - alert: ComposantSupervisionEnPanne
+        expr: up{job=~"alertmanager|loki|blackbox|netmap|snmp_exporter"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Le composant de supervision {{ $labels.job }} ne répond plus"
+
+      - alert: DecouverteReseauBloquee
+        expr: time() - netmap_last_scan_timestamp_seconds > 3 * 3600
+        labels:
+          severity: warning
+        annotations:
+          summary: "La découverte réseau n'a pas tourné depuis plus de 3 h"
+
+      # Toujours active : sert à vérifier que la chaîne d'alertes fonctionne (masquée dans Alertmanager)
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: none
+        annotations:
+          summary: "Chaîne d'alertes opérationnelle"

@@ -1,0 +1,106 @@
+groups:
+  - name: serveurs
+    rules:
+      # Un agent qui envoyait des données dans les dernières 24 h et n'envoie plus rien
+      - alert: AgentMuet
+        expr: |
+          group by (instance, os) (max_over_time(up{job=~"node|windows"}[1d]))
+          unless
+          group by (instance, os) (up{job=~"node|windows"})
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} n'envoie plus de données"
+          description: "Serveur éteint, planté, ou agent Alloy arrêté."
+
+      # ---------- Linux ----------
+      - alert: DisquePlein
+        expr: |
+          (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|nsfs|fuse.*"}
+             / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|nsfs|fuse.*"}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disque {{ $labels.mountpoint }} plein à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }}"
+
+      - alert: DisqueSeraPleinSous24h
+        expr: |
+          predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs|nsfs|fuse.*"}[6h], 24 * 3600) < 0
+          and node_filesystem_avail_bytes / node_filesystem_size_bytes < 0.3
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.mountpoint }} sur {{ $labels.instance }} sera plein dans moins de 24 h"
+
+      - alert: CPUSature
+        expr: 100 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 > 90
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }} depuis 15 min"
+
+      - alert: MemoireSaturee
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 95
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mémoire à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }}"
+
+      - alert: ServiceSystemdEnEchec
+        expr: node_systemd_unit_state{state="failed"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.name }} en échec sur {{ $labels.instance }}"
+
+      - alert: RedemarrageDetecte
+        expr: changes(node_boot_time_seconds[15m]) > 0
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.instance }} a redémarré"
+
+      # ---------- Windows ----------
+      - alert: DisquePleinWindows
+        expr: |
+          (1 - windows_logical_disk_free_bytes{volume!~"HarddiskVolume.*"}
+             / windows_logical_disk_size_bytes{volume!~"HarddiskVolume.*"}) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disque {{ $labels.volume }} plein à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }}"
+
+      - alert: CPUSatureWindows
+        expr: 100 - avg by (instance) (rate(windows_cpu_time_total{mode="idle"}[5m])) * 100 > 90
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }} depuis 15 min"
+
+      - alert: MemoireSatureeWindows
+        expr: |
+          (1 - (windows_memory_physical_free_bytes or windows_os_physical_memory_free_bytes)
+             / on (instance) (windows_memory_physical_total_bytes or windows_cs_physical_memory_bytes)) * 100 > 95
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mémoire à {{ $value | printf \"%.0f\" }} % sur {{ $labels.instance }}"
+
+      # ---------- LLDP : un serveur a changé de port de switch ----------
+      - alert: ChangementDePortSwitch
+        expr: |
+          (lldp_neighbor_info unless lldp_neighbor_info offset 30m)
+          and on (instance) group by (instance) (up{job="node"} offset 30m)
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.instance }} ({{ $labels.interface }}) est maintenant sur {{ $labels.chassis_name }} port {{ $labels.port_id }}"

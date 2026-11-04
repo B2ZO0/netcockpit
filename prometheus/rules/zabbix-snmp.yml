@@ -1,0 +1,40 @@
+groups:
+  - name: zabbix
+    rules:
+      # Les problèmes Zabbix (VMware natif, SNMP...) passent par Alertmanager : mêmes notifications, même anti-spam
+      - alert: ZabbixProbleme
+        expr: netmap_zabbix_problem == 1
+        for: 1m
+        annotations:
+          summary: "Zabbix : {{ $labels.problem }}"
+          description: "Hôte {{ $labels.host }}"
+
+      - alert: ZabbixInjoignable
+        expr: netmap_zabbix_up == 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Zabbix ne répond plus au cockpit"
+
+  - name: snmp
+    rules:
+      - alert: PortSwitchSature
+        expr: |
+          rate(ifHCInOctets{job="snmp"}[5m]) * 8 / on (instance, ifIndex) (ifHighSpeed{job="snmp"} * 1e6 > 0) > 0.85
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Port {{ $labels.ifName }} de {{ $labels.instance }} saturé ({{ $value | humanizePercentage }})"
+
+      - alert: PortSwitchErreurs
+        expr: increase(ifInErrors{job="snmp"}[15m]) > 100
+        labels: { severity: warning }
+        annotations:
+          summary: "Erreurs sur le port {{ $labels.ifName }} de {{ $labels.instance }} (câble ou duplex ?)"
+
+      - alert: EquipementSNMPMuet
+        expr: up{job="snmp"} == 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.name }} ({{ $labels.instance }}) ne répond plus en SNMP"

@@ -1,0 +1,42 @@
+groups:
+  - name: logs
+    rules:
+      - alert: AttaqueSSH
+        expr: |
+          sum by (host) (count_over_time({job="journal"} |~ "Failed password|Invalid user|authentication failure" [5m])) > 20
+        labels:
+          severity: warning
+        annotations:
+          summary: "Plus de 20 échecs de connexion SSH en 5 min sur {{ $labels.host }}"
+
+      - alert: ErreursDisque
+        expr: |
+          sum by (host) (count_over_time({job="journal"} |~ "(?i)I/O error|EXT4-fs error|XFS .*error|blk_update_request: .*error|medium error" [10m])) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Erreurs disque dans les logs de {{ $labels.host }}"
+
+      - alert: OOMKiller
+        expr: |
+          sum by (host) (count_over_time({job="journal"} |~ "Out of memory: Killed process|oom-kill" [10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le noyau a tué un processus faute de mémoire sur {{ $labels.host }}"
+
+      - alert: LogsCritiques
+        expr: |
+          sum by (host, unit) (count_over_time({job="journal", level=~"emerg|alert|crit"}[5m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Message critique dans les logs de {{ $labels.host }} ({{ $labels.unit }})"
+
+      - alert: WindowsEvenementsCritiques
+        expr: |
+          sum by (host) (count_over_time({job="windows", level="critical"}[10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Événement Windows critique sur {{ $labels.host }}"

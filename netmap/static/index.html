@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetCockpit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f8cff' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3 12h4l3-8 4 16 3-8h4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="side">
+  <div class="logo"><span class="logo-mark"></span><div><b>NetCockpit</b><small id="logo-sub">Supervision infra</small></div></div>
+  <nav id="nav">
+    <a href="#/overview" data-view="overview"><i data-icon="dashboard"></i><span>Vue d'ensemble</span></a>
+    <a href="#/topology" data-view="topology"><i data-icon="network"></i><span>Topologie</span></a>
+    <a href="#/vmware" data-view="vmware"><i data-icon="layers"></i><span>VMware</span></a>
+    <a href="#/switches" data-view="switches"><i data-icon="switch"></i><span>Switchs</span></a>
+    <a href="#/inventory" data-view="inventory"><i data-icon="list"></i><span>Inventaire</span></a>
+    <a href="#/alerts" data-view="alerts"><i data-icon="bell"></i><span>Alertes</span><em id="nav-alerts" class="pill hidden">0</em></a>
+    <a href="#/services" data-view="services"><i data-icon="globe"></i><span>Services</span></a>
+  </nav>
+  <div class="side-foot">
+    <div id="sources"></div>
+    <div class="scan-line"><span id="scan-info">—</span><button id="btn-rescan" class="ghost sm" title="Relancer la découverte du réseau">Rescanner</button></div>
+    <div id="ext-links"></div>
+  </div>
+</aside>
+
+<header id="top">
+  <div class="title"><h1 id="page-title">Vue d'ensemble</h1><span id="page-sub" class="muted"></span></div>
+  <div class="top-tools">
+    <div class="seg" id="site-seg"></div>
+    <div class="search-wrap">
+      <i data-icon="search"></i>
+      <input id="search" type="search" placeholder="Chercher un équipement : nom, IP, MAC…" autocomplete="off">
+      <div id="search-results" class="hidden"></div>
+    </div>
+    <button id="btn-ai" class="ai hidden" title="Résumé de la situation par l'IA"><i data-icon="sparkle"></i>Analyse IA</button>
+    <span class="live"><span class="dot-live" id="live-dot"></span><span id="live-txt">en direct</span></span>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<aside id="drawer" class="hidden">
+  <button class="x" id="drawer-close" aria-label="Fermer">×</button>
+  <div id="drawer-body"></div>
+</aside>
+
+<div id="modal" class="hidden">
+  <div class="modal-box">
+    <button class="x" id="modal-close" aria-label="Fermer">×</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="lib/cytoscape.min.js"></script>
+<script src="lib/layout-base.js"></script>
+<script src="lib/cose-base.js"></script>
+<script src="lib/cytoscape-fcose.js"></script>
+<script src="core.js"></script>
+<script src="topo.js"></script>
+<script src="views.js"></script>
+</body>
+</html>

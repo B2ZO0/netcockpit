@@ -1,0 +1,89 @@
+groups:
+  - name: reseau
+    rules:
+      # Équipement critique (passerelle, firewall, routeur prestataire, liste "watch") injoignable
+      - alert: EquipementCritiqueInjoignable
+        expr: |
+          max by (node, name, role) (probe_success{job=~"blackbox_icmp|blackbox_tcp", critical="true", role!="internet"}) == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.name }} ({{ $labels.role }}) ne répond plus"
+          description: "Aucune réponse au ping ni sur ses ports depuis plus d'une minute."
+
+      # Serveur / VM / équipement réseau qui répondait et ne répond plus
+      - alert: EquipementInjoignable
+        expr: |
+          (max by (node, name, role) (probe_success{job=~"blackbox_icmp|blackbox_tcp", alert="true", critical!="true"}) == 0)
+          and on (node)
+          (max by (node) (max_over_time(probe_success{job=~"blackbox_icmp|blackbox_tcp"}[1d])) == 1)
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.name }} ({{ $labels.role }}) ne répond plus"
+          description: "L'équipement répondait dans les dernières 24 h mais plus depuis 3 minutes."
+
+      - alert: InternetCoupe
+        expr: max(probe_success{job="blackbox_icmp", role="internet"}) == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Accès Internet coupé"
+          description: "Aucune des cibles Internet ne répond au ping."
+
+      - alert: LatenceElevee
+        expr: |
+          avg_over_time(probe_icmp_duration_seconds{phase="rtt", critical="true"}[5m]) > 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence élevée vers {{ $labels.name }}"
+          description: "Latence moyenne {{ $value | humanizeDuration }} sur 5 min."
+
+      - alert: PertesDePaquets
+        expr: |
+          avg_over_time(probe_success{job="blackbox_icmp", critical="true"}[10m]) < 0.9
+          and avg_over_time(probe_success{job="blackbox_icmp", critical="true"}[10m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Lien instable vers {{ $labels.name }}"
+          description: "{{ $value | humanizePercentage }} des pings réussis sur 10 min (pertes de paquets)."
+
+      - alert: SiteWebEnPanne
+        expr: probe_success{job="blackbox_http"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.name }} ne répond pas ({{ $labels.instance }})"
+          description: "Le contrôle HTTP échoue depuis 2 minutes."
+
+      - alert: CertificatExpireBientot
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox_http"} - time()) / 86400 < 14
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Certificat de {{ $labels.name }} expire dans {{ $value | printf \"%.0f\" }} jours"
+
+      - alert: DNSEnPanne
+        expr: probe_success{job="blackbox_dns"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Le serveur DNS {{ $labels.name }} ({{ $labels.instance }}) ne répond plus"
+
+      - alert: NouvelEquipementSurLeReseau
+        expr: (time() - netmap_device_first_seen_timestamp_seconds) < 86400
+        labels:
+          severity: info
+        annotations:
+          summary: "Nouvel équipement détecté : {{ $labels.ip }} ({{ $labels.vendor }})"
+          description: "MAC {{ $labels.mac }}, nom {{ $labels.hostname }}. À vérifier s'il n'est pas attendu."

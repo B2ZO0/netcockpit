@@ -1,0 +1,44 @@
+// Réception syslog (firewalls, switchs, NAS...) -> Loki
+// Le conteneur écoute 1514, publié sur le port 514 de la machine (UDP et TCP).
+
+loki.source.syslog "net" {
+  listener {
+    address       = "0.0.0.0:1514"
+    protocol      = "udp"
+    syslog_format = "rfc3164"
+    labels        = { job = "syslog", transport = "udp" }
+  }
+  listener {
+    address       = "0.0.0.0:1514"
+    protocol      = "tcp"
+    labels        = { job = "syslog", transport = "tcp" }
+  }
+  relabel_rules = loki.relabel.syslog.rules
+  forward_to    = [loki.write.main.receiver]
+}
+
+loki.relabel "syslog" {
+  forward_to = []
+  rule {
+    source_labels = ["__syslog_message_hostname"]
+    target_label  = "host"
+  }
+  rule {
+    source_labels = ["__syslog_message_app_name"]
+    target_label  = "app"
+  }
+  rule {
+    source_labels = ["__syslog_message_severity"]
+    target_label  = "level"
+  }
+  rule {
+    source_labels = ["__syslog_connection_ip_address"]
+    target_label  = "source_ip"
+  }
+}
+
+loki.write "main" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

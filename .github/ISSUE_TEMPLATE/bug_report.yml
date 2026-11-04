@@ -1,0 +1,30 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove any real IP address, host name or credential from logs and screenshots."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what you got.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "Output of `docker compose ps` and `docker compose logs --tail 50 netmap` (anonymised)"
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+  - type: dropdown
+    id: sources
+    attributes:
+      label: Data sources in use
+      multiple: true
+      options: [Scan only, vCenter, Standalone ESXi, SNMP, Zabbix, Alloy agents (Linux), Alloy agents (Windows), AI]

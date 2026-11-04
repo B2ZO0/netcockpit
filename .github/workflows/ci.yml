@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: Python
+        run: |
+          pip install pyyaml requests
+          python -m py_compile netmap/app/*.py scripts/*.py demo/demo.py
+
+      - name: JavaScript
+        run: for f in netmap/static/*.js; do node --check "$f"; done
+
+      - name: Shell
+        run: bash -n setup.sh agents/linux/install.sh
+
+      - name: YAML and dashboards
+        run: |
+          python - <<'PY'
+          import glob, json, yaml
+          for f in glob.glob("**/*.yml", recursive=True) + glob.glob(".github/**/*.yml", recursive=True):
+              yaml.safe_load(open(f, encoding="utf-8"))
+          for f in glob.glob("grafana/dashboards/*.json"):
+              json.load(open(f, encoding="utf-8"))
+          print("ok")
+          PY
+
+      - name: Prometheus rules (promtool)
+        run: docker run --rm -v "$PWD/prometheus:/p" --entrypoint promtool prom/prometheus check rules /p/rules/*.yml
+
+      - name: Loki rules
+        run: |
+          python - <<'PY'
+          import yaml; yaml.safe_load(open("loki/rules/fake/logs.yml"))
+          PY
+
+      - name: Compose file and Alertmanager config (amtool)
+        run: |
+          cp .env.example .env
+          sed -i 's/__RANDOM__/ci-password/g; s/__FERNET__/ci-key/g' .env
+          echo "TELEGRAM_BOT_TOKEN=123:abc" >> .env && echo "TELEGRAM_CHAT_ID=-100123" >> .env
+          python scripts/render_config.py
+          docker compose config -q
+          docker run --rm -v "$PWD/alertmanager:/am" --entrypoint amtool prom/alertmanager check-config /am/alertmanager.yml
+
+  demo-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the demo
+        run: docker compose -f docker-compose.demo.yml up -d --build
+      - name: API answers with a populated model
+        run: |
+          for i in $(seq 1 30); do curl -fs http://localhost:8088/health && break; sleep 2; done
+          sleep 15
+          curl -fs http://localhost:8088/api/overview | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['stats']['total'] > 50, d['stats']; print(d['stats'])"
+          curl -fs http://localhost:8088/api/graph | python3 -c "import json,sys; d=json.load(sys.stdin); assert any(n['role']=='esxi' for n in d['nodes']); print(len(d['nodes']), 'nodes')"
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.demo.yml logs

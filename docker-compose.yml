@@ -1,0 +1,202 @@
+# Supervision : cockpit (netmap) + Prometheus + Loki + Alertmanager + Blackbox + SNMP + syslog + Grafana + Zabbix
+# Lancement : ./setup.sh   (génère la config à partir de .env puis démarre tout)
+name: supervision
+
+x-zbx-db: &zbx-db
+  DB_SERVER_HOST: zabbix-db
+  POSTGRES_DB: zabbix
+  POSTGRES_USER: zabbix
+  POSTGRES_PASSWORD: ${ZABBIX_DB_PASSWORD:-zabbix}
+
+services:
+  # ------------------------------------------------------------ cockpit
+  netmap:
+    build: ./netmap
+    image: supervision/netmap:local
+    restart: unless-stopped
+    network_mode: host            # voit le LAN (ARP, NetBIOS, traceroute)
+    cap_add: [NET_RAW, NET_ADMIN]
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      NETMAP_PORT: "8088"
+      NETMAP_CONFIG: /config/netmap.yml
+      NETMAP_TARGETS_DIR: /targets
+      NETMAP_DATA_DIR: /data
+      PROMETHEUS_URL: http://127.0.0.1:9090
+      ALERTMANAGER_URL: http://127.0.0.1:9093
+      LOKI_URL: http://127.0.0.1:3100
+      GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
+      ALERTMANAGER_PUBLIC_URL: ${ALERTMANAGER_PUBLIC_URL:-}
+      ZABBIX_URL: ${NETMAP_ZABBIX_URL:-}
+      ZABBIX_PUBLIC_URL: ${ZABBIX_PUBLIC_URL:-}
+      ZABBIX_ADMIN_PASSWORD: ${ZABBIX_ADMIN_PASSWORD:-}
+      ZABBIX_GRAFANA_PASSWORD: ${ZABBIX_GRAFANA_PASSWORD:-}
+      VCENTER_URL: ${VCENTER_URL:-}
+      VCENTER_USER: ${VCENTER_USER:-}
+      VCENTER_PASSWORD: ${VCENTER_PASSWORD:-}
+      SNMP_COMMUNITY: ${SNMP_COMMUNITY:-}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+    volumes:
+      - ./config/netmap.yml:/config/netmap.yml:ro
+      - ./data/targets:/targets
+      - netmap-data:/data
+      - ./agents:/app/static/agents:ro      # scripts d'agent téléchargeables : http://IP:8088/agents/...
+
+  # ------------------------------------------------------------ métriques, alertes, logs
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-latest}
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${RETENTION:-30d}
+      - --web.enable-remote-write-receiver
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - ./data/targets:/etc/prometheus-targets:ro
+      - prometheus-data:/prometheus
+    ports: ["9090:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_VERSION:-latest}
+    restart: unless-stopped
+    command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    ports: ["9093:9093"]
+
+  loki:
+    image: grafana/loki:${LOKI_VERSION:-latest}
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - ./loki/rules:/etc/loki/rules:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
+
+  blackbox:
+    image: prom/blackbox-exporter:${BLACKBOX_VERSION:-latest}
+    restart: unless-stopped
+    command: --config.file=/etc/blackbox/blackbox.yml
+    volumes: ["./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro"]
+    cap_add: [NET_RAW]
+    sysctls: { net.ipv4.ping_group_range: "0 2147483647" }
+
+  # Trafic et état des ports des switchs / firewalls (dès que le prestataire ouvre le SNMP)
+  snmp-exporter:
+    image: prom/snmp-exporter:${SNMP_EXPORTER_VERSION:-latest}
+    restart: unless-stopped
+    command: [--config.file=/etc/snmp_exporter/snmp.yml, --config.file=/etc/snmp-auth/auth.yml]
+    volumes: ["./snmp:/etc/snmp-auth:ro"]
+
+  # Réception des logs syslog des firewalls / switchs (port 514 UDP/TCP) -> Loki
+  syslog:
+    image: grafana/alloy:${ALLOY_VERSION:-latest}
+    restart: unless-stopped
+    command: [run, /etc/alloy/syslog.alloy, --server.http.listen-addr=0.0.0.0:12345, --storage.path=/var/lib/alloy]
+    volumes: ["./syslog/syslog.alloy:/etc/alloy/syslog.alloy:ro"]
+    ports: ["514:1514/udp", "514:1514/tcp"]
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Lance ./setup.sh pour générer le .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL: yesoreyeram-infinity-datasource,alexanderzobnin-zabbix-app
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/00-vue-ensemble.json
+      ZABBIX_GRAFANA_PASSWORD: ${ZABBIX_GRAFANA_PASSWORD:-}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ["3000:3000"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  # ------------------------------------------------------------ Zabbix (profil "zabbix")
+  zabbix-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    profiles: [zabbix]
+    environment:
+      POSTGRES_DB: zabbix
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: ${ZABBIX_DB_PASSWORD:-zabbix}
+    volumes: [zabbix-db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbix -d zabbix"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-${ZABBIX_VERSION:-7.0}-latest
+    restart: unless-stopped
+    profiles: [zabbix]
+    depends_on: { zabbix-db: { condition: service_healthy } }
+    environment:
+      <<: *zbx-db
+      TZ: ${TZ:-Europe/Paris}
+      ZBX_CACHESIZE: 128M
+      ZBX_STARTVMWARECOLLECTORS: 2
+      ZBX_VMWARECACHESIZE: 32M
+      ZBX_STARTDISCOVERERS: 3
+      ZBX_STARTPINGERS: 3
+      ZBX_TIMEOUT: 10
+    ports: ["10051:10051"]
+    ulimits: { nofile: { soft: 20000, hard: 40000 } }
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-${ZABBIX_VERSION:-7.0}-latest
+    restart: unless-stopped
+    profiles: [zabbix]
+    depends_on: [zabbix-server]
+    environment:
+      <<: *zbx-db
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_NAME: Supervision
+      PHP_TZ: ${TZ:-Europe/Paris}
+    ports: ["${ZABBIX_WEB_PORT:-8081}:8080"]
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:alpine-${ZABBIX_VERSION:-7.0}-latest
+    restart: unless-stopped
+    profiles: [zabbix]
+    environment:
+      ZBX_HOSTNAME: Zabbix server
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_ACTIVE: zabbix-server
+
+  # ------------------------------------------------------------ xoriin/NetMap (profil "ipam", optionnel)
+  ipam:
+    image: xoriin/netmap:latest
+    restart: unless-stopped
+    profiles: [ipam]
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      SECRET_KEY: ${IPAM_SECRET_KEY:-}
+      MASTER_KEY: ${IPAM_MASTER_KEY:-}
+      SYSLOG_ENABLED: "false"
+    cap_drop: [ALL]
+    cap_add: [NET_RAW, NET_BIND_SERVICE]
+    volumes: [ipam-data:/app/data]
+    ports: ["${IPAM_PORT:-8090}:8080"]
+
+volumes:
+  prometheus-data:
+  alertmanager-data:
+  loki-data:
+  netmap-data:
+  grafana-data:
+  zabbix-db:
+  ipam-data:

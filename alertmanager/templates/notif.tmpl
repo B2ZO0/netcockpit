@@ -1,0 +1,17 @@
+{{ define "sev.emoji" }}{{ if eq .Status "resolved" }}✅{{ else if eq .Labels.severity "critical" }}🔴{{ else if eq .Labels.severity "warning" }}🟠{{ else }}🔵{{ end }}{{ end }}
+
+{{ define "telegram.msg" }}{{ range .Alerts }}{{ template "sev.emoji" . }} <b>{{ if eq .Status "resolved" }}RÉSOLU : {{ end }}{{ .Annotations.summary | html }}</b>
+{{ if .Annotations.description }}{{ .Annotations.description | html }}
+{{ end }}<i>{{ .Labels.alertname }} · {{ .Labels.severity }}</i>
+
+{{ end }}{{ end }}
+
+{{ define "discord.title" }}{{ if eq .Status "firing" }}🚨 {{ len .Alerts.Firing }} problème(s) en cours{{ else }}✅ Problème résolu{{ end }}{{ end }}
+
+{{ define "discord.msg" }}{{ range .Alerts }}{{ template "sev.emoji" . }} **{{ if eq .Status "resolved" }}RÉSOLU : {{ end }}{{ .Annotations.summary }}**
+{{ if .Annotations.description }}{{ .Annotations.description }}
+{{ end }}`{{ .Labels.alertname }} · {{ .Labels.severity }}`
+
+{{ end }}{{ end }}
+
+{{ define "email.subject" }}[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ len .Alerts.Firing }}{{ end }}] {{ (index .Alerts 0).Annotations.summary }}{{ end }}

@@ -1,0 +1,58 @@
+groups:
+  - name: vmware
+    rules:
+      - alert: ESXiDeconnecte
+        expr: netmap_vmware_host_connected == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "L'hôte ESXi {{ $labels.host }} est {{ $labels.state }} dans vCenter"
+
+      - alert: AlarmeVCenter
+        expr: netmap_vmware_alarm == 1
+        labels:
+          severity: '{{ if eq $labels.status "red" }}critical{{ else }}warning{{ end }}'
+        annotations:
+          summary: "vCenter : {{ $labels.alarm }} sur {{ $labels.entity }}"
+
+      - alert: VMEteinte
+        expr: netmap_vmware_vm_powered_on == 0 and netmap_vmware_vm_powered_on offset 10m == 1
+        labels: { severity: warning }
+        annotations:
+          summary: "La VM {{ $labels.vm }} vient de s'éteindre (hôte {{ $labels.host }})"
+
+      - alert: VCenterInjoignable
+        expr: netmap_vmware_up == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "vCenter ne répond plus au cockpit"
+          description: "{{ $labels.error }}"
+
+      - alert: DatastorePlein
+        expr: netmap_vmware_datastore_used_percent > 85
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Datastore {{ $labels.datastore }} plein à {{ $value | printf \"%.0f\" }} %"
+
+      - alert: DatastoreCritique
+        expr: netmap_vmware_datastore_used_percent > 95
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Datastore {{ $labels.datastore }} presque plein ({{ $value | printf \"%.0f\" }} %) : risque d'arrêt des VM"
+
+      - alert: ESXiCPUSature
+        expr: netmap_vmware_host_cpu_percent > 90
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "CPU de l'ESXi {{ $labels.host }} à {{ $value | printf \"%.0f\" }} %"
+
+      - alert: ESXiMemoireSaturee
+        expr: netmap_vmware_host_mem_percent > 92
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Mémoire de l'ESXi {{ $labels.host }} à {{ $value | printf \"%.0f\" }} %"
