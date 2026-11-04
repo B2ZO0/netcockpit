@@ -2,11 +2,12 @@
 
 ## `config/cockpit.yml`
 
-After any change: `docker compose restart cockpit`.
+Written by the setup assistant (`./setup.sh --configure`), which covers the common settings. Edit it by hand for the rest, then `docker compose restart cockpit`. Full example: [`config/cockpit.example.yml`](../config/cockpit.example.yml).
 
 | Key | Description |
 |---|---|
-| `sites[]` | `name` + `subnets` (CIDR). Each site is a node in the topology and a filter in the UI. |
+| `site_word` | Word shown for locations: `{ one: Building, many: Buildings }`. Default: Site / Sites. |
+| `sites[]` | `name` + `subnets` (CIDR). Each site (building) is a node in the topology and a filter in the UI. Empty = the local network detected by the cockpit. |
 | `scan.enabled` | Turn the active scan off (passive sources only). |
 | `scan.interval_minutes` | Default 30. |
 | `scan.netbios` | NetBIOS name query (UDP 137). Gives Windows names **and MACs** across routers. |

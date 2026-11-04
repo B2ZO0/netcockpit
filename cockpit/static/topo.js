@@ -298,7 +298,7 @@ const Topo = (() => {
       if (first || !cy || !document.getElementById("topo")) { sig = ""; if (cy) cy.destroy(); build(container); }
       data = await App.api("api/graph");
       App.setFeatures(data.features);
-      $("#page-sub").textContent = App.state.site ? t("tp.site", { s: App.state.site }) : t("top.allSites");
+      $("#page-sub").textContent = App.state.site ? `${App.words().one}${I18n.lang === "fr" ? " : " : ": "}${I18n.name(App.state.site)}` : App.allSites();
       draw();
     },
     leave() { clearInterval(blinkTimer); if (cy) { cy.destroy(); cy = null; } },

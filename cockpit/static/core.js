@@ -152,6 +152,17 @@ const App = (() => {
   // ------------------------------------------------------------ navigation
   const state = { site: store.get("site", ""), view: "overview", features: null, timer: null };
   const views = {};
+  // mot choisi pour les emplacements (Bâtiment, Site, Agence…), réglé par ./setup.sh --configure
+  function words() {
+    const w = state.features && state.features.site_word;
+    return w ? { one: w.one, many: w.many } : { one: t("word.one"), many: t("word.many") };
+  }
+  function allSites() {
+    const m = words().many;
+    if (I18n.lang !== "fr") return `All ${m.toLowerCase()}`;
+    return `${/^(agence|entit|succursale|usine|filiale)/i.test(m) ? "Toutes" : "Tous"} les ${m.toLowerCase()}`;
+  }
+  const guideUrl = () => `https://github.com/B2ZO0/netcockpit/blob/main/docs/${I18n.lang === "fr" ? "demarrage" : "getting-started"}.md`;
   const title = (v) => (v === "vmware" ? t("title.vmware") : t(`nav.${v}`));
 
   function register(name, impl) { views[name] = impl; }
@@ -203,14 +214,17 @@ const App = (() => {
     const key = sites.join("|") + I18n.lang;
     if (force || seg.dataset.sites !== key) {
       seg.dataset.sites = key;
-      seg.innerHTML = sites.map((s) => `<button data-site="${esc(s)}">${s ? esc(s) : t("top.allSites")}</button>`).join("");
+      seg.innerHTML = sites.map((s) => `<button data-site="${esc(s)}">${s ? esc(I18n.name(s)) : esc(allSites())}</button>`).join("");
       $$("button", seg).forEach((b) => b.addEventListener("click", () => { state.site = b.dataset.site; store.set("site", state.site); markSite(); refresh(true); }));
     }
     markSite();
     const src = [["Prometheus", true, true], [t("src.scan"), true, true],
       ["vCenter", f.vcenter && f.vcenter.up, !!f.vcenter], ["Zabbix", f.zabbix && f.zabbix.up, !!f.zabbix],
       ["SNMP", f.snmp, f.snmp], [t("src.ai"), !!f.ai, !!f.ai]];
-    $("#sources").innerHTML = src.map(([n, ok, on]) => `<div>${lamp(!on ? "off" : ok ? "up" : "down")}<span>${esc(n)}</span><span>${t(on ? (ok ? "src.connected" : "src.error") : "src.off")}</span></div>`).join("");
+    const errs = { vCenter: f.vcenter && f.vcenter.error, Zabbix: f.zabbix && f.zabbix.error };
+    $("#sources").innerHTML = src.map(([n, ok, on]) => `<div>${lamp(!on ? "off" : ok ? "up" : "down")}<span>${esc(n)}</span><span>${t(on ? (ok ? "src.connected" : "src.error") : "src.off")}</span></div>`
+      + (on && !ok && errs[n] ? `<div class="src-err">${esc(String(errs[n]).slice(0, 160))}</div>` : "")).join("")
+      + `<div class="src-err"><a href="${guideUrl()}" target="_blank" rel="noopener">${t("ov.guide")} ↗</a></div>`;
     const broken = src.some(([, ok, on]) => on && !ok);
     $("#src-lamp").className = `lamp ${broken ? "warning" : "up"}`;
     $("#scan-info").textContent = f.scanning ? t("scan.running") : t("scan.last", { t: fmt.time(f.last_scan) });
@@ -371,7 +385,7 @@ const App = (() => {
     state.timer = setInterval(() => { if (!document.hidden) { refresh(false); api("api/features").then((f) => setFeatures(f)).catch(() => {}); } }, 20000);
   }
 
-  return { ICONS, COLORS, LABELS, icon, roleIcon, roleLabel, nm, iconUri, svg, esc, $, $$, fmt, bar, meter, lamp, segBar, spark, areaChart, md,
+  return { words, allSites, guideUrl, ICONS, COLORS, LABELS, icon, roleIcon, roleLabel, nm, iconUri, svg, esc, $, $$, fmt, bar, meter, lamp, segBar, spark, areaChart, md,
     statusBadge, sevBadge, pctColor, api, post, register, state, store, setFeatures, setAlertCount, openNode, closeDrawer, hydrateIcons,
     aiBox, onRestyle, toast, init };
 })();

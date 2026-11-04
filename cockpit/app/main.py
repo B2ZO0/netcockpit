@@ -24,6 +24,10 @@ logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime
 log = logging.getLogger("cockpit")
 
 CFG = C.load()
+if not CFG["sites"]:          # aucun réseau déclaré : on surveille le réseau local détecté
+    _auto = scanner.local_networks()
+    if _auto:
+        CFG["sites"] = [{"name": "LAN", "subnets": _auto, "color": None, "auto": True}]
 LOCK = threading.RLock()
 RESCAN = threading.Event()
 SCANNING = threading.Event()
@@ -127,7 +131,8 @@ def features():
             "zabbix": None if not ZBX else {"up": ZBX.state["up"], "error": ZBX.state["error"], "url": C.ZABBIX_PUBLIC_URL},
             "snmp": bool(CFG["snmp"]["community"]), "ai": ai.info(), "grafana_url": C.GRAFANA_URL,
             "alertmanager_url": C.ALERTMANAGER_PUBLIC_URL,
-            "sites": [s["name"] for s in CFG["sites"]], "last_scan": SCAN.get("last_scan"),
+            "sites": [s["name"] for s in CFG["sites"]], "site_word": CFG.get("site_word"),
+            "auto_sites": any(s.get("auto") for s in CFG["sites"]), "last_scan": SCAN.get("last_scan"),
             "scan_duration": SCAN.get("scan_duration"), "scanning": SCANNING.is_set(), "now": time.time()}
 
 
@@ -161,7 +166,25 @@ def overview(site=None):
                                        "datastore_max": max((d.get("used_pct") or 0 for d in vc.get("datastores") or []), default=None)},
         "zabbix": None if not ZBX else {"up": ZBX.state["up"], "problems": len(ZBX.state["problems"])},
         "new_devices": new, "services": services()["http"],
+        "undeclared": undeclared(mdl),
     }
+
+
+def undeclared(mdl):
+    """Réseaux privés où des équipements ont été vus, mais qui ne sont rattachés à aucun site/bâtiment."""
+    nets = {}
+    for n in mdl.nodes.values():
+        ip = n.get("ip")
+        if n.get("site") != "Autres réseaux" or not ip or n["role"] in ("internet", "isp"):
+            continue
+        try:
+            a = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        if a.is_private:
+            k = str(ipaddress.ip_network(f"{ip}/24", strict=False))
+            nets[k] = nets.get(k, 0) + 1
+    return [{"subnet": k, "count": v} for k, v in sorted(nets.items(), key=lambda kv: -kv[1])][:8]
 
 
 def services():
