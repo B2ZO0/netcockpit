@@ -104,6 +104,14 @@ open(".env", "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
 chmod 600 .env
 
+# la machine a changé d'adresse (ré-adressage) : PUBLIC_HOST suit, sauf si c'est un nom DNS
+PH=$(envget PUBLIC_HOST)
+if [[ -n "${HOST_IP:-}" && "$PH" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ && "$PH" != "$HOST_IP" ]] && ! ip -4 addr 2>/dev/null | grep -q "inet ${PH}/"; then
+  sed -i "s/^PUBLIC_HOST=.*/PUBLIC_HOST=${HOST_IP}/" .env
+  warn "Cette machine a changé d'adresse : ${PH} → ${HOST_IP} (PUBLIC_HOST mis à jour). Réinstalle l'agent des serveurs avec la nouvelle adresse, ou utilise un nom DNS (voir docs/cas-pratiques.md)." \
+       "This machine's address changed: ${PH} → ${HOST_IP} (PUBLIC_HOST updated). Reinstall the server agents with the new address, or use a DNS name (see docs/scenarios.md)."
+fi
+
 # ------------------------------------------------------------------ 2. assistant : la première fois, sur demande, ou si la config est encore l'exemple
 NEED_WIZARD=""
 [[ ! -f config/cockpit.yml || -n "$CONFIGURE" ]] && NEED_WIZARD=1
