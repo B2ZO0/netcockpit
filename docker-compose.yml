@@ -39,6 +39,7 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-}
       AI_BASE_URL: ${AI_BASE_URL:-}
+      COCKPIT_INSTALL_DIR: ${COCKPIT_INSTALL_DIR:-}
     volumes:
       - ./config/cockpit.yml:/config/cockpit.yml:ro
       - ./data/targets:/targets

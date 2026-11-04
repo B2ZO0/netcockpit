@@ -310,6 +310,22 @@ a.chip:hover { text-decoration: none; color: var(--text); }
 #toast { position: fixed; left: calc(var(--rail) + 16px); bottom: 16px; background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-weight: 700; z-index: 60; }
 .loading { padding: 20px; color: var(--muted); }
 
+/* mise en route */
+.setup-head { display: flex; align-items: center; gap: 18px; margin-bottom: 6px; }
+.setup-head h2 { font-size: 22px; margin: 0; }
+.setup-head .seg-bar { flex: 1; max-width: 340px; height: 7px; margin: 0; }
+.steps { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; max-width: 1100px; }
+.step { display: grid; grid-template-columns: 34px 1fr auto; gap: 14px; align-items: start; }
+.step .st-ic { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--c, var(--line2)); color: var(--c, var(--muted)); font-weight: 700; }
+.step .st-ic i { width: 16px; height: 16px; }
+.step h3 { margin: 4px 0 2px; font-size: 15px; } .step .st-sum { color: var(--muted); font-size: 13px; }
+.step .st-how { margin-top: 10px; font-size: 13px; line-height: 1.6; }
+.step .st-how p { margin: 0 0 8px; }
+.step details summary { cursor: pointer; color: var(--violet); font-size: 12.5px; margin-top: 6px; }
+.step .badge { margin-top: 4px; }
+pre.cmd { background: var(--sunken); border: 1px solid var(--line); border-radius: 6px; padding: 9px 12px; margin: 6px 0 10px; overflow-x: auto;
+  font: 12px/1.5 ui-monospace, "SFMono-Regular", Consolas, monospace; color: var(--text); white-space: pre; user-select: all; }
+.st-opt { font-size: 11px; color: var(--dim); font-weight: 400; margin-left: 6px; }
 #inv-t td { white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 1500px) {

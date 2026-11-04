@@ -64,6 +64,26 @@ def alertmanager_alerts():
         return None
 
 
+_channels = {"t": 0, "v": None}
+
+
+def alertmanager_channels():
+    """Canaux de notification configurés dans Alertmanager (telegram, discord, email), mis en cache 60 s."""
+    if time.time() - _channels["t"] < 60:
+        return _channels["v"]
+    out = None
+    try:
+        r = _http.get(f"{C.ALERTMANAGER_URL}/api/v2/status", timeout=6)
+        r.raise_for_status()
+        raw = ((r.json().get("config") or {}).get("original") or "")
+        out = [name for key, name in (("telegram_configs", "telegram"), ("discord_configs", "discord"),
+                                      ("email_configs", "email"), ("webhook_configs", "webhook")) if key in raw]
+    except Exception as e:
+        log.debug("Alertmanager status : %s", e)
+    _channels.update(t=time.time(), v=out)
+    return out
+
+
 def loki_logs(selector, hours=6, limit=40):
     end = time.time_ns()
     start = end - hours * 3600 * 10 ** 9

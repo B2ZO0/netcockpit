@@ -2,7 +2,9 @@
 
 From an empty VM to a cockpit showing your buildings, your VMware and your alerts on Telegram. Allow about an hour, most of it waiting for the first scan.
 
-> 🇫🇷 Version française : [demarrage.md](demarrage.md)
+> 🇫🇷 Version française : [demarrage.md](demarrage.md) · Different situation (multi-site, no AD, no VMware, homelab…)? [Scenarios](scenarios.md)
+>
+> In the cockpit, the **Setup** screen (the flag in the left rail) tracks your progress and gives commands ready to copy.
 
 **Contents**
 

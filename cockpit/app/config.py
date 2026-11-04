@@ -37,6 +37,7 @@ AI_API_KEY = ENV("AI_API_KEY", "")
 AI_MODEL = ENV("AI_MODEL", "")
 AI_BASE_URL = ENV("AI_BASE_URL", "").rstrip("/")
 
+INSTALL_DIR = ENV("COCKPIT_INSTALL_DIR", "")              # dossier de NetCockpit sur l'hôte (affiché dans « Mise en route »)
 SCAN_OVERRIDE = ENV("COCKPIT_SCAN")  # "0" pour désactiver (tests)
 
 

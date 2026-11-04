@@ -490,7 +490,11 @@ def apply_live(m, live):
         rtt = live["rtt"].get(ip) if ip else None
         n["latency_ms"] = round(rtt * 1000, 1) if rtt is not None else None
         if n.get("agent") and n["agent"] in metrics:
-            n["metrics"] = metrics[n["agent"]]
+            n["metrics"] = dict(metrics[n["agent"]])
+            vm = n.get("vm") or {}
+            for k, vk in (("mem", "mem_pct"), ("cpu", "cpu_pct")):   # trou côté agent (ex. module mémoire absent) : on prend VMware
+                if n["metrics"].get(k) is None and vm.get(vk) is not None and vm.get("power") == "poweredOn":
+                    n["metrics"][k] = vm[vk]
         elif n.get("vm") and n["vm"].get("power") == "poweredOn":
             n["metrics"] = {"cpu": n["vm"].get("cpu_pct"), "mem": n["vm"].get("mem_pct")}
         elif n.get("esxi"):
