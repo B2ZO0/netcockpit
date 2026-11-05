@@ -1,10 +1,27 @@
 {
   "description": "Your whole infrastructure, live, in one cockpit: auto-discovered topology, VMware, switches, alerts, logs and AI, even without access to your network gear. Prometheus · Grafana · Loki · Zabbix. EN/FR.",
-  "homepage": "https://github.com/B2ZO0/netcockpit#-try-it-in-one-minute",
+  "homepage": "https://b2zo0.github.io/netcockpit/",
   "has_discussions": true,
   "topics": [
-    "monitoring", "network-monitoring", "network-topology", "infrastructure-monitoring", "sysadmin",
-    "homelab", "self-hosted", "vmware", "vsphere", "esxi", "prometheus", "grafana", "loki", "zabbix",
-    "alertmanager", "snmp", "lldp", "docker-compose", "network-map", "observability"
+    "monitoring",
+    "network-monitoring",
+    "network-topology",
+    "infrastructure-monitoring",
+    "sysadmin",
+    "homelab",
+    "self-hosted",
+    "vmware",
+    "vsphere",
+    "esxi",
+    "prometheus",
+    "grafana",
+    "loki",
+    "zabbix",
+    "alertmanager",
+    "snmp",
+    "lldp",
+    "docker-compose",
+    "network-map",
+    "observability"
   ]
 }

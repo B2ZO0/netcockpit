@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Live demo in the browser, nothing to install: https://b2zo0.github.io/netcockpit/ (simulated network, rebuilt automatically on every change).
 - Setup screen in the cockpit (flag in the rail): a checklist that ticks itself (buildings and networks, real names, VMware, server agents, notifications, Zabbix, SNMP, websites, AI), with what to do and commands ready to copy, including the install folder. The overview reminds how many essential steps are left.
 - The setup assistant shows a tip under each question: where to find the value (ipconfig, DHCP console, provider, UniFi menu…).
 - Scenario guides in English and French: one network, several buildings or VLANs, multi-site over VPN, provider-managed network, no Active Directory, no VMware (Hyper-V, Proxmox, physical), several ESXi hosts, switches (UniFi, Cisco, others), re-addressing, homelab, monitoring host placement and flows, wall screen.

@@ -15,7 +15,7 @@
 ![Docker Compose](https://img.shields.io/badge/d%C3%A9ploiement-docker%20compose-2496ED?logo=docker&logoColor=white)
 ![Interface : English | Français](https://img.shields.io/badge/interface-English%20%7C%20Fran%C3%A7ais-4cc9f0)
 
-[English](README.md) · **Français** · [Essayer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Documentation](docs/)
+[English](README.md) · **Français** · [**Démo en ligne**](https://b2zo0.github.io/netcockpit/) · [Lancer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Documentation](docs/)
 
 <img src="docs/images/demo.gif" alt="Démo NetCockpit : verdict, fiche équipement avec analyse IA, topologie, VMware, switchs, thème jour" width="100%">
 
@@ -62,6 +62,8 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 L'interface suit la langue du navigateur et le thème du système ; les deux se changent depuis la barre de gauche.
 
 ## ⚡ Démo en une minute
+
+**Sans rien installer :** ouvre la [démo en ligne](https://b2zo0.github.io/netcockpit/) dans ton navigateur.
 
 La démo simule un réseau complet sur deux sites : firewall, 2 ESXi, 11 VM, switchs, bornes Wi-Fi, imprimantes, téléphones IP, PC, et quelques pannes. **Rien n'est scanné, aucun identifiant n'est nécessaire.**
 
