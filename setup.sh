@@ -137,7 +137,7 @@ ZURL=""; [[ " ${profiles[*]} " == *" zabbix "* ]] && ZURL="http://127.0.0.1:${ZP
   echo "COMPOSE_PROFILES=$(IFS=,; echo "${profiles[*]}")"
   echo "GRAFANA_PUBLIC_URL=http://${PUBLIC_HOST}:3000"
   echo "COCKPIT_PUBLIC_URL=http://${PUBLIC_HOST}:8088"
-  echo "ALERTMANAGER_PUBLIC_URL=http://${PUBLIC_HOST}:9093"
+  echo "ALERTMANAGER_PUBLIC_URL="   # Alertmanager n'écoute plus qu'en local (sécurité)
   echo "ZABBIX_PUBLIC_URL=$([[ -n "$ZURL" ]] && echo "http://${PUBLIC_HOST}:${ZPORT}")"
   echo "COCKPIT_ZABBIX_URL=${ZURL}"
   echo "COCKPIT_INSTALL_DIR=${HERE}"
@@ -160,7 +160,7 @@ echo
 ok "NetCockpit démarré" "NetCockpit is running"
 if [[ -n "$FR" ]]; then cat <<EOF
 
-  Cockpit (carte, VMware, switchs, inventaire, alertes)   http://${PUBLIC_HOST}:8088
+  Cockpit (carte, VMware, switchs, inventaire, alertes)   http://${PUBLIC_HOST}:8088   mot de passe : $(envget COCKPIT_PASSWORD)
   Grafana (historique)                                     http://${PUBLIC_HOST}:3000   admin / GRAFANA_ADMIN_PASSWORD (dans .env)
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (dans .env)")
 
@@ -171,7 +171,7 @@ $([[ -n "$ZURL" ]] && echo "  Zabbix                                            
 EOF
 else cat <<EOF
 
-  Cockpit (map, VMware, switches, inventory, alerts)       http://${PUBLIC_HOST}:8088
+  Cockpit (map, VMware, switches, inventory, alerts)       http://${PUBLIC_HOST}:8088   password: $(envget COCKPIT_PASSWORD)
   Grafana (history)                                        http://${PUBLIC_HOST}:3000   admin / GRAFANA_ADMIN_PASSWORD (in .env)
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (in .env)")
 

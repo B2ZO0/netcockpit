@@ -18,7 +18,7 @@ WORK = tempfile.mkdtemp(prefix="netcockpit-demo-")
 WITH_SNMP = os.environ.get("DEMO_SNMP", "1") == "1"
 PORT = os.environ.get("COCKPIT_PORT", "8088")
 FAKE = "http://127.0.0.1:19090"
-os.environ.update(COCKPIT_PORT=PORT, COCKPIT_CONFIG=f"{WORK}/cockpit.yml", COCKPIT_TARGETS_DIR=f"{WORK}/targets",
+os.environ.update(COCKPIT_AUTH="off", COCKPIT_PORT=PORT, COCKPIT_CONFIG=f"{WORK}/cockpit.yml", COCKPIT_TARGETS_DIR=f"{WORK}/targets",
                   COCKPIT_DATA_DIR=f"{WORK}/data", PROMETHEUS_URL=FAKE, ALERTMANAGER_URL=FAKE, LOKI_URL=FAKE,
                   GRAFANA_PUBLIC_URL="http://localhost:3000", ZABBIX_URL=FAKE, ZABBIX_PUBLIC_URL="http://localhost:8081",
                   ZABBIX_ADMIN_PASSWORD="demo-password", ZABBIX_GRAFANA_PASSWORD="demo",

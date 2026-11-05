@@ -4,6 +4,9 @@
 
 Not published yet: these changes will make the next release.
 
+- Security: the cockpit now asks for a password. `./setup.sh` generates it (`COCKPIT_PASSWORD` in `.env`) and shows it at the end; signed session cookie, slowed-down brute force, sign-out button. Wall screens: `COCKPIT_TRUSTED_NETWORKS`. Personal lab: `COCKPIT_AUTH=off`.
+- Security: Alertmanager only listens on the host, so nobody on the network can silence alerts. Security headers on every page; request bodies are size-limited.
+- SECURITY.md: firewall examples for the ports agents push to (9090, 3100, 514) and HTTPS download of the agent scripts.
 - Live demo in the browser, nothing to install: https://b2zo0.github.io/netcockpit/ (simulated network, rebuilt automatically on every change).
 - Setup screen in the cockpit (flag in the rail): a checklist that ticks itself (buildings and networks, real names, VMware, server agents, notifications, Zabbix, SNMP, websites, AI), with what to do and commands ready to copy, including the install folder. The overview reminds how many essential steps are left.
 - The setup assistant shows a tip under each question: where to find the value (ipconfig, DHCP console, provider, UniFi menu…).

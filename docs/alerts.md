@@ -19,4 +19,8 @@ Rules live in `prometheus/rules/*.yml` (metrics) and `loki/rules/fake/*.yml` (lo
 
 ## Silences
 
-Alertmanager UI (`:9093`) → New silence, or the "Silence" link in the cockpit's Alerts view.
+Alertmanager only listens on the monitoring host (nobody on the network can silence alerts). Open its UI through an SSH tunnel, then *New silence*:
+
+```bash
+ssh -L 9093:127.0.0.1:9093 user@monitoring-host   # then open http://localhost:9093
+```

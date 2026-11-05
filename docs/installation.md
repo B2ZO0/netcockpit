@@ -84,7 +84,7 @@ docker compose down -v     # stop and delete all data (volumes)
 | 8088 | Cockpit (host network) |
 | 3000 | Grafana |
 | 8081 | Zabbix web (`ZABBIX_WEB_PORT`) |
-| 9090 / 9093 | Prometheus / Alertmanager |
+| 9090 / 9093 | Prometheus (agents push metrics) / Alertmanager (host only) |
 | 3100 | Loki (agents push logs) |
 | 514 UDP+TCP | Syslog receiver |
 | 10051 | Zabbix trapper (optional Zabbix agents) |
