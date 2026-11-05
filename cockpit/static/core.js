@@ -31,6 +31,7 @@ const App = (() => {
     alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
     check: '<path d="M20 6 9 17l-5-5"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     refresh: '<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
     moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
@@ -145,6 +146,7 @@ const App = (() => {
     const sep = path.includes("?") ? "&" : "?";
     const site = state.site && !/[?&]site=/.test(path) && !path.startsWith("api/node") && !path.startsWith("api/ai") ? `${sep}site=${encodeURIComponent(state.site)}` : "";
     const r = await fetch(path + site, Object.assign({ cache: "no-store" }, opts || {}));
+    if (r.status === 401) { location.href = "login" + location.hash; throw new Error("401"); }
     if (!r.ok) throw new Error(`${r.status}`);
     return r.json();
   }
@@ -195,7 +197,7 @@ const App = (() => {
   function chrome() {
     $$("#nav a").forEach((a) => { a.dataset.tip = title(a.dataset.view); a.setAttribute("aria-label", title(a.dataset.view)); });
     const day = document.documentElement.dataset.theme === "day";
-    const tips = { "btn-sources": t("rail.sources"), "btn-rescan": t("rail.rescan"), "btn-theme": t(day ? "rail.toNight" : "rail.toDay"), "btn-lang": t("rail.toLang") };
+    const tips = { "btn-sources": t("rail.sources"), "btn-rescan": t("rail.rescan"), "btn-theme": t(day ? "rail.toNight" : "rail.toDay"), "btn-lang": t("rail.toLang"), "btn-logout": t("rail.logout") };
     Object.entries(tips).forEach(([id, txt]) => { const b = $(`#${id}`); b.dataset.tip = txt; b.setAttribute("aria-label", txt); });
     $("#btn-theme").innerHTML = icon(day ? "moon" : "sun");
     $("#btn-lang").textContent = I18n.lang === "fr" ? "EN" : "FR";
@@ -381,6 +383,8 @@ const App = (() => {
     });
     $("#btn-theme").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "day" ? "night" : "day"));
     $("#btn-lang").addEventListener("click", () => { I18n.set(I18n.lang === "fr" ? "en" : "fr"); chrome(); route(); });
+    $("#btn-logout").addEventListener("click", () => { fetch("api/logout", { method: "POST" }).finally(() => { location.href = "login"; }); });
+    fetch("api/auth", { cache: "no-store" }).then((r) => r.json()).then((a) => { if (a.required) $("#btn-logout").classList.remove("hidden"); }).catch(() => {});
     api("api/features").then((f) => setFeatures(f)).catch(() => {});
     route();
     state.timer = setInterval(() => { if (!document.hidden) { refresh(false); api("api/features").then((f) => setFeatures(f)).catch(() => {}); } }, 20000);

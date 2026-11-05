@@ -19,6 +19,11 @@ services:
     environment:
       TZ: ${TZ:-Europe/Paris}
       COCKPIT_PORT: "8088"
+      COCKPIT_PASSWORD: ${COCKPIT_PASSWORD:-}
+      COCKPIT_SECRET: ${COCKPIT_SECRET:-}
+      COCKPIT_AUTH: ${COCKPIT_AUTH:-on}
+      COCKPIT_TRUSTED_NETWORKS: ${COCKPIT_TRUSTED_NETWORKS:-}
+      COCKPIT_SESSION_HOURS: ${COCKPIT_SESSION_HOURS:-12}
       COCKPIT_CONFIG: /config/cockpit.yml
       COCKPIT_TARGETS_DIR: /targets
       COCKPIT_DATA_DIR: /data
@@ -70,7 +75,7 @@ services:
     volumes:
       - ./alertmanager:/etc/alertmanager:ro
       - alertmanager-data:/alertmanager
-    ports: ["9093:9093"]
+    ports: ["127.0.0.1:9093:9093"]   # local only: the cockpit reads it, nobody else can silence alerts
 
   loki:
     image: grafana/loki:${LOKI_VERSION:-latest}

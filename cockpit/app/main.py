@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 import ai
+import auth
 import config as C
 import model as M
 import scanner
@@ -604,14 +605,33 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("Referrer-Policy", "same-origin")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(body)
 
+    def _gate(self, path):
+        """True si la requête peut continuer ; sinon la réponse (401 ou page de connexion) est envoyée."""
+        if auth.allowed(path, self.client_address[0], self.headers.get("Cookie")):
+            return True
+        if path.startswith("/api/"):
+            self._send(401, {"error": "login required"})
+        else:
+            self._send(302, b"", "text/plain", {"Location": "/login"})
+        return False
+
     def do_GET(self):
         url = urlparse(self.path)
+        if not self._gate(url.path):
+            return
+        if url.path in ("/login", "/login/"):
+            return self._send(200, (C.STATIC_DIR / "login.html").read_bytes(), "text/html; charset=utf-8",
+                              {"Cache-Control": "no-store"})
+        if url.path == "/api/auth":
+            return self._send(200, {"required": auth.active(), "misconfigured": auth.misconfigured()})
         qs = {k: v[0] for k, v in parse_qs(url.query).items()}
         site = qs.get("site") or None
         try:
@@ -670,10 +690,26 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         url = urlparse(self.path)
         try:
-            length = int(self.headers.get("Content-Length") or 0)
+            length = min(int(self.headers.get("Content-Length") or 0), 1_000_000)
             body = json.loads(self.rfile.read(length) or b"{}") if length else {}
         except ValueError:
             body = {}
+        if url.path == "/api/login":
+            if auth.misconfigured():
+                return self._send(503, {"error": "no password set: run ./setup.sh"})
+            ok, wait = auth.check_password(self.client_address[0], str(body.get("password") or ""))
+            if wait:
+                return self._send(429, {"error": "too many attempts", "retry_after": wait})
+            if not ok:
+                log.warning("connexion refusée depuis %s", self.client_address[0])
+                return self._send(401, {"error": "wrong password"})
+            token, age = auth.new_session()
+            return self._send(200, {"ok": True}, headers={
+                "Set-Cookie": f"{auth.COOKIE}={token}; Max-Age={age}; Path=/; HttpOnly; SameSite=Lax"})
+        if url.path == "/api/logout":
+            return self._send(200, {"ok": True}, headers={"Set-Cookie": f"{auth.COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"})
+        if not self._gate(url.path):
+            return
         try:
             if url.path == "/api/rescan":
                 RESCAN.set()
@@ -696,6 +732,10 @@ def main():
     log.info("cockpit démarré sur le port %d · sites : %s · vCenter : %s · Zabbix : %s · SNMP : %s · IA : %s",
              C.PORT, ", ".join(s["name"] for s in CFG["sites"]) or "auto", "oui" if VC else "non",
              "oui" if ZBX else "non", "oui" if CFG["snmp"]["community"] else "non", (ai.info() or {}).get("provider", "non"))
+    if auth.misconfigured():
+        log.error("connexion activée mais COCKPIT_PASSWORD est vide : l'interface reste fermée. Lance ./setup.sh")
+    elif not auth.active():
+        log.warning("interface SANS mot de passe (COCKPIT_AUTH=off) : toute personne du réseau peut la consulter")
     C.TARGETS_DIR.mkdir(parents=True, exist_ok=True)
     try:
         write_targets()

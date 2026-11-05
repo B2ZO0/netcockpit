@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NetCockpit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='16' cy='16' r='13' stroke='%238A6CFF' stroke-width='3'/%3E%3Cpath d='M5 18 27 13' stroke='%238A6CFF' stroke-width='3'/%3E%3Cpath d='m10 22 6-5 6 5' stroke='%23D16BFF' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+@font-face { font-family: "B612"; src: url("lib/fonts/B612-Regular.woff") format("woff"); font-weight: 400; }
+@font-face { font-family: "B612"; src: url("lib/fonts/B612-Bold.woff") format("woff"); font-weight: 700; }
+:root { --bg:#0b0d16; --panel:#131625; --line:#272b40; --text:#e8e9f3; --muted:#9096b4; --violet:#8a6cff; --magenta:#d16bff; --bad:#ff5c7a; }
+@media (prefers-color-scheme: light) { :root { --bg:#f4f4fa; --panel:#fff; --line:#e1e2ee; --text:#171a2b; --muted:#5d6382; --violet:#6d4cf0; --magenta:#b13ad6; --bad:#d6264a; } }
+* { box-sizing: border-box; }
+body { margin:0; min-height:100vh; display:grid; place-items:center; background:radial-gradient(900px 500px at 80% -10%, color-mix(in srgb, var(--violet) 22%, transparent), transparent 60%), var(--bg); color:var(--text); font:15px/1.5 "B612", system-ui, sans-serif; }
+.card { width:min(380px, 92vw); background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:30px 28px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.brand { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+.brand svg { width:40px; height:40px; }
+h1 { font-size:22px; margin:0; } .sub { color:var(--muted); font-size:13px; }
+label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+input { width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:inherit; }
+input:focus { outline:2px solid var(--violet); outline-offset:1px; }
+button { width:100%; margin-top:14px; padding:11px; border:0; border-radius:10px; font:inherit; font-weight:700; color:#fff; background:linear-gradient(90deg, var(--violet), var(--magenta)); cursor:pointer; }
+button:disabled { opacity:.6; cursor:wait; }
+.msg { min-height:22px; margin-top:12px; font-size:13px; color:var(--bad); }
+.hint { margin-top:18px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:14px; }
+code { font-family:ui-monospace, monospace; font-size:12px; }
+</style>
+</head>
+<body>
+<form class="card" id="f">
+  <div class="brand">
+    <svg viewBox="0 0 128 128"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="64" cy="64" r="40" stroke="#8a6cff" stroke-width="8"/><path d="M27 71 101 55" stroke="#8a6cff" stroke-width="8"/><path d="m44 86 20-16 20 16" stroke="#d16bff" stroke-width="8.5"/></g></svg>
+    <div><h1>NetCockpit</h1><div class="sub" id="sub">Sign in to the cockpit</div></div>
+  </div>
+  <label for="p" id="lbl">Password</label>
+  <input id="p" type="password" autocomplete="current-password" autofocus required>
+  <button id="b" type="submit">Sign in</button>
+  <div class="msg" id="m" role="alert"></div>
+  <div class="hint" id="h">The password is shown at the end of <code>./setup.sh</code> and stored in <code>.env</code> (COCKPIT_PASSWORD).</div>
+</form>
+<script>
+(function () {
+  var fr = /^fr/i.test((function () { try { return JSON.parse(localStorage.getItem("cockpit.lang")) || navigator.language; } catch (e) { return navigator.language; } })() || "");
+  var T = fr ? { sub: "Connexion au cockpit", lbl: "Mot de passe", b: "Se connecter", wrong: "Mot de passe incorrect.", wait: "Trop d'essais : réessaie dans {n} s.",
+                 none: "Aucun mot de passe n'est défini : lance ./setup.sh sur le serveur.", err: "Le cockpit ne répond pas.",
+                 h: "Le mot de passe s'affiche à la fin de <code>./setup.sh</code> et se trouve dans <code>.env</code> (COCKPIT_PASSWORD)." }
+               : { sub: "Sign in to the cockpit", lbl: "Password", b: "Sign in", wrong: "Wrong password.", wait: "Too many attempts: try again in {n} s.",
+                 none: "No password is set: run ./setup.sh on the server.", err: "The cockpit does not answer.", h: null };
+  document.documentElement.lang = fr ? "fr" : "en";
+  document.getElementById("sub").textContent = T.sub;
+  document.getElementById("lbl").textContent = T.lbl;
+  document.getElementById("b").textContent = T.b;
+  if (T.h) document.getElementById("h").innerHTML = T.h;
+  var m = document.getElementById("m"), b = document.getElementById("b");
+  document.getElementById("f").addEventListener("submit", function (e) {
+    e.preventDefault(); m.textContent = ""; b.disabled = true;
+    fetch("api/login", { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: document.getElementById("p").value }) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.s === 200) { location.href = "./" + (location.hash || ""); return; }
+        m.textContent = x.s === 429 ? T.wait.replace("{n}", x.d.retry_after) : x.s === 503 ? T.none : T.wrong;
+      })
+      .catch(function () { m.textContent = T.err; })
+      .then(function () { b.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>

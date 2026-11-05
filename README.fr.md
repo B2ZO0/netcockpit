@@ -137,10 +137,10 @@ L'assistant détecte le réseau local, la passerelle et les DNS, puis te demande
 
 | Service | Adresse |
 |---|---|
-| **Cockpit** | `http://<IP>:8088` |
+| **Cockpit** | `http://<IP>:8088` (mot de passe affiché par `./setup.sh`, `COCKPIT_PASSWORD`) |
 | Grafana | `http://<IP>:3000` (admin / `GRAFANA_ADMIN_PASSWORD`) |
 | Zabbix | `http://<IP>:8081` (Admin / `ZABBIX_ADMIN_PASSWORD`) |
-| Prometheus · Alertmanager | `:9090` · `:9093` |
+| Prometheus · Alertmanager | `:9090` · `:9093` (local uniquement, voir [SECURITY.md](SECURITY.md)) |
 
 Ensuite, installe les agents. Le cockpit sert lui-même les scripts :
 
