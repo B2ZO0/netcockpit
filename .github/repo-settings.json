@@ -19,7 +19,7 @@
     "zabbix",
     "alertmanager",
     "snmp",
-    "lldp",
+    "network-discovery",
     "docker-compose",
     "network-map",
     "observability"
