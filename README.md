@@ -15,7 +15,7 @@
 ![Docker Compose](https://img.shields.io/badge/deploy-docker%20compose-2496ED?logo=docker&logoColor=white)
 ![UI: English | Français](https://img.shields.io/badge/UI-English%20%7C%20Fran%C3%A7ais-4cc9f0)
 
-**English** · [Français](README.fr.md) · [**Live demo**](https://b2zo0.github.io/netcockpit/) · [Run the demo](#-try-it-in-one-minute) · [Step-by-step guide](docs/getting-started.md) · [Docs](docs/)
+**English** · [Français](README.fr.md) · [**Live demo**](https://b2zo0.github.io/netcockpit/) · [Run the demo](#-try-it-in-one-minute) · [Step-by-step guide](docs/getting-started.md) · [How it works](docs/how-it-works.md) · [Docs](docs/)
 
 <img src="docs/images/demo.gif" alt="NetCockpit demo: status headline, device sheet with AI analysis, topology, VMware, switches, day theme" width="100%">
 
