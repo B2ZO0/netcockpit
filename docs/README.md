@@ -3,6 +3,7 @@
 **New here? Start with the step-by-step guide: [English](getting-started.md) · [Français](demarrage.md).**
 **Your situation is different (multi-site, no AD, no VMware, provider-managed network, homelab…)? [Scenarios](scenarios.md) · [Cas pratiques](cas-pratiques.md).**
 
+- **How it works, in plain words: [English](how-it-works.md) · [Français](comment-ca-marche.md)**
 - [Installation](installation.md): requirements, first run, upgrade, ports
 - [Configuration](configuration.md): `config/cockpit.yml` and `.env` reference, read-only VMware account
 - [Agents](agents.md): Grafana Alloy for Windows and Linux, LLDP
