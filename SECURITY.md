@@ -7,6 +7,9 @@ Please report vulnerabilities **privately**, through GitHub's "Report a vulnerab
 - **The cockpit asks for a password** (since this version). `./setup.sh` generates it, shows it at the end and keeps it in `.env` (`COCKPIT_PASSWORD`). Sessions are signed cookies (HttpOnly, SameSite), and repeated wrong passwords are slowed down (5 tries per 5 minutes per address).
   - Wall screen: list its address in `COCKPIT_TRUSTED_NETWORKS` instead of turning the login off.
   - `COCKPIT_AUTH=off` removes the login: only for a personal lab.
+- **`/metrics` is no longer public**: it lists every device (IP, MAC, name, OS). Without a session it only answers the monitoring host itself and its local Docker networks (where Prometheus scrapes from). An external Prometheus: add its address to `COCKPIT_METRICS_NETWORKS`.
+- **Behind an HTTPS reverse proxy** that sends `X-Forwarded-Proto: https`, the session cookie is marked `Secure`.
+- **vCenter certificate**: not verified by default (self-signed is common). Set `VCENTER_VERIFY_TLS=true` once vCenter has a certificate your system trusts.
 - **Alertmanager (9093) listens on the host only**: nobody on the network can silence alerts.
 - **Prometheus remote-write (9090), Loki push (3100), syslog (514) and the Zabbix trapper (10051) are unauthenticated by design**: agents and devices push to them. Allow them **only from your server and device networks** with a firewall, for example:
   ```bash

@@ -19,6 +19,9 @@ jobs:
           pip install pyyaml requests
           python -m py_compile cockpit/app/*.py scripts/*.py demo/demo.py
 
+      - name: Unit tests
+        run: python -m unittest discover -v -s tests
+
       - name: JavaScript
         run: for f in cockpit/static/*.js; do node --check "$f"; done
 

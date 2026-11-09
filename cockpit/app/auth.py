@@ -5,12 +5,17 @@ COCKPIT_AUTH               on (défaut) | off
 COCKPIT_SECRET             clé de signature des sessions (générée par setup.sh)
 COCKPIT_TRUSTED_NETWORKS   réseaux autorisés sans connexion (écran mural), ex. "192.0.2.50/32,10.0.9.0/24"
 COCKPIT_SESSION_HOURS      durée d'une session (défaut 12)
+COCKPIT_METRICS_NETWORKS   réseaux autorisés à lire /metrics sans connexion, en plus de la machine elle-même
+                           et des réseaux Docker locaux (d'où Prometheus interroge le cockpit)
 """
 import hashlib
 import hmac
 import ipaddress
+import json
 import os
+import re
 import secrets
+import subprocess
 import threading
 import time
 
@@ -19,17 +24,28 @@ PASSWORD = os.environ.get("COCKPIT_PASSWORD", "")
 ENABLED = os.environ.get("COCKPIT_AUTH", "on").strip().lower() not in ("off", "0", "false", "no")
 SECRET = (os.environ.get("COCKPIT_SECRET") or secrets.token_hex(32)).encode()
 HOURS = float(os.environ.get("COCKPIT_SESSION_HOURS", "12") or 12)
-TRUSTED = []
-for _n in (os.environ.get("COCKPIT_TRUSTED_NETWORKS") or "").replace(";", ",").split(","):
-    if _n.strip():
-        try:
-            TRUSTED.append(ipaddress.ip_network(_n.strip(), strict=False))
-        except ValueError:
-            pass
+
+
+def _networks(value: str | None) -> list:
+    nets = []
+    for n in (value or "").replace(";", ",").split(","):
+        if n.strip():
+            try:
+                nets.append(ipaddress.ip_network(n.strip(), strict=False))
+            except ValueError:
+                pass
+    return nets
+
+
+TRUSTED = _networks(os.environ.get("COCKPIT_TRUSTED_NETWORKS"))
+METRICS_NETWORKS = _networks(os.environ.get("COCKPIT_METRICS_NETWORKS"))
+DOCKER_IFACES = re.compile(r"^(docker\d*|br-)")
+_docker = {"at": 0.0, "nets": []}
 
 # Chemins accessibles sans connexion : page de connexion et ses ressources, santé,
-# métriques pour Prometheus, scripts d'installation des agents (publics de toute façon).
-PUBLIC_PREFIXES = ("/login", "/api/login", "/health", "/-/healthy", "/metrics", "/agents/",
+# scripts d'installation des agents (publics de toute façon).
+# /metrics n'en fait pas partie : il contient tout l'inventaire (voir metrics_source).
+PUBLIC_PREFIXES = ("/login", "/api/login", "/health", "/-/healthy", "/agents/",
                    "/lib/fonts/", "/style.css", "/i18n.js", "/favicon")
 
 _fails: dict[str, list[float]] = {}
@@ -85,7 +101,52 @@ def is_public(path: str) -> bool:
     return path.startswith(PUBLIC_PREFIXES)
 
 
+def _parse_docker_networks(ip_addr_json: str) -> list:
+    """Réseaux des interfaces Docker de la machine, d'après la sortie de `ip -j -4 addr`."""
+    nets = []
+    try:
+        for iface in json.loads(ip_addr_json or "[]"):
+            if not DOCKER_IFACES.match(iface.get("ifname", "")):
+                continue
+            for a in iface.get("addr_info", []):
+                nets.append(ipaddress.ip_interface(f"{a['local']}/{a['prefixlen']}").network)
+    except (ValueError, KeyError, TypeError):
+        pass
+    return nets
+
+
+def docker_networks() -> list:
+    """Réseaux Docker locaux, relus au plus une fois par minute (ils peuvent apparaître après le démarrage)."""
+    now = time.time()
+    with _lock:
+        if now - _docker["at"] < 60:
+            return _docker["nets"]
+        _docker["at"] = now
+    try:
+        out = subprocess.run(["ip", "-j", "-4", "addr"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        out = ""
+    nets = _parse_docker_networks(out)
+    with _lock:
+        _docker["nets"] = nets
+    return nets
+
+
+def metrics_source(ip: str) -> bool:
+    """Qui peut lire /metrics sans connexion : la machine elle-même, les conteneurs Docker locaux
+    (Prometheus), et les réseaux de COCKPIT_METRICS_NETWORKS."""
+    try:
+        a = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    if a.is_loopback or any(a in n for n in METRICS_NETWORKS):
+        return True
+    return any(a in n for n in docker_networks())
+
+
 def allowed(path: str, ip: str, cookie_header: str | None) -> bool:
+    if path == "/metrics" and metrics_source(ip):
+        return True
     if misconfigured():
         return is_public(path) and path not in ("/api/login",)
     if not active() or is_public(path) or trusted(ip):

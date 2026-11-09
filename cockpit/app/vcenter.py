@@ -15,12 +15,13 @@ except ImportError:  # pragma: no cover
 
 
 class VCenter:
-    def __init__(self, url, user, password):
+    def __init__(self, url, user, password, verify_tls=False):
         u = urlparse(url if "://" in url else f"https://{url}")
         self.host = u.hostname
         self.port = u.port or 443
         self.user = user
         self.password = password
+        self.verify_tls = verify_tls
         self.si = None
         self.state = {"up": False, "error": "pas encore interrogé", "hosts": [], "vms": [], "datastores": [],
                       "alarms": [], "links": [], "updated": 0}
@@ -34,7 +35,9 @@ class VCenter:
             except Exception:  # session expirée
                 pass
             self.si = None
-        ctx = ssl._create_unverified_context()
+        # Par défaut le certificat n'est pas vérifié (vCenter est souvent en auto-signé).
+        # VCENTER_VERIFY_TLS=true le vérifie avec les autorités de confiance du système.
+        ctx = ssl.create_default_context() if self.verify_tls else ssl._create_unverified_context()
         self.si = SmartConnect(host=self.host, port=self.port, user=self.user, pwd=self.password, sslContext=ctx)
         log.info("connecté à vCenter %s", self.host)
 
