@@ -184,20 +184,26 @@ def build(cfg, scan, vc, snmp_state, agents, lldp, now=None):
             ip = h["ips"][0] if h.get("ips") else None
             nid = m.by_ip(ip) if ip else f"esx:{norm(h['name'])}"
             site, subnet = C.site_of(cfg, ip) if ip else (None, None)
-            m.node(nid, ip=ip, role="esxi", source="vcenter", critical=True, alert=True, site=site, subnet=subnet,
+            pve = h.get("platform") == "proxmox"
+            m.node(nid, ip=ip, role="hypervisor" if pve else "esxi", source="proxmox" if pve else "vcenter",
+                   critical=True, alert=True, site=site, subnet=subnet,
                    esxi=h, vc_state=h.get("state"), details={"esx_name": short(h["name"], strip)},
                    os=short_os(h.get("version")))
             host_ids[h["name"]] = nid
+        mac_ip = {str(n["mac"]).lower(): n["ip"] for n in m.nodes.values() if n.get("mac") and n.get("ip")}
         for v in vc.get("vms") or []:
             ips = v.get("ips") or []
+            if not ips:   # pas d'agent invité (fréquent sous Proxmox) : l'IP vient du scan, retrouvée par l'adresse MAC
+                ips = [mac_ip[x] for x in v.get("macs") or [] if x in mac_ip]
             known = [i for i in ips if C.site_of(cfg, i)[0]]
             ip = known[0] if known else (ips[0] if ips else None)
             nid = m.by_ip(ip) if ip else f"vm:{norm(v['name'])}"
             site, subnet = C.site_of(cfg, ip) if ip else (None, None)
             existing = m.nodes.get(nid)
-            m.node(nid, ip=ip, role="vm", source="vcenter", alert=v.get("power") == "poweredOn", site=site, subnet=subnet,
+            pve = v.get("platform") == "proxmox"
+            m.node(nid, ip=ip, role="vm", source="proxmox" if pve else "vcenter", alert=v.get("power") == "poweredOn", site=site, subnet=subnet,
                    vm=v, vm_power=v.get("power"), os=short_os(v.get("os")) or (existing or {}).get("os"),
-                   mac=(existing or {}).get("mac") or ((v.get("macs") or [None])[0]), vendor=(existing or {}).get("vendor") or "VMware",
+                   mac=(existing or {}).get("mac") or ((v.get("macs") or [None])[0]), vendor=(existing or {}).get("vendor") or ("Proxmox" if pve else "VMware"),
                    details={"vm_name": v["name"], "vm_hostname": v.get("hostname"),
                             "autres IP": ", ".join(i for i in ips if i != ip)})
             if v.get("host") in host_ids:

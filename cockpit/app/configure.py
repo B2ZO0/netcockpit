@@ -47,6 +47,11 @@ T = {
         "gwq": "Adresse de la passerelle / du firewall",
         "gwname": "Passerelle / Firewall",
         "vc": "VMware : adresse du vCenter ou de l'ESXi (IP ou nom, Entrée pour passer)",
+        "h_pve": "Proxmox VE : il faut un jeton d'API en lecture seule (rôle PVEAuditor). Les 3 commandes à lancer sur le Proxmox sont dans docs/demarrage.md.",
+        "pve": "Proxmox VE : adresse d'un nœud (IP ou nom, Entrée pour passer)",
+        "pve_keep": "Proxmox déjà configuré ({v}). Entrée pour garder, ou nouvelle adresse",
+        "pvei": "Identifiant du jeton (ex. netcockpit@pve!cockpit)",
+        "pves": "Secret du jeton (rien ne s'affiche) : ",
         "vc_keep": "VMware déjà configuré ({v}). Entrée pour garder, ou nouvelle adresse",
         "vcu": "Utilisateur en lecture seule (ex. supervision ou supervision@vsphere.local)",
         "vcp": "Mot de passe de cet utilisateur (rien ne s'affiche) : ",
@@ -88,6 +93,11 @@ T = {
         "gwq": "Gateway / firewall address",
         "gwname": "Gateway / Firewall",
         "vc": "VMware: vCenter or ESXi address (IP or name, Enter to skip)",
+        "h_pve": "Proxmox VE: a read-only API token is needed (PVEAuditor role). The 3 commands to run on the Proxmox host are in docs/getting-started.md.",
+        "pve": "Proxmox VE: address of one node (IP or name, Enter to skip)",
+        "pve_keep": "Proxmox already configured ({v}). Enter to keep, or a new address",
+        "pvei": "Token ID (e.g. netcockpit@pve!cockpit)",
+        "pves": "Token secret (nothing is shown): ",
         "vc_keep": "VMware already configured ({v}). Enter to keep, or a new address",
         "vcu": "Read-only user (e.g. monitoring or monitoring@vsphere.local)",
         "vcp": "Password of that user (nothing is shown): ",
@@ -324,6 +334,18 @@ def main():
         pw = ask.secret("vcp")
         if pw:
             env_new["VCENTER_PASSWORD"] = pw
+    pve_cur = env.get("PROXMOX_URL", "")
+    ask.hint("h_pve")
+    host = ask("pve_keep", "", v=pve_cur) if pve_cur else ask("pve")
+    if host:
+        url = host if host.startswith("http") else f"https://{host}"
+        if not re.search(r":\d+$", url.rstrip("/")):
+            url = url.rstrip("/") + ":8006"
+        env_new["PROXMOX_URL"] = url.rstrip("/")
+        env_new["PROXMOX_TOKEN_ID"] = ask("pvei", env.get("PROXMOX_TOKEN_ID", ""))
+        pw = ask.secret("pves")
+        if pw:
+            env_new["PROXMOX_TOKEN_SECRET"] = pw
     snmp_cfg = cfg.get("snmp") or {}
     ask.hint("h_snmp")
     community = ask("snmp", env.get("SNMP_COMMUNITY", "") or str(snmp_cfg.get("community") or ""))
@@ -368,6 +390,8 @@ def main():
     print(f"    DNS {', '.join(dns) or '-'}   {s['gw']} {gw_ip or '-'}")
     if env_new.get("VCENTER_URL") or vc_cur:
         print(f"    VMware {env_new.get('VCENTER_URL') or vc_cur}")
+    if env_new.get("PROXMOX_URL") or pve_cur:
+        print(f"    Proxmox {env_new.get('PROXMOX_URL') or pve_cur}")
     print(f"    Zabbix {env_new['ENABLE_ZABBIX']}")
     if interactive and ask.raw("\n" + s["save"], s["yes"][0]).lower() not in s["yes"]:
         print(s["cancel"])

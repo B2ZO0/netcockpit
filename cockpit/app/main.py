@@ -18,6 +18,7 @@ import model as M
 import scanner
 import snmp as S
 import sources as SRC
+from proxmox import Proxmox, merge_states
 from vcenter import VCenter
 from zabbix import Zabbix
 
@@ -60,6 +61,13 @@ def save_state():
 
 
 VC = VCenter(C.VCENTER_URL, C.VCENTER_USER, C.VCENTER_PASSWORD) if C.VCENTER_URL and C.VCENTER_PASSWORD else None
+PVE = Proxmox(C.PROXMOX_URL, C.PROXMOX_TOKEN_ID, C.PROXMOX_TOKEN_SECRET, C.PROXMOX_VERIFY_TLS) \
+    if C.PROXMOX_URL and C.PROXMOX_TOKEN_ID and C.PROXMOX_TOKEN_SECRET else None
+
+
+def virt():
+    """État de la virtualisation, toutes plateformes confondues (vCenter/ESXi et Proxmox VE), ou None."""
+    return merge_states([x.state for x in (VC, PVE) if x])
 ZBX = Zabbix(C.ZABBIX_URL, C.ZABBIX_ADMIN_PASSWORD) if C.ZABBIX_URL else None
 
 
@@ -121,7 +129,7 @@ def current(force=False):
         if not force and _cache.get("model") and time.time() - _cache["t"] < 15:
             return _cache["model"], _cache["live"]
         live = collect_live()
-        mdl = M.build(CFG, SCAN, VC.state if VC else None, SNMP_STATE, live["agents"], live["lldp"])
+        mdl = M.build(CFG, SCAN, virt(), SNMP_STATE, live["agents"], live["lldp"])
         M.apply_live(mdl, live)
         _cache.update(t=time.time(), model=mdl, live=live)
         return mdl, live
@@ -129,6 +137,7 @@ def current(force=False):
 
 def features():
     return {"vcenter": None if not VC else {"up": VC.state["up"], "error": VC.state["error"]},
+            "proxmox": None if not PVE else {"up": PVE.state["up"], "error": PVE.state["error"]},
             "zabbix": None if not ZBX else {"up": ZBX.state["up"], "error": ZBX.state["error"], "url": C.ZABBIX_PUBLIC_URL},
             "snmp": bool(CFG["snmp"]["community"]), "ai": ai.info(), "grafana_url": C.GRAFANA_URL,
             "alertmanager_url": C.ALERTMANAGER_PUBLIC_URL,
@@ -150,7 +159,7 @@ def overview(site=None):
             mt = n.get("metrics") or {}
             servers.append({"id": n["id"], "name": n["name"], "ip": n.get("ip"), "status": n["status"], "os": n.get("os"),
                             "cpu": mt.get("cpu"), "mem": mt.get("mem"), "disk": mt.get("disk")})
-    vc = VC.state if VC else None
+    vc = virt()
     inet_series = SRC.prom_range('avg(probe_icmp_duration_seconds{job="blackbox_icmp", role="internet", phase="rtt"}) * 1000', hours=24)
     new = [M.public_node(n, light=True) for n in mdl.nodes.values() if n.get("new") and (not site or n.get("site") == site)]
     return {
@@ -176,7 +185,7 @@ def setup_status():
     mdl, live = current()
     devices = [n for n in mdl.nodes.values() if n.get("ip") and n["role"] not in ("site", "subnet", "internet", "isp", "group")]
     named = [n for n in devices if n.get("name") and n["name"] != n.get("ip")]
-    vc = VC.state if VC else None
+    vc = virt()
     return {
         "sites": [{"name": s["name"], "subnets": s["subnets"]} for s in CFG["sites"]],
         "auto_sites": any(s.get("auto") for s in CFG["sites"]),
@@ -184,7 +193,7 @@ def setup_status():
         "undeclared": undeclared(mdl),
         "scan": {"last": SCAN.get("last_scan"), "running": SCANNING.is_set(), "devices": len(devices)},
         "names": {"total": len(devices), "named": len(named), "dns": CFG["names"]["dns_servers"]},
-        "vmware": {"configured": bool(VC), "up": bool(vc and vc["up"]), "error": vc and vc.get("error"),
+        "vmware": {"configured": bool(VC or PVE), "platforms": [n for n, x in (("vmware", VC), ("proxmox", PVE)) if x], "up": bool(vc and vc["up"]), "error": vc and vc.get("error"),
                    "hosts": len(vc["hosts"]) if vc else 0, "vms": len(vc["vms"]) if vc else 0},
         "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"]),
                    "silent": sorted(a["instance"] for a in live["agents"] if not a["alive"])[:10]},
@@ -471,7 +480,9 @@ def scan_loop():
 
 def vcenter_loop():
     while True:
-        VC.poll()
+        for src in (VC, PVE):
+            if src:
+                src.poll()
         try:
             write_targets()
         except Exception:
@@ -537,8 +548,8 @@ def metrics_text():
         out.append(_line("cockpit_devices", {"site": site, "subnet": subnet}, c))
     for k, v in M.stats(mdl).items():
         out.append(_line("cockpit_nodes", {"status": k}, v))
-    if VC:
-        st = VC.state
+    if VC or PVE:
+        st = virt()
         out.append(_line("cockpit_vmware_up", {"error": st.get("error")}, 1 if st["up"] else 0))
         if st["up"]:
             for h in st["hosts"]:
@@ -649,7 +660,7 @@ class Handler(BaseHTTPRequestHandler):
                                   {"Content-Disposition": 'attachment; filename="inventaire-reseau.csv"'})
             if p == "/api/vmware":
                 mdl, _ = current()
-                return self._send(200, M.vmware_view(mdl, VC.state if VC else None))
+                return self._send(200, M.vmware_view(mdl, virt()))
             if p == "/api/switches":
                 mdl, _ = current()
                 v = M.switches_view(mdl, traffic())
@@ -730,7 +741,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     log.info("cockpit démarré sur le port %d · sites : %s · vCenter : %s · Zabbix : %s · SNMP : %s · IA : %s",
-             C.PORT, ", ".join(s["name"] for s in CFG["sites"]) or "auto", "oui" if VC else "non",
+             C.PORT, ", ".join(s["name"] for s in CFG["sites"]) or "auto", " + ".join(n for n, x in (("vCenter", VC), ("Proxmox", PVE)) if x) or "non",
              "oui" if ZBX else "non", "oui" if CFG["snmp"]["community"] else "non", (ai.info() or {}).get("provider", "non"))
     if auth.misconfigured():
         log.error("connexion activée mais COCKPIT_PASSWORD est vide : l'interface reste fermée. Lance ./setup.sh")
@@ -742,7 +753,7 @@ def main():
     except Exception:
         log.exception("écriture initiale des cibles")
     threading.Thread(target=scan_loop, daemon=True, name="scan").start()
-    if VC:
+    if VC or PVE:
         threading.Thread(target=vcenter_loop, daemon=True, name="vcenter").start()
     if ZBX:
         threading.Thread(target=zabbix_loop, daemon=True, name="zabbix").start()

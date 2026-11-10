@@ -222,9 +222,10 @@ const App = (() => {
     }
     markSite();
     const src = [["Prometheus", true, true], [t("src.scan"), true, true],
-      ["vCenter", f.vcenter && f.vcenter.up, !!f.vcenter], ["Zabbix", f.zabbix && f.zabbix.up, !!f.zabbix],
+      ...(f.vcenter || !f.proxmox ? [["vCenter", f.vcenter && f.vcenter.up, !!f.vcenter]] : []),
+      ...(f.proxmox ? [["Proxmox", f.proxmox.up, true]] : []), ["Zabbix", f.zabbix && f.zabbix.up, !!f.zabbix],
       ["SNMP", f.snmp, f.snmp], [t("src.ai"), !!f.ai, !!f.ai]];
-    const errs = { vCenter: f.vcenter && f.vcenter.error, Zabbix: f.zabbix && f.zabbix.error };
+    const errs = { vCenter: f.vcenter && f.vcenter.error, Proxmox: f.proxmox && f.proxmox.error, Zabbix: f.zabbix && f.zabbix.error };
     $("#sources").innerHTML = src.map(([n, ok, on]) => `<div>${lamp(!on ? "off" : ok ? "up" : "down")}<span>${esc(n)}</span><span>${t(on ? (ok ? "src.connected" : "src.error") : "src.off")}</span></div>`
       + (on && !ok && errs[n] ? `<div class="src-err">${esc(String(errs[n]).slice(0, 160))}</div>` : "")).join("")
       + `<div class="src-err"><a href="${guideUrl()}" target="_blank" rel="noopener">${t("ov.guide")} ↗</a></div>`;

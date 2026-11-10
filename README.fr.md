@@ -39,7 +39,7 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 - 🔌 **Qui est branché sur quel port ?** Le CDP/LLDP est lu **via les ESXi** et les serveurs Linux, sans toucher aux switchs. Avec un accès SNMP en lecture seule, tu obtiens la carte complète, port par port.
 - 🏷️ **De vrais noms, pas des IP.** DNS AD, NetBIOS (noms et MAC des PC Windows, même sur un site distant), noms vCenter et noms des agents.
 - 🚦 **Pas de fausses alertes.** Un portable rentré à la maison apparaît *absent*, en gris. Le rouge est réservé aux serveurs, VM, hyperviseurs, firewalls, switchs et contrôleurs de domaine qui ne répondent plus.
-- 🖥️ **VMware d'un coup d'œil.** Chaque hôte, ses VM (CPU, RAM, IP, OS), les datastores et les alarmes vCenter. Fonctionne avec un **vCenter ou un ESXi seul**, en lecture seule.
+- 🖥️ **VMware et Proxmox d'un coup d'œil.** Chaque hôte, ses VM (CPU, RAM, IP, OS), les datastores et les alarmes. Fonctionne avec un **vCenter, un ESXi seul ou Proxmox VE** (VM et conteneurs LXC), toujours en lecture seule.
 - 🔔 **Une seule chaîne d'alertes.** Prometheus, Loki et Zabbix passent tous par Alertmanager vers Telegram, Discord ou email, regroupés et dédoublonnés : si le firewall tombe, tu reçois un message, pas 80.
 - 🤖 **Diagnostic IA, en option.** Un bouton « Analyser » sur chaque équipement et un briefing de la situation, avec une API d'IA dans le cloud ou un **modèle local** (Ollama : rien ne sort du réseau).
 - ✈️ **Un vrai cockpit, pas un énième template d'admin.** Une phrase te dit où en est l'infra, la route vers Internet est tracée comme la ligne magenta d'un plan de vol, et l'interface utilise [B612](https://github.com/polarsys/b612), la police conçue par Airbus pour les écrans de cockpit. Thèmes nuit et jour, français et anglais.
@@ -182,7 +182,7 @@ Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés
 
 **Peut-on l'installer à côté d'autres conteneurs ?** Oui. Il utilise les ports 8088, 3000, 9090, 9093, 3100 et 514, plus 8081 et 10051 quand Zabbix est activé.
 
-**Seulement VMware ?** Pour l'instant oui, plus tout serveur physique équipé d'un agent. Hyper-V et Proxmox sont prévus.
+**Seulement VMware ?** Non : **Proxmox VE** est aussi pris en charge (nœuds, VM, conteneurs LXC, stockages, avec un jeton d'API en lecture seule), plus tout serveur physique équipé d'un agent. Hyper-V est prévu.
 
 ## 🔐 Sécurité
 
@@ -196,12 +196,13 @@ Pour signaler une faille : [SECURITY.md](SECURITY.md).
 
 - [x] Interface en français et en anglais, thèmes nuit et jour
 - [x] Mises à jour sans risque : réglages jamais versionnés, sauvegardes automatiques
-- [ ] D'autres langues (un bloc à ajouter dans `cockpit/static/i18n.js`)
-- [ ] Plusieurs vCenter / ESXi
-- [ ] SNMPv3
-- [ ] Inventaire Hyper-V et Proxmox
-- [ ] Authentification devant le cockpit (exemple OIDC / reverse proxy)
-- [ ] Chart Helm
+- [x] Connexion par mot de passe au cockpit
+- [x] Proxmox VE (nœuds, VM, LXC, stockages) et mise à jour en une commande
+- [ ] Des connecteurs à activer un par un (pare-feu, NAS, plus de switchs)
+- [ ] La configuration depuis le navigateur, avec un guide
+- [ ] Hyper-V, SNMPv3, plusieurs vCenter / ESXi
+
+Le plan complet, version par version, est dans [ROADMAP.md](ROADMAP.md).
 
 Idées, traductions et pull requests bienvenues : voir [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # NetCockpit : installation, configuration et mise à jour. Relançable à volonté, ne perd jamais tes réglages.
 #   ./setup.sh               installe ou met à jour (l'assistant se lance tout seul la première fois)
+#   ./setup.sh --update      télécharge la dernière version puis met à jour, sans toucher à tes réglages ni à l'historique
 #   ./setup.sh --configure   relance l'assistant : ajouter un bâtiment, changer d'adressage, connecter VMware...
 #   ./setup.sh --yes         sans questions (valeurs détectées automatiquement)
 #   ./setup.sh --fresh       repart de zéro même si une ancienne installation existe (déconseillé)
@@ -13,13 +14,14 @@ ok() { printf '\033[32m✔\033[0m %s\n' "$(say "$1" "$2")"; }
 warn() { printf '\033[33m!\033[0m %s\n' "$(say "$1" "$2")"; }
 die() { printf '\n\033[31m✖\033[0m %s\n\n' "$(say "$1" "$2")"; exit 1; }
 
-CONFIGURE=""; YES=""; FRESH=""
+CONFIGURE=""; YES=""; FRESH=""; UPDATE=""; REST=()
 for a in "$@"; do
   case "$a" in
-    --configure) CONFIGURE=1 ;;
-    --yes|-y) YES=1 ;;
+    --update) UPDATE=1 ;;
+    --configure) CONFIGURE=1; REST+=("$a") ;;
+    --yes|-y) YES=1; REST+=("$a") ;;
     --fresh) FRESH=1 ;;
-    -h|--help) sed -n '2,7p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
     *) die "Option inconnue : $a (voir ./setup.sh --help)" "Unknown option: $a (see ./setup.sh --help)" ;;
   esac
 done
@@ -27,6 +29,29 @@ done
 command -v docker >/dev/null || die "Docker manque : curl -fsSL https://get.docker.com | sh" "Docker is missing: curl -fsSL https://get.docker.com | sh"
 docker compose version >/dev/null 2>&1 || die "Le plugin « docker compose » manque." "The docker compose plugin is missing."
 command -v python3 >/dev/null || die "python3 manque : apt install python3" "python3 is missing: apt install python3"
+
+# ------------------------------------------------------------------ --update : récupère la dernière version, puis relance ce script (nouvelle version)
+# Tes réglages (.env, config/cockpit.yml) ne font pas partie du dépôt : git ne peut pas les écraser. L'historique est dans des volumes Docker.
+if [[ -n "$UPDATE" ]]; then
+  command -v git >/dev/null || die "git manque : apt install git" "git is missing: apt install git"
+  [[ -d .git ]] || die "Ce dossier n'a pas été installé avec git clone : télécharge la nouvelle version, décompresse-la DANS ce dossier, puis lance ./setup.sh" \
+                       "This folder was not installed with git clone: download the new version, extract it INTO this folder, then run ./setup.sh"
+  OLD=$(git rev-parse HEAD)
+  if ! git pull --ff-only; then
+    die "La mise à jour n'a pas pu être téléchargée (voir le message de git ci-dessus). Rien n'a été modifié.
+  Cause fréquente : un fichier du projet a été modifié à la main. « git status » les liste ; « git stash » les met de côté, puis relance ./setup.sh --update" \
+        "The update could not be downloaded (see git's message above). Nothing was changed.
+  Usual cause: a project file was edited by hand. \"git status\" lists them; \"git stash\" puts them aside, then run ./setup.sh --update again"
+  fi
+  NEW=$(git rev-parse HEAD)
+  if [[ "$OLD" == "$NEW" ]]; then ok "Déjà à jour : je vérifie simplement que tout tourne" "Already up to date: just checking that everything runs"
+  else
+    ok "Nouvelle version téléchargée ($(git log --oneline "$OLD..$NEW" | wc -l | tr -d ' ') changement(s)). Nouveautés : CHANGELOG.md" \
+       "New version downloaded ($(git log --oneline "$OLD..$NEW" | wc -l | tr -d ' ') change(s)). What's new: CHANGELOG.md"
+    git log --format='    - %s' "$OLD..$NEW" | head -15
+  fi
+  exec ./setup.sh ${REST[@]+"${REST[@]}"}
+fi
 
 HOST_IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}' || true)
 rand() { python3 -c "import secrets,string;print(''.join(secrets.choice(string.ascii_letters+string.digits) for _ in range(24)))"; }
@@ -149,7 +174,8 @@ COCKPIT_PUBLIC_URL="http://${PUBLIC_HOST}:8088" python3 scripts/gen_dashboards.p
 mkdir -p data/targets
 for f in icmp tcp http dns snmp; do [[ -s data/targets/$f.json ]] || echo "[]" > "data/targets/$f.json"; done
 if [[ -n "$(envget VCENTER_URL)" && -n "$(envget VCENTER_PASSWORD)" ]]; then ok "VMware configuré ($(envget VCENTER_URL))" "VMware configured ($(envget VCENTER_URL))"
-else warn "VMware non configuré : ./setup.sh --configure pour le connecter" "VMware not configured: ./setup.sh --configure to connect it"; fi
+elif [[ -z "$(envget PROXMOX_URL)" ]]; then warn "Ni VMware ni Proxmox configuré : ./setup.sh --configure pour en connecter un" "Neither VMware nor Proxmox configured: ./setup.sh --configure to connect one"; fi
+[[ -n "$(envget PROXMOX_URL)" && -n "$(envget PROXMOX_TOKEN_SECRET)" ]] && ok "Proxmox configuré ($(envget PROXMOX_URL))" "Proxmox configured ($(envget PROXMOX_URL))"
 [[ " ${profiles[*]} " == *" zabbix "* ]] && ok "Zabbix activé (port ${ZPORT})" "Zabbix enabled (port ${ZPORT})"
 
 # ------------------------------------------------------------------ 5. démarrage
@@ -165,7 +191,8 @@ if [[ -n "$FR" ]]; then cat <<EOF
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (dans .env)")
 
   Premier scan : 2 à 5 minutes. Zabbix : 2 à 3 minutes de plus au premier démarrage.
-  Ajouter un bâtiment, changer d'adressage, connecter VMware ou Telegram :  ./setup.sh --configure
+  Ajouter un bâtiment, changer d'adressage, connecter VMware, Proxmox ou Telegram :  ./setup.sh --configure
+  Mettre à jour plus tard, sans rien perdre :  ./setup.sh --update
   Guide pas à pas : docs/demarrage.md · selon ta situation : docs/cas-pratiques.md
   Dans le cockpit, l'écran « Mise en route » (le drapeau) montre ce qu'il reste à faire.
 EOF
@@ -176,7 +203,8 @@ else cat <<EOF
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (in .env)")
 
   First scan: 2 to 5 minutes. Zabbix: 2 to 3 more minutes on first start.
-  Add a building, change addressing, connect VMware or Telegram:  ./setup.sh --configure
+  Add a building, change addressing, connect VMware, Proxmox or Telegram:  ./setup.sh --configure
+  Update later, without losing anything:  ./setup.sh --update
   Step-by-step guide: docs/getting-started.md · by situation: docs/scenarios.md
   In the cockpit, the "Setup" screen (the flag) shows what is left to do.
 EOF

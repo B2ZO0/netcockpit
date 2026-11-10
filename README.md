@@ -39,11 +39,11 @@ It does not replace Prometheus, Grafana or Zabbix: it **ships them, configures t
 - 🔌 **Which port is everything plugged into?** CDP/LLDP is read **through your ESXi hosts** and Linux servers, without touching the switches. Add read-only SNMP and you get the full port-by-port map.
 - 🏷️ **Real names, not IPs.** AD DNS, NetBIOS (Windows names and MACs even across routers), vCenter and agent names.
 - 🚦 **No false alarms.** A laptop that went home is *absent* (grey), not *down*. Red is reserved for servers, VMs, hypervisors, firewalls, switches and domain controllers that stopped answering.
-- 🖥️ **VMware at a glance.** Every host, its VMs (CPU, RAM, IPs, OS), datastores and vCenter alarms. Works with **vCenter or a standalone ESXi**, read-only.
+- 🖥️ **VMware and Proxmox at a glance.** Every host, its VMs (CPU, RAM, IPs, OS), datastores and alarms. Works with **vCenter, a standalone ESXi, or Proxmox VE** (VMs and LXC containers), always read-only.
 - 🔔 **One alert pipeline.** Prometheus, Loki and Zabbix all go through Alertmanager to Telegram, Discord or email, grouped and de-duplicated: if the firewall dies, you get one message, not 80.
 - 🤖 **AI diagnosis, optional.** "Explain this problem" on any device and a situation briefing, with a cloud LLM API or a **local model** (Ollama: nothing leaves your network).
 - ✈️ **A real cockpit, not another admin template.** One sentence tells you how things are, the route to the Internet is drawn like the magenta line of a flight plan, and the UI uses [B612](https://github.com/polarsys/b612), the typeface Airbus designed for cockpit screens. Night and day themes, English and French.
-- 📦 **One command, no YAML to write.** `./setup.sh` detects your network, asks a few questions with sensible defaults, backs up your settings and starts everything. Re-run it any time.
+- 📦 **One command, no YAML to write.** `./setup.sh` detects your network, asks a few questions with sensible defaults, backs up your settings and starts everything. Later, `./setup.sh --update` upgrades without touching your settings or history.
 
 ## 📸 Screenshots
 
@@ -182,7 +182,7 @@ Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten
 
 **Can I run it next to other containers?** Yes. It uses ports 8088, 3000, 9090, 9093, 3100 and 514, plus 8081 and 10051 when Zabbix is enabled.
 
-**Only VMware?** For now, yes, plus any physical server with an agent. Hyper-V and Proxmox are on the roadmap.
+**Only VMware?** No: **Proxmox VE** is supported too (nodes, VMs, LXC containers, storages, with a read-only API token), plus any physical server with an agent. Hyper-V is on the roadmap.
 
 ## 🏗️ Architecture
 
@@ -225,12 +225,13 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 - [x] English and French UI, night and day themes
 - [x] Safe upgrades: settings never versioned, automatic backups
-- [ ] More languages (one block to add in `cockpit/static/i18n.js`)
-- [ ] Several vCenter / ESXi endpoints
-- [ ] SNMPv3
-- [ ] Hyper-V and Proxmox inventory
-- [ ] Authentication in front of the cockpit (OIDC / reverse proxy example)
-- [ ] Helm chart
+- [x] Password login for the cockpit
+- [x] Proxmox VE (nodes, VMs, LXC, storages) and one-command update
+- [ ] Connectors you switch on one by one (firewalls, NAS, more switches)
+- [ ] Setup from the browser, with a guide
+- [ ] Hyper-V, SNMPv3, several vCenter / ESXi endpoints
+
+The full plan, version by version, is in [ROADMAP.md](ROADMAP.md).
 
 Ideas, translations and pull requests are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -140,6 +140,23 @@ Then `./setup.sh --configure` and answer the VMware question with the ESXi or vC
 
 Bonus: the cockpit reads **CDP/LLDP from the ESXi host NICs**, so it knows which switch and port each host is plugged into, without any switch access.
 
+### Proxmox VE
+
+NetCockpit reads Proxmox with a **read-only API token**: it cannot start, stop or change anything. On a Proxmox node, as root:
+
+```bash
+pveum user add netcockpit@pve
+pveum acl modify / --users netcockpit@pve --roles PVEAuditor
+pveum user token add netcockpit@pve cockpit --privsep 0
+```
+
+The last command shows the **token secret** only once: copy it. Then run `./setup.sh --configure`: enter the address of one node (one is enough for the whole cluster), the token ID `netcockpit@pve!cockpit` and the secret. The **Proxmox** lamp turns green and the Virtualization screen shows every node, its VMs, its LXC containers and the storages.
+
+- **VM addresses**: for LXC containers the address is read directly. For VMs, the cockpit finds it through the MAC address seen during the network scan. No guest agent is needed.
+- **VMware and Proxmox together**: both can be connected at the same time, on the same screen.
+- **Certificate**: Proxmox's self-signed certificate is accepted by default. With a real certificate, set `PROXMOX_VERIFY_TLS=true` in `.env`.
+- The Proxmox connector is recent: if something looks wrong on your setup, open an issue with your Proxmox version.
+
 ## 7. Zabbix
 
 Zabbix is installed and **configured automatically**: native VMware template, SNMP discovery, and every important device found by the cockpit is declared in it, grouped by building and type (every 30 minutes).
@@ -192,9 +209,10 @@ Then `./setup.sh --configure`: answer the SNMP question with the community, then
 
 ```bash
 cd /opt/netcockpit           # ALWAYS the folder where NetCockpit is already installed
-git pull                     # or extract the new version INTO that same folder
-./setup.sh
+./setup.sh --update          # downloads the latest version, then updates everything
 ```
+
+Without git (installed from an archive): extract the new version INTO that same folder, then run `./setup.sh`.
 
 - Your `.env` (passwords, VMware, Telegram) and your `config/cockpit.yml` (buildings, networks) are **never overwritten**: they are not part of the downloaded project.
 - `setup.sh` copies them to `backups/<date>/` before every run (the last 10 copies are kept).

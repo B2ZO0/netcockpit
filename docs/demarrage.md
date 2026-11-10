@@ -140,6 +140,23 @@ Puis `./setup.sh --configure` et réponds à la question VMware avec l'IP de l'E
 
 Bonus : le cockpit lit le **CDP/LLDP des cartes réseau des ESXi**, et sait ainsi sur quel switch et quel port chaque hôte est branché, sans accès aux switchs.
 
+### Proxmox VE
+
+NetCockpit lit Proxmox avec un **jeton d'API en lecture seule** : il ne peut rien démarrer, arrêter ni modifier. Sur un nœud Proxmox, en root :
+
+```bash
+pveum user add netcockpit@pve
+pveum acl modify / --users netcockpit@pve --roles PVEAuditor
+pveum user token add netcockpit@pve cockpit --privsep 0
+```
+
+La dernière commande affiche le **secret du jeton** une seule fois : copie-le. Puis `./setup.sh --configure` : donne l'adresse d'un nœud (un seul suffit pour tout le cluster), l'identifiant `netcockpit@pve!cockpit` et le secret. La pastille **Proxmox** passe au vert et l'écran Virtualisation affiche chaque nœud, ses VM, ses conteneurs LXC et les stockages.
+
+- **IP des VM** : pour les conteneurs LXC, elle est lue directement. Pour les VM, le cockpit la retrouve par l'adresse MAC vue pendant le scan du réseau. Aucun agent invité n'est nécessaire.
+- **VMware et Proxmox ensemble** : les deux peuvent être connectés en même temps, tout s'affiche sur le même écran.
+- **Certificat** : le certificat auto-signé de Proxmox est accepté par défaut. Avec un vrai certificat, mets `PROXMOX_VERIFY_TLS=true` dans `.env`.
+- Le connecteur Proxmox est récent : si quelque chose s'affiche mal chez toi, ouvre un ticket avec ta version de Proxmox.
+
 ## 7. Zabbix
 
 Zabbix est installé et **configuré automatiquement** : modèle VMware natif, découverte SNMP, et tous les équipements importants trouvés par le cockpit y sont déclarés, rangés par bâtiment et par type (toutes les 30 minutes).
@@ -192,9 +209,10 @@ Puis `./setup.sh --configure` : réponds à la question SNMP avec la communauté
 
 ```bash
 cd /root/netcockpit          # TOUJOURS le dossier où NetCockpit est déjà installé
-git pull                     # ou décompresse la nouvelle version DANS ce même dossier
-./setup.sh
+./setup.sh --update          # télécharge la dernière version, puis met tout à jour
 ```
+
+Sans git (installation par archive) : décompresse la nouvelle version DANS ce même dossier, puis lance `./setup.sh`.
 
 - Ton `.env` (mots de passe, VMware, Telegram) et ton `config/cockpit.yml` (bâtiments, réseaux) **ne sont jamais écrasés** : ils ne font pas partie du projet téléchargé.
 - `setup.sh` les copie dans `backups/<date>/` avant chaque lancement (les 10 dernières copies sont gardées).

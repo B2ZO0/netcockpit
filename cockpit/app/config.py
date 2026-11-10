@@ -30,6 +30,11 @@ VCENTER_URL = ENV("VCENTER_URL", "")
 VCENTER_USER = ENV("VCENTER_USER", "")
 VCENTER_PASSWORD = ENV("VCENTER_PASSWORD", "")
 
+PROXMOX_URL = ENV("PROXMOX_URL", "")
+PROXMOX_TOKEN_ID = ENV("PROXMOX_TOKEN_ID", "")          # ex. netcockpit@pve!cockpit
+PROXMOX_TOKEN_SECRET = ENV("PROXMOX_TOKEN_SECRET", "")
+PROXMOX_VERIFY_TLS = ENV("PROXMOX_VERIFY_TLS", "").lower() in ("1", "true", "yes", "on")
+
 SNMP_COMMUNITY_ENV = ENV("SNMP_COMMUNITY", "")
 
 AI_PROVIDER = (ENV("AI_PROVIDER", "") or "").lower()       # anthropic | openai | ""

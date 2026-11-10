@@ -83,9 +83,9 @@ Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche)
 
 - **Dans l'assistant** : Entrée à la question VMware.
 - **Hyper-V** : installe l'agent Windows sur l'hôte Hyper-V et dans les VM importantes. Tu as CPU, RAM, disques et journaux de chacun.
-- **Proxmox** : installe l'agent Linux sur l'hôte Proxmox (c'est une Debian) et dans les VM importantes.
+- **Proxmox** : connecte-le avec un jeton d'API en lecture seule ([guide](demarrage.md#proxmox-ve)) : les nœuds, VM, conteneurs LXC et stockages s'affichent comme pour VMware. L'agent Linux sur l'hôte et dans les VM importantes ajoute les disques et les logs.
 - **Serveurs physiques** : l'agent suffit. Sur Linux, il lit aussi le LLDP et sait sur quel switch et quel port le serveur est branché.
-- **Limite** : sans VMware, la topologie ne dessine pas le lien « VM → hôte ». L'inventaire Hyper-V et Proxmox est prévu dans la feuille de route.
+- **Limite** : avec Hyper-V, la topologie ne dessine pas encore le lien « VM → hôte ». L'inventaire Hyper-V est prévu dans la [feuille de route](../ROADMAP.md).
 
 ## Plusieurs ESXi sans vCenter
 

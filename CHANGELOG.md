@@ -4,6 +4,10 @@
 
 Not published yet: these changes will make the next release.
 
+- **Proxmox VE**: nodes, QEMU VMs, LXC containers and storages in the map, the Virtualization screen, the metrics and the alerts, like VMware. Read-only API token (PVEAuditor role). VMware and Proxmox can be connected at the same time. VMs without a guest agent get their address from the network scan, matched by MAC address. The connector is tested against a simulated Proxmox API: feedback from real clusters is welcome.
+- **One-command update**: `./setup.sh --update` downloads the latest version and updates everything. Settings (`.env`, `config/cockpit.yml`) and history are never touched; settings are backed up first. If a project file was edited by hand, it stops without changing anything and says what to do.
+- The "VMware" screen is now "Virtualization" and its wording no longer assumes ESXi.
+- Roadmap published in ROADMAP.md.
 - Security: the cockpit now asks for a password. `./setup.sh` generates it (`COCKPIT_PASSWORD` in `.env`) and shows it at the end; signed session cookie, slowed-down brute force, sign-out button. Wall screens: `COCKPIT_TRUSTED_NETWORKS`. Personal lab: `COCKPIT_AUTH=off`.
 - Security: Alertmanager only listens on the host, so nobody on the network can silence alerts. Security headers on every page; request bodies are size-limited.
 - SECURITY.md: firewall examples for the ports agents push to (9090, 3100, 514) and HTTPS download of the agent scripts.

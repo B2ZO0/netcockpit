@@ -83,9 +83,9 @@ In the cockpit, the **Setup** screen (the flag in the left rail) always tells yo
 
 - **In the assistant**: press Enter at the VMware question.
 - **Hyper-V**: install the Windows agent on the Hyper-V host and in the important VMs. You get CPU, RAM, disks and logs for each.
-- **Proxmox**: install the Linux agent on the Proxmox host (it is Debian) and in the important VMs.
+- **Proxmox**: connect it with a read-only API token ([guide](getting-started.md#proxmox-ve)): nodes, VMs, LXC containers and storages appear like VMware does. The Linux agent on the host and in important VMs adds disks and logs.
 - **Physical servers**: the agent is enough. On Linux it also reads LLDP and knows which switch and port the server is plugged into.
-- **Limit**: without VMware, the topology does not draw the "VM → host" link. Hyper-V and Proxmox inventory is on the roadmap.
+- **Limit**: with Hyper-V, the topology does not draw the "VM → host" link yet. Hyper-V inventory is on the [roadmap](../ROADMAP.md).
 
 ## Several ESXi hosts without vCenter
 
