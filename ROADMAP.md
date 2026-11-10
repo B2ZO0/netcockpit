@@ -7,6 +7,19 @@ NetCockpit grows one brick at a time: each version adds a small number of things
 Want something moved up, or want to help on one item? [Open an issue](https://github.com/B2ZO0/netcockpit/issues).
 *Une idée, une priorité à changer, envie d'aider ? [Ouvre un ticket](https://github.com/B2ZO0/netcockpit/issues).*
 
+## Calendar · Calendrier
+
+A new piece lands every week as a pull request, with tests and docs. A version is published only after it has run on a real network.
+*Une nouveauté arrive chaque semaine sous forme de pull request, avec tests et documentation. Une version n'est publiée qu'après avoir tourné sur un vrai réseau.*
+
+| Weeks · Semaines | Version | Focus |
+|---|---|---|
+| Nov 2026 | **1.2** | Proxmox, one-command update, security hardening, ready-made Docker images |
+| Dec 2026 | **1.3** | Connectors: firewalls, NAS, UPS, SNMPv3, menu that adapts |
+| Jan 2027 | **1.4** | Setup from the browser, with a guide |
+| Feb 2027 | **1.5** | Library of ready-made checks, custom overview |
+| Mar 2027 | **1.6** | Hyper-V, several hypervisor endpoints, single sign-on |
+
 ## 1.2 · Proxmox and painless updates *(in progress)*
 
 - [x] **Proxmox VE**: nodes, VMs, LXC containers and storages, with a read-only API token. *Proxmox VE : nœuds, VM, conteneurs LXC et stockages, avec un jeton en lecture seule.*
@@ -14,6 +27,8 @@ Want something moved up, or want to help on one item? [Open an issue](https://gi
 - [x] Hypervisors detected automatically; the menu hides what you do not have. *Hyperviseurs détectés automatiquement ; le menu masque ce que tu n'as pas.*
 - [x] The VMware screen becomes a platform-neutral Virtualization screen. *L'écran VMware devient un écran Virtualisation.*
 - [ ] Feedback from real Proxmox clusters (versions 7, 8, 9). *Retours sur de vrais clusters Proxmox.*
+- [x] Security: protected `/metrics`, Secure session cookie, optional vCenter TLS verification. *Sécurité : `/metrics` protégé, cookie sécurisé, vérification TLS de vCenter.*
+- [ ] Ready-made Docker image on GitHub Container Registry: nothing to build on the host, faster install and update. *Image Docker prête à l'emploi : rien à compiler, installation et mise à jour plus rapides.*
 - [ ] "New version available" notice in the cockpit, opt-in. *Bandeau « nouvelle version disponible », à activer.*
 
 ## 1.3 · Connectors
@@ -25,6 +40,7 @@ Everything you can monitor becomes a connector you switch on. What is not switch
 - [ ] Menu and overview adapt to what is connected. *Le menu et la vue d'ensemble s'adaptent à ce qui est connecté.*
 - [ ] Firewalls over SNMP (pfSense, OPNsense, FortiGate): WAN state, VPN tunnels. *Pare-feu en SNMP : état du WAN, tunnels VPN.*
 - [ ] NAS over SNMP (Synology, TrueNAS): volumes, disk health. *NAS en SNMP : volumes, santé des disques.*
+- [ ] UPS (NUT or SNMP): battery, load, runtime left. *Onduleurs (NUT ou SNMP) : batterie, charge, autonomie restante.*
 - [ ] SNMPv3.
 - [ ] Hyper-V inventory. *Inventaire Hyper-V.*
 
@@ -44,7 +60,6 @@ Everything you can monitor becomes a connector you switch on. What is not switch
 
 - Several vCenter, ESXi or Proxmox endpoints. *Plusieurs vCenter, ESXi ou Proxmox.*
 - Single sign-on (OIDC) in front of the cockpit. *Authentification unique (OIDC).*
-- Ready-made Docker images, so nothing is built on the host. *Images Docker prêtes à l'emploi.*
 
 ## What NetCockpit will stay · Ce qui ne changera pas
 
