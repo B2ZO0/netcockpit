@@ -135,9 +135,22 @@ def current(force=False):
         return mdl, live
 
 
+def detected_hypervisors():
+    """Hyperviseurs vus par le scan mais pas encore connectés : {"vmware": [ip...], "proxmox": [ip...]}."""
+    out = {"vmware": [], "proxmox": []}
+    for ip, d in (SCAN.get("devices") or {}).items():
+        ports = set(d.get("ports") or [])
+        if not VC and {443, 902} <= ports:
+            out["vmware"].append(ip)
+        elif not PVE and 8006 in ports:
+            out["proxmox"].append(ip)
+    return {k: sorted(v, key=lambda i: [int(x) for x in i.split(".")])[:5] for k, v in out.items()}
+
+
 def features():
     return {"vcenter": None if not VC else {"up": VC.state["up"], "error": VC.state["error"]},
             "proxmox": None if not PVE else {"up": PVE.state["up"], "error": PVE.state["error"]},
+            "virt": bool(VC or PVE), "virt_detected": detected_hypervisors(),
             "zabbix": None if not ZBX else {"up": ZBX.state["up"], "error": ZBX.state["error"], "url": C.ZABBIX_PUBLIC_URL},
             "snmp": bool(CFG["snmp"]["community"]), "ai": ai.info(), "grafana_url": C.GRAFANA_URL,
             "alertmanager_url": C.ALERTMANAGER_PUBLIC_URL,
@@ -169,6 +182,8 @@ def overview(site=None):
         "alerts": alerts[:12], "alerts_count": {s: sum(1 for a in alerts if a["severity"] == s) for s in ("critical", "warning", "info")},
         "servers": servers,
         "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"])},
+        "virt_detected": ", ".join(f"{lab} {ip}" for lab, k in (("VMware ESXi", "vmware"), ("Proxmox", "proxmox"))
+                                   for ip in detected_hypervisors()[k][:2]) or None,
         "vmware": None if not vc else {"up": vc["up"], "hosts": len(vc["hosts"]),
                                        "hosts_ok": sum(1 for h in vc["hosts"] if h["state"] == "connected"),
                                        "vms": len(vc["vms"]), "vms_on": sum(1 for v in vc["vms"] if v["power"] == "poweredOn"),
@@ -193,7 +208,7 @@ def setup_status():
         "undeclared": undeclared(mdl),
         "scan": {"last": SCAN.get("last_scan"), "running": SCANNING.is_set(), "devices": len(devices)},
         "names": {"total": len(devices), "named": len(named), "dns": CFG["names"]["dns_servers"]},
-        "vmware": {"configured": bool(VC or PVE), "platforms": [n for n, x in (("vmware", VC), ("proxmox", PVE)) if x], "up": bool(vc and vc["up"]), "error": vc and vc.get("error"),
+        "vmware": {"configured": bool(VC or PVE), "detected": detected_hypervisors(), "platforms": [n for n, x in (("vmware", VC), ("proxmox", PVE)) if x], "up": bool(vc and vc["up"]), "error": vc and vc.get("error"),
                    "hosts": len(vc["hosts"]) if vc else 0, "vms": len(vc["vms"]) if vc else 0},
         "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"]),
                    "silent": sorted(a["instance"] for a in live["agents"] if not a["alive"])[:10]},

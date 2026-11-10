@@ -11,6 +11,7 @@ Want something moved up, or want to help on one item? [Open an issue](https://gi
 
 - [x] **Proxmox VE**: nodes, VMs, LXC containers and storages, with a read-only API token. *Proxmox VE : nœuds, VM, conteneurs LXC et stockages, avec un jeton en lecture seule.*
 - [x] **`./setup.sh --update`**: one command, settings and history kept. *Une commande, réglages et historique conservés.*
+- [x] Hypervisors detected automatically; the menu hides what you do not have. *Hyperviseurs détectés automatiquement ; le menu masque ce que tu n'as pas.*
 - [x] The VMware screen becomes a platform-neutral Virtualization screen. *L'écran VMware devient un écran Virtualisation.*
 - [ ] Feedback from real Proxmox clusters (versions 7, 8, 9). *Retours sur de vrais clusters Proxmox.*
 - [ ] "New version available" notice in the cockpit, opt-in. *Bandeau « nouvelle version disponible », à activer.*

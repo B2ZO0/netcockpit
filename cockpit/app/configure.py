@@ -47,6 +47,10 @@ T = {
         "gwq": "Adresse de la passerelle / du firewall",
         "gwname": "Passerelle / Firewall",
         "vc": "VMware : adresse du vCenter ou de l'ESXi (IP ou nom, Entrée pour passer)",
+        "virt_scan": "Recherche d'hyperviseurs sur ton réseau…",
+        "virt_found": "Trouvé : {l}",
+        "virt_none": "Aucun hyperviseur trouvé sur le réseau local (il peut être sur un autre réseau).",
+        "virt": "Tu utilises quoi comme hyperviseur ? 1 = VMware, 2 = Proxmox, 3 = les deux, 0 = aucun",
         "h_pve": "Proxmox VE : il faut un jeton d'API en lecture seule (rôle PVEAuditor). Les 3 commandes à lancer sur le Proxmox sont dans docs/demarrage.md.",
         "pve": "Proxmox VE : adresse d'un nœud (IP ou nom, Entrée pour passer)",
         "pve_keep": "Proxmox déjà configuré ({v}). Entrée pour garder, ou nouvelle adresse",
@@ -93,6 +97,10 @@ T = {
         "gwq": "Gateway / firewall address",
         "gwname": "Gateway / Firewall",
         "vc": "VMware: vCenter or ESXi address (IP or name, Enter to skip)",
+        "virt_scan": "Looking for hypervisors on your network…",
+        "virt_found": "Found: {l}",
+        "virt_none": "No hypervisor found on the local network (it may be on another network).",
+        "virt": "Which hypervisor do you use? 1 = VMware, 2 = Proxmox, 3 = both, 0 = none",
         "h_pve": "Proxmox VE: a read-only API token is needed (PVEAuditor role). The 3 commands to run on the Proxmox host are in docs/getting-started.md.",
         "pve": "Proxmox VE: address of one node (IP or name, Enter to skip)",
         "pve_keep": "Proxmox already configured ({v}). Enter to keep, or a new address",
@@ -162,6 +170,42 @@ def detect():
 
 
 # ------------------------------------------------------------------ .env
+def find_hypervisors(nets, limit=1024):
+    """Cherche des hyperviseurs sur les réseaux locaux (ports ouverts seulement, rien n'est envoyé) :
+    Proxmox écoute sur 8006, ESXi et vCenter sur 443 et 902."""
+    import socket
+    from concurrent.futures import ThreadPoolExecutor
+    ips = []
+    for n in nets:
+        try:
+            net = ipaddress.ip_network(n, strict=False)
+        except ValueError:
+            continue
+        if net.num_addresses <= limit:
+            ips += [str(h) for h in net.hosts()]
+
+    def is_open(ip, port):
+        try:
+            with socket.create_connection((ip, port), timeout=0.4):
+                return True
+        except OSError:
+            return False
+
+    def probe(ip):
+        if is_open(ip, 8006):
+            return "proxmox", ip
+        if is_open(ip, 902) and is_open(ip, 443):
+            return "vmware", ip
+        return None
+
+    found = {"vmware": [], "proxmox": []}
+    with ThreadPoolExecutor(max_workers=128) as ex:
+        for r in ex.map(probe, ips[:limit * 2]):
+            if r:
+                found[r[0]].append(r[1])
+    return found
+
+
 def env_read():
     out = {}
     if ENVF.exists():
@@ -324,8 +368,20 @@ def main():
     # VMware, notifications, Zabbix (.env)
     env_new = {}
     vc_cur = env.get("VCENTER_URL", "")
-    ask.hint("h_vc")
-    host = ask("vc_keep", "", v=vc_cur) if vc_cur else ask("vc")
+    pve_cur = env.get("PROXMOX_URL", "")
+    seen = {"vmware": [], "proxmox": []}
+    if interactive:
+        print(f"\n  {s['virt_scan']}")
+        seen = find_hypervisors(det["nets"])
+        labels = [f"VMware {i}" for i in seen["vmware"][:3]] + [f"Proxmox {i}" for i in seen["proxmox"][:3]]
+        print("  " + (s["virt_found"].format(l=", ".join(labels)) if labels else s["virt_none"]))
+    has_vc, has_pve = bool(vc_cur or seen["vmware"]), bool(pve_cur or seen["proxmox"])
+    choice = ask("virt", "3" if has_vc and has_pve else "1" if has_vc else "2" if has_pve else "0")
+    want_vc, want_pve = choice in ("1", "3"), choice in ("2", "3")
+    host = ""
+    if want_vc:
+        ask.hint("h_vc")
+        host = ask("vc_keep", "", v=vc_cur) if vc_cur else ask("vc", (seen["vmware"] or [""])[0])
     if host:
         url = host if host.startswith("http") else f"https://{host}"
         url = url if url.rstrip("/").endswith("/sdk") else url.rstrip("/") + "/sdk"
@@ -334,9 +390,10 @@ def main():
         pw = ask.secret("vcp")
         if pw:
             env_new["VCENTER_PASSWORD"] = pw
-    pve_cur = env.get("PROXMOX_URL", "")
-    ask.hint("h_pve")
-    host = ask("pve_keep", "", v=pve_cur) if pve_cur else ask("pve")
+    host = ""
+    if want_pve:
+        ask.hint("h_pve")
+        host = ask("pve_keep", "", v=pve_cur) if pve_cur else ask("pve", (seen["proxmox"] or [""])[0])
     if host:
         url = host if host.startswith("http") else f"https://{host}"
         if not re.search(r":\d+$", url.rstrip("/")):

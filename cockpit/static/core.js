@@ -212,6 +212,9 @@ const App = (() => {
   function setFeatures(f, force) {
     if (!f) return;
     state.features = f;
+    const seen = f.virt_detected || {};   // pas d'hyperviseur connecté ni détecté : l'entrée du menu disparaît
+    const nv = $('#nav a[data-view="vmware"]');
+    if (nv) nv.classList.toggle("hidden", f.virt === false && !(seen.vmware || []).length && !(seen.proxmox || []).length);
     const seg = $("#site-seg");
     const sites = ["", ...(f.sites || [])];
     const key = sites.join("|") + I18n.lang;

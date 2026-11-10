@@ -61,7 +61,7 @@
           d.agents.total ? (d.agents.alive < d.agents.total ? t("g.silent", { n: d.agents.total - d.agents.alive }) : t("g.allReport")) : t("g.noAgent")),
         d.vmware ? g(`click calm-val ${d.vmware.hosts_ok < d.vmware.hosts ? "bad" : d.vmware.alarms ? "warn" : ""}`, t("g.vmware"), "layers", `${d.vmware.vms_on}<small>${t("g.vmOn", { n: d.vmware.vms })}</small>`,
           t("g.vmSub", { ok: d.vmware.hosts_ok, h: d.vmware.hosts, ds: fmt.pct(d.vmware.datastore_max) }) + (d.vmware.alarms ? `, <b style="color:var(--warning)">${t("g.vmAlarms", { n: d.vmware.alarms })}</b>` : ""), "", `data-go="#/vmware"`)
-          : g("", t("g.vmware"), "layers", `<span style="font-size:17px">${t("g.vmOff")}</span>`, t("g.vmHint")),
+          : (d.virt_detected ? g("click warn", t("g.vmware"), "layers", `<span style="font-size:17px">${t("g.vmSeen")}</span>`, esc(d.virt_detected), "", `data-go="#/setup"`) : ""),
         d.zabbix ? g(d.zabbix.problems ? "warn" : "", t("g.zabbix"), "alert", d.zabbix.up ? `${d.zabbix.problems}<small>${t("g.zProblems")}</small>` : "—", d.zabbix.up ? t("g.zSub") : t("g.zDown"))
           : g("", t("g.lastScan"), "clock", fmt.time(d.features.last_scan), t("g.scanDur", { n: Math.round(d.features.scan_duration || 0) })),
       ].join("");
@@ -316,8 +316,10 @@
       sum: t("su.names.s", { named: nm.named || 0, total: nm.total || 0 }), how: `<p>${t("su.names.how")}</p>${conf}` });
     const vm = d.vmware || {};
     add({ key: "vmware", essential: !!vm.configured, optional: !vm.configured, title: t("su.vm.t"),
-      state: vm.up ? "done" : vm.configured ? "warn" : "todo",
-      sum: vm.up ? t("su.vm.ok", { h: vm.hosts, v: vm.vms }) : vm.configured ? t("su.vm.err", { e: vm.error || "?" }) : t("su.vm.none"),
+      state: vm.up ? "done" : vm.configured || ((vm.detected || {}).vmware || []).length || ((vm.detected || {}).proxmox || []).length ? "warn" : "todo",
+      sum: vm.up ? t("su.vm.ok", { h: vm.hosts, v: vm.vms }) : vm.configured ? t("su.vm.err", { e: vm.error || "?" })
+        : (() => { const dt = vm.detected || {}; const p = [...(dt.vmware || []).map((i) => `VMware ESXi ${i}`), ...(dt.proxmox || []).map((i) => `Proxmox ${i}`)];
+          return p.length ? t("su.vm.seen", { l: p.join(", ") }) : t("su.vm.none"); })(),
       how: `<p>${t("su.vm.how")}</p>${conf}` });
     const ag = d.agents || {};
     add({ key: "agents", essential: true, title: t("su.ag.t"),
