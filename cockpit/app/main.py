@@ -60,7 +60,7 @@ def save_state():
     tmp.replace(STATE_FILE)
 
 
-VC = VCenter(C.VCENTER_URL, C.VCENTER_USER, C.VCENTER_PASSWORD) if C.VCENTER_URL and C.VCENTER_PASSWORD else None
+VC = VCenter(C.VCENTER_URL, C.VCENTER_USER, C.VCENTER_PASSWORD, C.VCENTER_VERIFY_TLS) if C.VCENTER_URL and C.VCENTER_PASSWORD else None
 PVE = Proxmox(C.PROXMOX_URL, C.PROXMOX_TOKEN_ID, C.PROXMOX_TOKEN_SECRET, C.PROXMOX_VERIFY_TLS) \
     if C.PROXMOX_URL and C.PROXMOX_TOKEN_ID and C.PROXMOX_TOKEN_SECRET else None
 
@@ -643,7 +643,7 @@ class Handler(BaseHTTPRequestHandler):
         """True si la requête peut continuer ; sinon la réponse (401 ou page de connexion) est envoyée."""
         if auth.allowed(path, self.client_address[0], self.headers.get("Cookie")):
             return True
-        if path.startswith("/api/"):
+        if path.startswith("/api/") or path == "/metrics":
             self._send(401, {"error": "login required"})
         else:
             self._send(302, b"", "text/plain", {"Location": "/login"})
@@ -730,8 +730,10 @@ class Handler(BaseHTTPRequestHandler):
                 log.warning("connexion refusée depuis %s", self.client_address[0])
                 return self._send(401, {"error": "wrong password"})
             token, age = auth.new_session()
+            # Derrière un reverse proxy HTTPS, le cookie ne doit jamais repartir en clair.
+            secure = "; Secure" if (self.headers.get("X-Forwarded-Proto") or "").lower() == "https" else ""
             return self._send(200, {"ok": True}, headers={
-                "Set-Cookie": f"{auth.COOKIE}={token}; Max-Age={age}; Path=/; HttpOnly; SameSite=Lax"})
+                "Set-Cookie": f"{auth.COOKIE}={token}; Max-Age={age}; Path=/; HttpOnly; SameSite=Lax{secure}"})
         if url.path == "/api/logout":
             return self._send(200, {"ok": True}, headers={"Set-Cookie": f"{auth.COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"})
         if not self._gate(url.path):
