@@ -1,15 +1,14 @@
-# Message d'accueil automatique pour le premier ticket ou la première pull request d'une personne.
+# Message d'accueil automatique pour le premier ticket d'une personne.
+# Pas de message sur les pull requests : il faudrait le déclencheur pull_request_target, que GitHub restreint
+# à partir du 2 décembre 2026 et qui donne des droits d'écriture à du code venu de forks.
 name: Welcome
 
 on:
   issues:
     types: [opened]
-  pull_request_target:
-    types: [opened]
 
 permissions:
   issues: write
-  pull-requests: write
 
 jobs:
   welcome:
