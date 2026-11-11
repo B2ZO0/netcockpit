@@ -120,6 +120,7 @@ Then run the assistant again: enter the community, then the switch and firewall 
 - **Less than 8 GB of RAM**: answer **n** to the Zabbix question. Everything else runs in 4 to 6 GB.
 - **Homelab**: the demo (`docker compose -f docker-compose.demo.yml up`) lets you try without touching anything. For your real network, proceed as for a [small organisation](#small-organisation-one-network).
 - **Shorter history**: `RETENTION=15d` in `.env`, then `./setup.sh`.
+- **ARM machine** (64-bit OS, e.g. a Raspberry Pi 4 or 5): the ready-made cockpit image also exists for arm64, so nothing is compiled. Not yet tried on real hardware: feedback welcome.
 
 ## Where to put the monitoring host
 

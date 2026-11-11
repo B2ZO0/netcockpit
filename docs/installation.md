@@ -25,7 +25,7 @@ On the first run `setup.sh`:
 1. creates `.env` from `.env.example`, with random passwords and your IP as `PUBLIC_HOST`;
 2. starts the **setup assistant**, which detects the local network, gateway and DNS servers and asks for your buildings, other networks, VMware, SNMP, Telegram and Zabbix (walkthrough: [getting-started.md](getting-started.md#3-answer-the-setup-assistant));
 3. renders `alertmanager/alertmanager.yml` and `snmp/auth.yml` from `.env`, and the Grafana dashboards;
-4. builds the cockpit image and starts the stack (`docker compose up -d`).
+4. downloads the ready-made cockpit image matching your version from GitHub Container Registry (nothing to build), or builds it on the host when it is not available, then starts the stack (`docker compose up -d`). See [Ready-made image](#ready-made-cockpit-image).
 
 Re-run the assistant at any time with `./setup.sh --configure` (add a building, change addressing, connect VMware). `./setup.sh --yes` skips the questions and uses the detected values.
 
@@ -66,6 +66,16 @@ What is yours stays yours:
 | History (metrics, logs, scans), Zabbix database, Grafana | Docker volumes | Kept. `docker compose down` keeps them too; only `down -v` deletes them. |
 
 Before doing anything, `./setup.sh` copies `.env` and `config/*.yml` to `backups/<date>/` (the last 10 are kept). To roll back a setting: `cp backups/<date>/.env .`.
+
+## Ready-made cockpit image
+
+The cockpit is published as a Docker image on GitHub Container Registry, `ghcr.io/b2zo0/netcockpit`, for amd64 and arm64. Installing and upgrading therefore download it instead of compiling it on the host: faster, and nothing to install besides Docker.
+
+- **Always the right version.** The image tag is the git hash of the `cockpit/` folder (`tree-<hash>`): `./setup.sh` downloads exactly the image built from the code it has. `python3 scripts/cockpit_image.py` prints which one.
+- **Never stuck.** If the image cannot be downloaded (no access to `ghcr.io`, a version published a few minutes ago and still being built, a CPU other than amd64/arm64), `./setup.sh` says so and builds it on the host, as before.
+- **Your own changes are respected.** If you edited files in `cockpit/`, or installed from an archive without git, the image is built on the host from your files.
+- **`COCKPIT_IMAGE` in `.env`**: `auto` (default), `build` to always build on the host, or the name of your own registry mirror (`registry.example.local/netcockpit`, the tag is still chosen automatically).
+- Released versions are also tagged `X.Y.Z`, `X.Y` and `latest`, and `main` follows the main branch.
 
 > Dashboards are provisioned from `grafana/dashboards/` and regenerated on every run: to customise one, use **Save as** in Grafana to keep your own copy.
 > Upgrading from 1.0 (when the cockpit was called `netmap`)? `./setup.sh` renames `config/netmap.yml` to `config/cockpit.yml` and moves the history volume for you. If `git pull` refuses because you edited `config/netmap.yml`, run `mv config/netmap.yml config/cockpit.yml` first.

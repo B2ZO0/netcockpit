@@ -43,7 +43,7 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 - 🔔 **Une seule chaîne d'alertes.** Prometheus, Loki et Zabbix passent tous par Alertmanager vers Telegram, Discord ou email, regroupés et dédoublonnés : si le firewall tombe, tu reçois un message, pas 80.
 - 🤖 **Diagnostic IA, en option.** Un bouton « Analyser » sur chaque équipement et un briefing de la situation, avec une API d'IA dans le cloud ou un **modèle local** (Ollama : rien ne sort du réseau).
 - ✈️ **Un vrai cockpit, pas un énième template d'admin.** Une phrase te dit où en est l'infra, la route vers Internet est tracée comme la ligne magenta d'un plan de vol, et l'interface utilise [B612](https://github.com/polarsys/b612), la police conçue par Airbus pour les écrans de cockpit. Thèmes nuit et jour, français et anglais.
-- 📦 **Une seule commande, aucun YAML à écrire.** `./setup.sh` détecte ton réseau, pose quelques questions avec des valeurs par défaut, sauvegarde tes réglages et démarre tout. Relançable à volonté.
+- 📦 **Une seule commande, aucun YAML à écrire.** `./setup.sh` détecte ton réseau, pose quelques questions avec des valeurs par défaut, sauvegarde tes réglages et démarre tout. Le cockpit arrive en image toute prête (amd64 et arm64) : rien à compiler. Relançable à volonté.
 
 ## 📸 Captures
 

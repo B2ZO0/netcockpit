@@ -35,6 +35,7 @@ After any change: `./setup.sh`.
 | Variable | Description |
 |---|---|
 | `PUBLIC_HOST` | IP or DNS name of the monitoring VM (links in alerts and between tools). |
+| `COCKPIT_IMAGE` | `auto` (default): download the ready-made cockpit image matching your code from `ghcr.io/b2zo0/netcockpit`, build it on the host if unavailable. `build`: always build on the host. A registry mirror (`registry.example.local/netcockpit`): same automatic tag, from your registry. With a tag (`…/netcockpit:1.2`): that exact image. |
 | `RETENTION` | Prometheus retention (default `30d`). Loki retention is in `loki/loki.yml`. |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana `admin` password. |
 | `ENABLE_ZABBIX` | `true` / `false`. Zabbix uses ~1.5 GB of RAM. |

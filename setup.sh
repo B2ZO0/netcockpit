@@ -137,13 +137,35 @@ if [[ -n "${HOST_IP:-}" && "$PH" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ && "$PH" !=
        "This machine's address changed: ${PH} → ${HOST_IP} (PUBLIC_HOST updated). Reinstall the server agents with the new address, or use a DNS name (see docs/scenarios.md)."
 fi
 
+# ------------------------------------------------------------------ image du cockpit : téléchargée toute prête si possible, sinon construite ici
+# scripts/cockpit_image.py donne l'image qui correspond exactement au code de ce dossier (COCKPIT_IMAGE dans .env, auto par défaut).
+IMAGE_READY=""
+cockpit_image() {
+  [[ -n "$IMAGE_READY" ]] && return 0
+  local ref t=()
+  ref=$(COCKPIT_IMAGE="$(envget COCKPIT_IMAGE)" python3 scripts/cockpit_image.py 2>/dev/null || true)
+  command -v timeout >/dev/null && t=(timeout 600)
+  if [[ -n "$ref" ]]; then
+    say "Téléchargement de l'image du cockpit…" "Downloading the cockpit image…"
+    if ${t[@]+"${t[@]}"} docker pull -q "$ref" >/dev/null 2>&1 && docker tag "$ref" netcockpit/cockpit:local; then
+      ok "Image du cockpit téléchargée, rien à construire ($ref)" "Cockpit image downloaded, nothing to build ($ref)"
+      IMAGE_READY=1; return 0
+    fi
+    warn "Image toute prête indisponible (pas encore publiée, pas d'accès à ghcr.io, ou processeur non pris en charge) : construction sur cette machine" \
+         "Ready-made image unavailable (not published yet, no access to ghcr.io, or unsupported CPU): building it on this machine"
+  fi
+  say "Construction de l'image du cockpit (quelques minutes la première fois)…" "Building the cockpit image (a few minutes the first time)…"
+  docker compose build -q cockpit
+  IMAGE_READY=1
+}
+
 # ------------------------------------------------------------------ 2. assistant : la première fois, sur demande, ou si la config est encore l'exemple
 NEED_WIZARD=""
 [[ ! -f config/cockpit.yml || -n "$CONFIGURE" ]] && NEED_WIZARD=1
 grep -q "Site A (servers)" config/cockpit.yml 2>/dev/null && NEED_WIZARD=1
 if [[ -n "$NEED_WIZARD" ]]; then
   say "Préparation de l'assistant…" "Preparing the setup assistant…"
-  docker compose build -q cockpit
+  cockpit_image
   tty=(-i); [[ -t 0 && -z "$YES" ]] && tty=(-it)
   wl="en"; [[ -n "$FR" ]] && wl="fr"
   docker run --rm "${tty[@]}" --network host --user "$(id -u):$(id -g)" -v "$HERE:/work" -w /work \
@@ -179,7 +201,8 @@ elif [[ -z "$(envget PROXMOX_URL)" ]]; then warn "Ni VMware ni Proxmox configur�
 [[ " ${profiles[*]} " == *" zabbix "* ]] && ok "Zabbix activé (port ${ZPORT})" "Zabbix enabled (port ${ZPORT})"
 
 # ------------------------------------------------------------------ 5. démarrage
-docker compose up -d --build --remove-orphans
+cockpit_image
+docker compose up -d --remove-orphans
 docker compose restart prometheus alertmanager cockpit >/dev/null 2>&1 || true
 
 echo

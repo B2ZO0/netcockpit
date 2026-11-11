@@ -45,7 +45,7 @@ cd netcockpit
 ./setup.sh
 ```
 
-Pas de git ? Télécharge le zip de la dernière version depuis la page *Releases*, décompresse-le, puis lance `./setup.sh` depuis le dossier obtenu.
+Pas de git ? Télécharge le zip de la dernière version depuis la page *Releases*, décompresse-le, puis lance `./setup.sh` depuis le dossier obtenu. Avec git, l'image du cockpit est téléchargée toute prête ; sans git, elle est construite sur la machine (quelques minutes de plus).
 
 `setup.sh` vérifie Docker, génère des mots de passe aléatoires dans `.env`, puis lance l'**assistant**.
 
@@ -217,6 +217,7 @@ Sans git (installation par archive) : décompresse la nouvelle version DANS ce m
 - Ton `.env` (mots de passe, VMware, Telegram) et ton `config/cockpit.yml` (bâtiments, réseaux) **ne sont jamais écrasés** : ils ne font pas partie du projet téléchargé.
 - `setup.sh` les copie dans `backups/<date>/` avant chaque lancement (les 10 dernières copies sont gardées).
 - L'historique, la base Zabbix et Grafana sont dans des volumes Docker : ils restent.
+- L'image du cockpit est **téléchargée toute prête** (`ghcr.io/b2zo0/netcockpit`), exactement celle du code téléchargé : rien à compiler. Si elle ne peut pas être téléchargée, elle est construite sur la machine, comme avant.
 - Si tu décompresses par erreur la mise à jour dans **un autre dossier**, `setup.sh` le détecte et s'arrête sans rien modifier, en te donnant le bon dossier.
 
 ## 12. Dépannage
@@ -231,6 +232,7 @@ Sans git (installation par archive) : décompresse la nouvelle version DANS ce m
 | VMware « non configuré » alors qu'il l'était | `grep ^VCENTER .env` : si c'est vide, remets l'ancien `.env` depuis `backups/<date>/`, ou refais `./setup.sh --configure`. |
 | Des machines affichées par leur IP | Pas de zone DNS inverse : renseigne les DNS internes dans l'assistant. Les PC Windows sont nommés via NetBIOS de toute façon. |
 | Un serveur Windows « en panne » alors qu'il tourne | Il bloque le ping : l'installeur de l'agent ouvre la règle « Echo Request ». |
+| « Image toute prête indisponible : construction sur cette machine » | La machine n'accède pas à `ghcr.io` (proxy, filtrage), la version vient d'être publiée il y a quelques minutes, ou le processeur n'est ni amd64 ni arm64. Rien à faire : l'image est construite sur place, c'est juste plus long. Pour toujours la construire sur place : `COCKPIT_IMAGE=build` dans `.env`. |
 | `setup.sh` s'arrête avec « NetCockpit tourne déjà depuis le dossier … » | Tu l'as lancé depuis un autre dossier : va dans celui indiqué et relance-le là. |
 
 Toujours bloqué ? Ouvre une [issue](https://github.com/B2ZO0/netcockpit/issues) avec la sortie de `docker compose ps` et de `docker compose logs --tail 50 cockpit` (sans mots de passe ni IP publiques).
