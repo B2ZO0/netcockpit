@@ -18,12 +18,12 @@ jobs:
     steps:
       - uses: actions/first-interaction@v3
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-message: |
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: |
             Thanks for opening your first issue on NetCockpit! 🙌
             If it is a bug, the output of `docker compose ps` and `docker compose logs --tail 50 cockpit` (anonymised) helps a lot.
             Merci pour ce premier ticket ! Tu peux écrire en français ou en anglais.
-          pr-message: |
+          pr_message: |
             Thanks for your first pull request on NetCockpit! 🎉
             The CI runs the same checks as `CONTRIBUTING.md`; the demo (`python demo/demo.py`) is the quickest way to try UI changes.
             Merci pour cette première contribution !
