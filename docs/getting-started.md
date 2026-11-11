@@ -45,7 +45,7 @@ cd netcockpit
 ./setup.sh
 ```
 
-No git? Download the zip of the latest version from the *Releases* page, extract it and run `./setup.sh` from that folder.
+No git? Download the zip of the latest version from the *Releases* page, extract it and run `./setup.sh` from that folder. With git, the cockpit image is downloaded ready-made; without git, it is built on the host (a few more minutes).
 
 `setup.sh` checks Docker, generates random passwords in `.env`, then starts the **setup assistant**.
 
@@ -217,6 +217,7 @@ Without git (installed from an archive): extract the new version INTO that same 
 - Your `.env` (passwords, VMware, Telegram) and your `config/cockpit.yml` (buildings, networks) are **never overwritten**: they are not part of the downloaded project.
 - `setup.sh` copies them to `backups/<date>/` before every run (the last 10 copies are kept).
 - History, the Zabbix database and Grafana live in Docker volumes: they stay.
+- The cockpit image is **downloaded ready-made** (`ghcr.io/b2zo0/netcockpit`), matching the downloaded code exactly: nothing to compile. If it cannot be downloaded, it is built on the host, as before.
 - If you extract the upgrade into **another folder** by mistake, `setup.sh` detects it and stops without changing anything, and tells you the right folder.
 
 ## 12. Troubleshooting
@@ -231,6 +232,7 @@ Without git (installed from an archive): extract the new version INTO that same 
 | VMware "not configured" although it was | `grep ^VCENTER .env`: if empty, restore the previous `.env` from `backups/<date>/`, or run `./setup.sh --configure` again. |
 | Machines shown by IP | No reverse DNS zone: enter your internal DNS servers in the assistant. Windows PCs are named through NetBIOS anyway. |
 | A Windows server shown down although it runs | It blocks ping: the agent installer opens the "Echo Request" rule. |
+| "Ready-made image unavailable: building it on this machine" | The host cannot reach `ghcr.io` (proxy, filtering), the version was published a few minutes ago, or the CPU is not amd64/arm64. Nothing to do: it is built locally, it just takes longer. To always build locally: `COCKPIT_IMAGE=build` in `.env`. |
 | `setup.sh` stops with "NetCockpit is already running from …" | You ran it from another folder: go to the one shown and run it there. |
 
 Still stuck? Open an [issue](https://github.com/B2ZO0/netcockpit/issues) with the output of `docker compose ps` and `docker compose logs --tail 50 cockpit` (without passwords or public IPs).

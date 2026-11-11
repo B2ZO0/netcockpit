@@ -1,0 +1,111 @@
+# Builds the cockpit image and publishes it on GitHub Container Registry: ghcr.io/<owner>/netcockpit
+# Tag "tree-<hash>" = git hash of the cockpit/ folder (scripts/cockpit_image.py --tag). ./setup.sh downloads the
+# image whose tag matches its own cockpit/ folder, and builds locally when there is none (nothing breaks).
+#   push to main              tree-<hash> + main
+#   pull request (this repo)  tree-<hash>, so the branch can be tried on a real host before merging
+#   called by release.yml     tree-<hash> + X.Y.Z + X.Y + latest
+# One-time setup after the first publish: GitHub profile -> Packages -> netcockpit -> Package settings -> Change visibility: Public.
+name: Docker image
+
+on:
+  push:
+    branches: [main]
+    paths: ["cockpit/**", "scripts/cockpit_image.py", ".github/workflows/image.yml"]
+  pull_request:
+    paths: ["cockpit/**", "scripts/cockpit_image.py", ".github/workflows/image.yml"]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to tag (X.Y.Z)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Tags
+        id: meta
+        env:
+          VERSION: ${{ inputs.version }}
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/netcockpit"
+          tree=$(python3 scripts/cockpit_image.py --tag)
+          tags="$name:$tree"
+          if [ -n "$VERSION" ]; then
+            tags="$tags,$name:$VERSION,$name:${VERSION%.*},$name:latest"
+          elif [ "$EVENT" != "pull_request" ] && [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            tags="$tags,$name:main"
+          fi
+          push=true
+          if [ "$EVENT" = "pull_request" ]; then
+            # forks and Dependabot get a read-only token: build and test only
+            [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ] && [ "$ACTOR" != "dependabot[bot]" ] || push=false
+          fi
+          { echo "name=$name"; echo "tree=$tree"; echo "tags=$tags"; echo "push=$push"; } >> "$GITHUB_OUTPUT"
+          echo "::notice::$tags (push: $push)"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build for this runner (amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: cockpit
+          load: true
+          tags: netcockpit/cockpit:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: The image starts and serves the demo
+        run: |
+          docker run -d --name smoke -p 8088:8088 -v "$PWD/demo:/demo:ro" -v "$PWD/config:/config:ro" \
+            netcockpit/cockpit:test python /demo/demo.py
+          for i in $(seq 1 30); do curl -fs http://localhost:8088/health && break; sleep 2; done
+          curl -fs http://localhost:8088/health
+          docker run --rm netcockpit/cockpit:test python -c "import yaml, requests, pyVmomi; print('python deps ok')"
+          docker run --rm netcockpit/cockpit:test sh -c "command -v nmap traceroute snmpwalk ip"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker logs smoke || true
+
+      - uses: docker/login-action@v3
+        if: steps.meta.outputs.push == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish (amd64 + arm64)
+        if: steps.meta.outputs.push == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: cockpit
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title=NetCockpit
+            org.opencontainers.image.description=NetCockpit cockpit: network map, discovery and supervision UI
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.event.pull_request.head.sha || github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

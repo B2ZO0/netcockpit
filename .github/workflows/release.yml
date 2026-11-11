@@ -11,9 +11,12 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Publish the newest CHANGELOG version if it is not released yet
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -23,6 +26,7 @@ jobs:
           fi
           version=$(grep -m1 -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md)
           tag="v${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "$tag is already released, nothing to do."
             exit 0
@@ -30,3 +34,13 @@ jobs:
           python3 scripts/release_notes.py "$version" > notes.md
           gh release create "$tag" --target "$GITHUB_SHA" --title "NetCockpit ${version}" --notes-file notes.md --latest
           echo "::notice::Released $tag"
+
+  # Ready-made Docker image tagged with the version (X.Y.Z, X.Y, latest) on ghcr.io
+  image:
+    needs: release
+    uses: ./.github/workflows/image.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
+    permissions:
+      contents: read
+      packages: write
