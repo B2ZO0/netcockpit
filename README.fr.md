@@ -15,7 +15,7 @@
 ![Docker Compose](https://img.shields.io/badge/d%C3%A9ploiement-docker%20compose-2496ED?logo=docker&logoColor=white)
 ![Interface : English | Français](https://img.shields.io/badge/interface-English%20%7C%20Fran%C3%A7ais-4cc9f0)
 
-[English](README.md) · **Français** · [**Démo en ligne**](https://b2zo0.github.io/netcockpit/) · [Lancer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Comment ça marche](docs/comment-ca-marche.md) · [Documentation](docs/)
+[English](README.md) · **Français** · [**Démo en ligne**](https://b2zo0.github.io/netcockpit/) · [🎬 Vidéo (4 min)](https://youtu.be/G1qtRnapp1k) · [Lancer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Comment ça marche](docs/comment-ca-marche.md) · [Documentation](docs/)
 
 <a href="https://alternativeto.net/software/netcockpit/about/?utm_source=badge&utm_medium=referral"><img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="NetCockpit on AlternativeTo" height="40"></a>
 
@@ -65,7 +65,7 @@ L'interface suit la langue du navigateur et le thème du système ; les deux se 
 
 ## ⚡ Démo en une minute
 
-**Sans rien installer :** ouvre la [démo en ligne](https://b2zo0.github.io/netcockpit/) dans ton navigateur.
+**Sans rien installer :** ouvre la [démo en ligne](https://b2zo0.github.io/netcockpit/) dans ton navigateur, ou regarde la [vidéo de 4 minutes](https://youtu.be/G1qtRnapp1k) : présentation, démo et installation pas à pas.
 
 La démo simule un réseau complet sur deux sites : firewall, 2 ESXi, 11 VM, switchs, bornes Wi-Fi, imprimantes, téléphones IP, PC, et quelques pannes. **Rien n'est scanné, aucun identifiant n'est nécessaire.**
 
