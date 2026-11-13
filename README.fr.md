@@ -17,6 +17,8 @@
 
 [English](README.md) · **Français** · [**Démo en ligne**](https://b2zo0.github.io/netcockpit/) · [Lancer la démo](#-démo-en-une-minute) · [Guide pas à pas](docs/demarrage.md) · [Comment ça marche](docs/comment-ca-marche.md) · [Documentation](docs/)
 
+<a href="https://alternativeto.net/software/netcockpit/about/?utm_source=badge&utm_medium=referral"><img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="NetCockpit on AlternativeTo" height="40"></a>
+
 <img src="docs/images/demo.gif" alt="Démo NetCockpit : verdict, fiche équipement avec analyse IA, topologie, VMware, switchs, thème jour" width="100%">
 
 <sub>Tout ce qui est affiché vient de la démo intégrée : les noms et les adresses IP sont fictifs.</sub>
