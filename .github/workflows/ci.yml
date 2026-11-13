@@ -9,6 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+
+      # Every commit is signed by the maintainer: no bot or AI-assistant author, no co-author line.
+      - name: Commit authorship
+        run: |
+          bad=$(git log HEAD --format='%h %an <%ae>%n%B' | grep -i -E 'noreply@anthropic\.com|^co-authored-by:.*(claude|anthropic)|^claude-session:|dependabot\[bot\]|^[0-9a-f]{7,} claude ' || true)
+          if [ -n "$bad" ]; then echo "::error::Commits must be authored by the maintainer, without bot or AI co-author lines:"; echo "$bad"; exit 1; fi
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/setup-node@v7
@@ -19,9 +26,6 @@ jobs:
           pip install pyyaml requests
           python -m py_compile cockpit/app/*.py scripts/*.py demo/demo.py
           python -m unittest discover -s tests -v
-
-      - name: Unit tests
-        run: python -m unittest discover -v -s tests
 
       - name: JavaScript
         run: for f in cockpit/static/*.js; do node --check "$f"; done
