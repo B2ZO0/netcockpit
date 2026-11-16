@@ -58,12 +58,15 @@ Everything you can monitor becomes a connector you switch on. What is not switch
 - [ ] NAS over SNMP (Synology, TrueNAS): volumes, disk health. *NAS en SNMP : volumes, santé des disques.*
 - [ ] UPS (NUT or SNMP): battery, load, runtime left. *Onduleurs (NUT ou SNMP) : batterie, charge, autonomie restante.*
 - [ ] SNMPv3.
+- [ ] **Zabbix templates suggested from what was detected**: when Zabbix is enabled, the cockpit proposes the official Zabbix template that matches each detected device (firewall, NAS, UPS, switch) and shows its results. NetCockpit reuses Zabbix's integrations instead of rewriting them. *Modèles Zabbix proposés selon les équipements détectés : le cockpit réutilise les intégrations officielles de Zabbix au lieu de les réécrire.*
 - [ ] Hyper-V inventory. *Inventaire Hyper-V.*
 
 ## 1.5 · Your cockpit
 
 - [ ] Choose which instruments the overview shows. *Choisir les instruments de la vue d'ensemble.*
 - [ ] A library of ready-made checks to switch on (certificates, DNS, AD replication, backups). *Une bibliothèque de contrôles prêts à activer (certificats, DNS, réplication AD, sauvegardes).*
+- [ ] **Your own icons**: upload an icon per device, type or brand; it is used on the map and in the inventory. NetCockpit ships no brand logos. *Tes propres icônes : une icône par équipement, type ou marque, sur la carte et dans l'inventaire. NetCockpit ne fournit aucun logo de marque.*
+- [ ] **Themes**: choose the accent colour (including a black and red theme), with the same readability on a wall screen. Animations stay light and can be turned off. *Thèmes : choix de la couleur d'accent (dont un thème noir et rouge), aussi lisible sur un écran mural. Animations légères, désactivables.*
 - [ ] More languages. *D'autres langues.*
 
 ## Later · Plus tard
