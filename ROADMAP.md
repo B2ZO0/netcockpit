@@ -63,10 +63,15 @@ Everything you can monitor becomes a connector you switch on. What is not switch
 
 ## 1.5 · Your cockpit
 
-- [ ] Choose which instruments the overview shows. *Choisir les instruments de la vue d'ensemble.*
+Everything works without touching anything; all customisation lives in one "Customise" screen, and "Reset" brings back the defaults.
+*Tout marche sans rien toucher ; toute la personnalisation est dans un seul écran « Personnaliser », et « Réinitialiser » remet les réglages d'origine.*
+
+- [ ] Choose which instruments the overview shows, and arrange them by drag and drop. *Choisir les instruments de la vue d'ensemble et les placer par glisser-déposer.*
+- [ ] **Map layout**: move nodes and keep their position, colour per building, labels shown or hidden. *Carte personnalisable : déplacer les éléments et garder leur place, couleur par bâtiment, étiquettes affichées ou non.*
 - [ ] A library of ready-made checks to switch on (certificates, DNS, AD replication, backups). *Une bibliothèque de contrôles prêts à activer (certificats, DNS, réplication AD, sauvegardes).*
 - [ ] **Your own icons**: upload an icon per device, type or brand; it is used on the map and in the inventory. NetCockpit ships no brand logos. *Tes propres icônes : une icône par équipement, type ou marque, sur la carte et dans l'inventaire. NetCockpit ne fournit aucun logo de marque.*
 - [ ] **Themes**: choose the accent colour (including a black and red theme), with the same readability on a wall screen. Animations stay light and can be turned off. *Thèmes : choix de la couleur d'accent (dont un thème noir et rouge), aussi lisible sur un écran mural. Animations légères, désactivables.*
+- [ ] **Theme files**: a theme is one small file you can import, export and share; a few ready-made themes ship with NetCockpit. *Fichiers de thème : un thème est un petit fichier à importer, exporter et partager ; quelques thèmes prêts à l'emploi sont fournis.*
 - [ ] More languages. *D'autres langues.*
 
 ## Later · Plus tard
