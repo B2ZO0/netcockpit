@@ -5,7 +5,7 @@
 | | Minimum | Recommended (20–100 servers, 30 days of history) |
 |---|---|---|
 | OS | Debian 12 / Ubuntu 22.04+ | Debian 12 / Ubuntu 24.04 |
-| CPU / RAM | 2 vCPU / 4 GB (`ENABLE_ZABBIX=false`) | 4 vCPU / 8 GB |
+| CPU / RAM | 2 vCPU / 4 GB (Zabbix included; measured ~1.2 GB used on a homelab) | 4 vCPU / 8 GB |
 | Disk | 30 GB | 60–100 GB |
 | Software | Docker Engine + compose plugin, Python 3 | |
 
