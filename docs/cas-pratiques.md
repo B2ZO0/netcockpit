@@ -117,7 +117,7 @@ Puis relance l'assistant : donne la communauté, puis les IP des switchs et du f
 
 ## Petite machine ou homelab
 
-- **Peu de RAM** : 4 Go suffisent pour toute la pile, Zabbix compris (mesuré à ~1,2 Go sur un homelab). Avec 2 Go, ça tourne aussi mais avec du swap : réponds alors **n** à la question Zabbix.
+- **Peu de RAM** : 4 Go suffisent pour toute la pile, Zabbix compris (mesuré à ~1,2 Go en production, sur un réseau d'entreprise de taille moyenne). Avec 2 Go, ça tourne aussi mais avec du swap : réponds alors **n** à la question Zabbix.
 - **Homelab** : la démo (`docker compose -f docker-compose.demo.yml up`) permet d'essayer sans rien toucher. Pour ton vrai réseau, procède comme pour une [petite structure](#petite-structure-un-seul-réseau).
 - **Réduire l'historique** : `RETENTION=15d` dans `.env`, puis `./setup.sh`.
 - **Machine ARM** (système 64 bits, par exemple un Raspberry Pi 4 ou 5) : l'image toute prête du cockpit existe aussi en arm64, rien n'est compilé. Pas encore essayé sur du vrai matériel : les retours sont bienvenus.
