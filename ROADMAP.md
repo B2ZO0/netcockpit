@@ -31,13 +31,14 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 - [x] Ready-made Docker image on GitHub Container Registry: nothing to build on the host, faster install and update. *Image Docker prête à l'emploi : rien à compiler, installation et mise à jour plus rapides.*
 - [ ] **Updates follow releases**: `./setup.sh --update` moves to the latest published version, never to work in progress (`--update --edge` for testers). It never goes backwards. *Les mises à jour suivent les versions publiées : `--update` installe la dernière version publiée, jamais le travail en cours (`--edge` pour les testeurs), et ne revient jamais en arrière.*
 - [ ] **Install test on every change**: CI installs NetCockpit from scratch on a clean Debian and a clean Ubuntu, starts it and checks that the cockpit answers; shell scripts are linted. A change that breaks the install cannot be merged. *Test d'installation à chaque changement : la CI installe NetCockpit de zéro sur un Debian et un Ubuntu propres et vérifie que le cockpit répond. Un changement qui casse l'installation ne peut pas être fusionné.*
-- [ ] "New version available" notice in the cockpit, opt-in. *Bandeau « nouvelle version disponible », à activer.*
 
 ## 1.3 · Setup from the browser
 
 Installing and configuring without editing a single file: what makes beginners give up today.
 *Installer et configurer sans éditer un seul fichier : c'est ce qui fait abandonner les débutants aujourd'hui.*
 
+- [ ] **Network diagram export**: the topology as a draw.io file (editable) and SVG, by building. *Export du schéma réseau : la topologie en fichier draw.io (modifiable) et en SVG, par bâtiment.*
+- [ ] **Light install**: cockpit, scan and map only, for a Raspberry Pi or a small container; metrics, logs and Zabbix can be added later without reinstalling. *Installation légère : cockpit, scan et carte seulement, pour un Raspberry Pi ou un petit conteneur ; métriques, logs et Zabbix s'ajoutent plus tard sans réinstaller.*
 - [ ] **Compatibility report**: `./setup.sh --report` prints what NetCockpit detected (hypervisors and versions, switches, SNMP), without addresses or names, ready to paste in an issue. *Rapport de compatibilité : ce que NetCockpit a détecté, sans adresses ni noms, prêt à coller dans un ticket.*
 - [ ] **"Works on my setup" issue template**: 30 seconds to say what runs NetCockpit fine. *Modèle de ticket « Ça marche chez moi » : 30 secondes pour dire sur quoi NetCockpit tourne bien.*
 - [ ] **"Tested with" table** in both READMEs (Proxmox, ESXi/vCenter, UniFi, Cisco, firewalls, NAS…), filled from the reports: tested, reported by a user, not tried yet. *Tableau « Testé avec » dans les deux README, rempli à partir des retours.*
@@ -47,8 +48,8 @@ Installing and configuring without editing a single file: what makes beginners g
 - [ ] First-run guide in the browser after `./setup.sh`, instead of terminal questions (the terminal assistant stays available). *Guide de premier démarrage dans le navigateur ; l'assistant en terminal reste disponible.*
 - [ ] **`./setup.sh --doctor`**: checks containers, ports, disk space and each source, and says in plain words what to fix. *Vérifie les conteneurs, les ports, le disque et chaque source, et dit simplement quoi corriger.*
 - [ ] **`./setup.sh --backup` and `--restore`**: one archive with settings and history, to move to another machine or come back after a mistake. *Une archive avec les réglages et l'historique, pour changer de machine ou revenir en arrière.*
-- [ ] **Network diagram export**: the topology as a draw.io file (editable) and SVG, by building. *Export du schéma réseau : la topologie en fichier draw.io (modifiable) et en SVG, par bâtiment.*
 - [ ] **Network report**: one printable page (PDF from the browser) with inventory, address plan, VLANs, hypervisors and open problems, without secrets. *Rapport réseau : une page imprimable (PDF depuis le navigateur) avec inventaire, plan d'adressage, VLAN, hyperviseurs et problèmes en cours, sans secrets.*
+- [ ] "New version available" notice in the cockpit, opt-in. *Bandeau « nouvelle version disponible », à activer.*
 
 ## 1.4 · Connectors
 
@@ -57,7 +58,6 @@ Everything you can monitor becomes a connector you switch on. What is not switch
 
 - [ ] Existing sources reorganised as connectors: VMware, Proxmox, SNMP, Zabbix. *Les sources actuelles deviennent des connecteurs.*
 - [ ] Menu and overview adapt to what is connected. *Le menu et la vue d'ensemble s'adaptent à ce qui est connecté.*
-- [ ] **Light install**: cockpit, scan and map only, for a Raspberry Pi or a small container; metrics, logs and Zabbix can be added later without reinstalling. *Installation légère : cockpit, scan et carte seulement, pour un Raspberry Pi ou un petit conteneur ; métriques, logs et Zabbix s'ajoutent plus tard sans réinstaller.*
 - [ ] Firewalls over SNMP (pfSense, OPNsense, FortiGate): WAN state, VPN tunnels. *Pare-feu en SNMP : état du WAN, tunnels VPN.*
 - [ ] NAS over SNMP (Synology, TrueNAS): volumes, disk health. *NAS en SNMP : volumes, santé des disques.*
 - [ ] UPS (NUT or SNMP): battery, load, runtime left. *Onduleurs (NUT ou SNMP) : batterie, charge, autonomie restante.*
