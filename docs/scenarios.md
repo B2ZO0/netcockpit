@@ -117,7 +117,7 @@ Then run the assistant again: enter the community, then the switch and firewall 
 
 ## Small machine or homelab
 
-- **Little RAM**: 4 GB is enough for the whole stack, Zabbix included (measured at ~1.2 GB in production, on a mid-sized company network). 2 GB also runs, but swaps: answer **n** to the Zabbix question then.
+- **Little RAM**: 4 GB is enough for the whole stack, Zabbix included (measured at ~1.2 GB in production, on a company network (~230 devices across 2 buildings, 20 VMs, 8 servers with the agent)). 2 GB also runs, but swaps: answer **n** to the Zabbix question then.
 - **Homelab**: the demo (`docker compose -f docker-compose.demo.yml up`) lets you try without touching anything. For your real network, proceed as for a [small organisation](#small-organisation-one-network).
 - **Shorter history**: `RETENTION=15d` in `.env`, then `./setup.sh`.
 - **ARM machine** (64-bit OS, e.g. a Raspberry Pi 4 or 5): the ready-made cockpit image also exists for arm64, so nothing is compiled. Not yet tried on real hardware: feedback welcome.

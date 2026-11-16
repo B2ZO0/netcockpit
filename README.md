@@ -180,7 +180,7 @@ Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten
 
 **Does anything leave my network?** No, unless you enable the AI feature with a cloud provider. With a local model (Ollama), nothing leaves.
 
-**Is it heavy?** Less than you'd think. Measured in production on a mid-sized company network, the whole stack including Zabbix uses about 1.2 GB of RAM (Prometheus and Grafana ~250 MB each, Loki ~150 MB, Zabbix ~250 MB in total, the cockpit ~60 MB) and under 5 % CPU at rest. Plan 4 GB to be comfortable, 8 GB for a large network or long retention.
+**Is it heavy?** Less than you'd think. Measured in production on a company network (~230 devices across 2 buildings, 20 VMs, 8 servers with the agent), the whole stack including Zabbix uses about 1.2 GB of RAM (Prometheus and Grafana ~250 MB each, Loki ~150 MB, Zabbix ~250 MB in total, the cockpit ~60 MB) and under 5 % CPU at rest. Plan 4 GB to be comfortable, 8 GB for a large network or long retention.
 
 **Can I run it next to other containers?** Yes. It uses ports 8088, 3000, 9090, 9093, 3100 and 514, plus 8081 and 10051 when Zabbix is enabled.
 
