@@ -29,6 +29,7 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 - [ ] Feedback from real Proxmox clusters (versions 7, 8, 9) *(maintainer test, not code)*. *Retours sur de vrais clusters Proxmox (test du mainteneur).*
 - [x] Security: protected `/metrics`, Secure session cookie, optional vCenter TLS verification. *Sécurité : `/metrics` protégé, cookie sécurisé, vérification TLS de vCenter.*
 - [x] Ready-made Docker image on GitHub Container Registry: nothing to build on the host, faster install and update. *Image Docker prête à l'emploi : rien à compiler, installation et mise à jour plus rapides.*
+- [ ] **Updates follow releases**: `./setup.sh --update` moves to the latest published version, never to work in progress (`--update --edge` for testers). It never goes backwards. *Les mises à jour suivent les versions publiées : `--update` installe la dernière version publiée, jamais le travail en cours (`--edge` pour les testeurs), et ne revient jamais en arrière.*
 - [ ] "New version available" notice in the cockpit, opt-in. *Bandeau « nouvelle version disponible », à activer.*
 
 ## 1.3 · Setup from the browser
@@ -43,6 +44,8 @@ Installing and configuring without editing a single file: what makes beginners g
 - [ ] Buildings and networks editable from the cockpit. *Bâtiments et réseaux modifiables depuis le cockpit.*
 - [ ] Secrets stay in `.env`, never shown again once saved; only logged-in admins can change settings. *Les secrets restent dans `.env`, jamais réaffichés ; seuls les admins connectés modifient les réglages.*
 - [ ] First-run guide in the browser after `./setup.sh`, instead of terminal questions (the terminal assistant stays available). *Guide de premier démarrage dans le navigateur ; l'assistant en terminal reste disponible.*
+- [ ] **Network diagram export**: the topology as a draw.io file (editable) and SVG, by building. *Export du schéma réseau : la topologie en fichier draw.io (modifiable) et en SVG, par bâtiment.*
+- [ ] **Network report**: one printable page (PDF from the browser) with inventory, address plan, VLANs, hypervisors and open problems, without secrets. *Rapport réseau : une page imprimable (PDF depuis le navigateur) avec inventaire, plan d'adressage, VLAN, hyperviseurs et problèmes en cours, sans secrets.*
 
 ## 1.4 · Connectors
 
