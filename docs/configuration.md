@@ -38,7 +38,7 @@ After any change: `./setup.sh`.
 | `COCKPIT_IMAGE` | `auto` (default): download the ready-made cockpit image matching your code from `ghcr.io/b2zo0/netcockpit`, build it on the host if unavailable. `build`: always build on the host. A registry mirror (`registry.example.local/netcockpit`): same automatic tag, from your registry. With a tag (`…/netcockpit:1.2`): that exact image. |
 | `RETENTION` | Prometheus retention (default `30d`). Loki retention is in `loki/loki.yml`. |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana `admin` password. |
-| `ENABLE_ZABBIX` | `true` / `false`. Zabbix uses ~1.5 GB of RAM. |
+| `ENABLE_ZABBIX` | `true` / `false`. Zabbix uses ~0.5 GB of RAM on a small network, more as it grows. |
 | `ZABBIX_WEB_PORT`, `ZABBIX_*_PASSWORD` | Zabbix web port and generated passwords. |
 | `VCENTER_URL` | `https://vcenter.example.local/sdk` **or** a standalone ESXi: `https://10.10.0.5/sdk`. |
 | `VCENTER_USER`, `VCENTER_PASSWORD` | Read-only account (see below). Quote values containing `$`: `'pa$$word'`. |

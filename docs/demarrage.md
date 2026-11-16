@@ -25,7 +25,7 @@ De la VM vide au cockpit qui affiche tes bâtiments, ton VMware et tes alertes s
 
 ## 1. Préparer la machine de supervision
 
-Une VM Debian 12 ou Ubuntu 24.04 suffit : **4 vCPU, 8 Go de RAM, 60 Go de disque** (6 Go de RAM sans Zabbix).
+Une VM Debian 12 ou Ubuntu 24.04 suffit : **2 vCPU, 4 Go de RAM, 60 Go de disque** au minimum ; 4 vCPU et 8 Go pour plusieurs centaines d'équipements.
 
 Elle doit pouvoir joindre **tous les réseaux à surveiller** (ping et quelques ports), l'**API de ton vCenter ou de ton ESXi** (port 443), et être joignable par les agents (ports 9090 et 3100). Donne-lui une IP fixe : c'est l'adresse que tu taperas dans ton navigateur.
 
@@ -70,7 +70,7 @@ Utilisateur en lecture seule : supervision
 Mot de passe de cet utilisateur (rien ne s'affiche) :
 Switchs et firewall : communauté SNMP en lecture seule (Entrée pour passer) :
 Notifications Telegram : jeton du bot (Entrée pour passer) :
-Installer Zabbix (VMware natif, découverte SNMP, ~1,5 Go de RAM) ? o/n [o] :
+Installer Zabbix (VMware natif, découverte SNMP, ~0,5 Go de RAM) ? o/n [o] :
 ```
 
 Ce que chaque réponse change :
@@ -164,7 +164,7 @@ Zabbix est installé et **configuré automatiquement** : modèle VMware natif, d
 - Adresse : `http://<IP de la VM>:8081`, utilisateur `Admin`, mot de passe `ZABBIX_ADMIN_PASSWORD` dans `.env`.
 - Au **premier démarrage**, Zabbix crée sa base : compte **2 à 3 minutes** avant qu'il réponde. Pendant ce temps, la pastille Zabbix est rouge, c'est normal.
 - Si elle reste rouge, ouvre la pastille des sources : la raison s'affiche sous « Zabbix ». Puis voir [Dépannage](#12-dépannage).
-- Pas besoin de Zabbix ? Réponds `n` dans l'assistant : tu économises 1,5 Go de RAM, et le reste fonctionne pareil.
+- Pas besoin de Zabbix ? Réponds `n` dans l'assistant : tu économises environ 0,5 Go de RAM (plus sur un gros réseau), et le reste fonctionne pareil.
 
 ## 8. Installer les agents sur les serveurs
 

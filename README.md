@@ -125,7 +125,7 @@ flowchart LR
 
 ## 🚀 Installation
 
-**Requirements:** a Linux VM (Debian 12 / Ubuntu 24.04), **4 vCPU, 8 GB RAM** (6 GB without Zabbix), 60 GB disk, Docker with the compose plugin.
+**Requirements:** a Linux VM (Debian 12 / Ubuntu 24.04), **2 vCPU and 4 GB RAM minimum** (4 vCPU and 8 GB for several hundred devices), 60 GB disk, Docker with the compose plugin.
 
 ```bash
 curl -fsSL https://get.docker.com | sh            # if Docker is not installed
@@ -180,7 +180,7 @@ Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten
 
 **Does anything leave my network?** No, unless you enable the AI feature with a cloud provider. With a local model (Ollama), nothing leaves.
 
-**Is it heavy?** The full stack with Zabbix is sized for 4 vCPU and 8 GB RAM; without Zabbix, 6 GB is enough.
+**Is it heavy?** Less than you'd think. Measured on a homelab, the whole stack including Zabbix uses about 1.2 GB of RAM (Prometheus and Grafana ~250 MB each, Loki ~150 MB, Zabbix ~250 MB in total, the cockpit ~60 MB) and under 5 % CPU at rest. Plan 4 GB to be comfortable, 8 GB for a large network or long retention.
 
 **Can I run it next to other containers?** Yes. It uses ports 8088, 3000, 9090, 9093, 3100 and 514, plus 8081 and 10051 when Zabbix is enabled.
 

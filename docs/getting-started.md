@@ -25,7 +25,7 @@ From an empty VM to a cockpit showing your buildings, your VMware and your alert
 
 ## 1. Prepare the monitoring host
 
-A Debian 12 or Ubuntu 24.04 VM is enough: **4 vCPU, 8 GB RAM, 60 GB disk** (6 GB RAM without Zabbix).
+A Debian 12 or Ubuntu 24.04 VM is enough: **2 vCPU, 4 GB RAM, 60 GB disk** minimum; 4 vCPU and 8 GB for several hundred devices.
 
 It must reach **every network you want to monitor** (ping and a few ports), your **vCenter or ESXi API** (port 443), and be reachable by the agents (ports 9090 and 3100). Give it a fixed IP: it is the address you will open in your browser.
 
@@ -70,7 +70,7 @@ Read-only user: monitoring
 Password of that user (nothing is shown):
 Switches and firewall: read-only SNMP community (Enter to skip):
 Telegram notifications: bot token (Enter to skip):
-Install Zabbix (native VMware, SNMP discovery, ~1.5 GB RAM)? y/n [y]:
+Install Zabbix (native VMware, SNMP discovery, ~0.5 GB RAM)? y/n [y]:
 ```
 
 What each answer changes:
@@ -164,7 +164,7 @@ Zabbix is installed and **configured automatically**: native VMware template, SN
 - Address: `http://<host IP>:8081`, user `Admin`, password `ZABBIX_ADMIN_PASSWORD` in `.env`.
 - On **first start** Zabbix creates its database: allow **2 to 3 minutes** before it answers. Meanwhile the Zabbix light is red, which is expected.
 - If it stays red, open the sources light: the reason is shown under "Zabbix". Then see [Troubleshooting](#12-troubleshooting).
-- Don't need Zabbix? Answer `n` in the assistant: you save 1.5 GB of RAM and everything else works the same.
+- Don't need Zabbix? Answer `n` in the assistant: you save about 0.5 GB of RAM (more on a large network) and everything else works the same.
 
 ## 8. Install the server agents
 

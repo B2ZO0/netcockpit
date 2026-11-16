@@ -125,7 +125,7 @@ flowchart LR
 
 ## 🚀 Installation
 
-**Prérequis :** une VM Linux (Debian 12 / Ubuntu 24.04), **4 vCPU, 8 Go de RAM** (6 Go sans Zabbix), 60 Go de disque, Docker avec le plugin compose.
+**Prérequis :** une VM Linux (Debian 12 / Ubuntu 24.04), **2 vCPU et 4 Go de RAM minimum** (4 vCPU et 8 Go pour plusieurs centaines d'équipements), 60 Go de disque, Docker avec le plugin compose.
 
 ```bash
 curl -fsSL https://get.docker.com | sh            # si Docker n'est pas installé
@@ -180,7 +180,7 @@ Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés
 
 **Est-ce que des données sortent du réseau ?** Non, sauf si tu actives l'IA avec un fournisseur dans le cloud. Avec un modèle local (Ollama), rien ne sort.
 
-**Est-ce lourd ?** La pile complète avec Zabbix est dimensionnée pour 4 vCPU et 8 Go de RAM ; sans Zabbix, 6 Go suffisent.
+**Est-ce lourd ?** Moins qu'on ne croit. Mesuré sur un homelab, toute la pile, Zabbix compris, occupe environ 1,2 Go de RAM (Prometheus et Grafana ~250 Mo chacun, Loki ~150 Mo, Zabbix ~250 Mo au total, le cockpit ~60 Mo) et moins de 5 % de CPU au repos. Prévois 4 Go pour être à l'aise, 8 Go pour un gros réseau ou une longue rétention.
 
 **Peut-on l'installer à côté d'autres conteneurs ?** Oui. Il utilise les ports 8088, 3000, 9090, 9093, 3100 et 514, plus 8081 et 10051 quand Zabbix est activé.
 
