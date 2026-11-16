@@ -72,7 +72,7 @@ Everything works without touching anything; all customisation lives in one "Cust
 - [ ] **Your own icons**: upload an icon per device, type or brand; it is used on the map and in the inventory. NetCockpit ships no brand logos. *Tes propres icônes : une icône par équipement, type ou marque, sur la carte et dans l'inventaire. NetCockpit ne fournit aucun logo de marque.*
 - [ ] **Themes**: choose the accent colour (including a black and red theme), with the same readability on a wall screen. Animations stay light and can be turned off. *Thèmes : choix de la couleur d'accent (dont un thème noir et rouge), aussi lisible sur un écran mural. Animations légères, désactivables.*
 - [ ] **Theme files**: a theme is one small file you can import, export and share; a few ready-made themes ship with NetCockpit. *Fichiers de thème : un thème est un petit fichier à importer, exporter et partager ; quelques thèmes prêts à l'emploi sont fournis.*
-- [ ] More languages. *D'autres langues.*
+- [ ] **More languages for the interface**, chosen by the size of the self-hosting and sysadmin communities: German, Spanish, Portuguese (Brazil), Simplified Chinese first; then Italian, Polish, Russian, Japanese. One file per language, picked from the browser language. Each language is marked "needs review" until a native speaker has checked it, and corrections are welcome as first contributions. Guides stay in English and French. *D'autres langues pour l'interface : allemand, espagnol, portugais (Brésil), chinois simplifié d'abord ; puis italien, polonais, russe, japonais. Chaque langue reste marquée « à relire » tant qu'un natif ne l'a pas vérifiée ; les corrections sont de bonnes premières contributions. Les guides restent en anglais et en français.*
 
 ## Later · Plus tard
 
