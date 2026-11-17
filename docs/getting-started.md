@@ -142,6 +142,8 @@ Bonus: the cockpit reads **CDP/LLDP from the ESXi host NICs**, so it knows which
 
 ### Proxmox VE
 
+> **Experimental.** Checked against a simulated Proxmox API in automated tests; not yet tested on a real Proxmox server — feedback welcome in the [issues](https://github.com/B2ZO0/netcockpit/issues).
+
 NetCockpit reads Proxmox with a **read-only API token**: it cannot start, stop or change anything. On a Proxmox node, as root:
 
 ```bash

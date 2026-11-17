@@ -142,6 +142,8 @@ Bonus : le cockpit lit le **CDP/LLDP des cartes réseau des ESXi**, et sait ains
 
 ### Proxmox VE
 
+> **Expérimental.** Vérifié avec une API Proxmox simulée dans les tests automatiques ; pas encore testé sur un vrai serveur Proxmox — retours bienvenus dans les [tickets](https://github.com/B2ZO0/netcockpit/issues).
+
 NetCockpit lit Proxmox avec un **jeton d'API en lecture seule** : il ne peut rien démarrer, arrêter ni modifier. Sur un nœud Proxmox, en root :
 
 ```bash
