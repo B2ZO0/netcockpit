@@ -1,6 +1,7 @@
 // Online demo (GitHub Pages): answers the interface's API calls from recorded files.
 // Recorded from demo/demo.py: a simulated network with fictitious names and addresses.
 (function () {
+  window.NETCOCKPIT_DEMO = true;
   const realFetch = window.fetch.bind(window);
   let meta = null;
   const metaReady = realFetch("data/meta.json").then((r) => r.json()).then((m) => { meta = m; }).catch(() => { meta = { snapshot: 0 }; });
@@ -26,10 +27,10 @@
     if (i < 0 || u.origin !== location.origin || u.pathname.endsWith(".csv")) return realFetch(input, opts);
     const name = u.pathname.slice(i + 5);
     if (name === "rescan") return json({ ok: true }, 202);
-    let lang = "";
-    if (opts && opts.body) { try { lang = JSON.parse(opts.body).lang || ""; } catch (e) { /* ignore */ } }
+    let lang = "", bodyId = "";
+    if (opts && opts.body) { try { const b = JSON.parse(opts.body); lang = b.lang || ""; bodyId = b.id || ""; } catch (e) { /* ignore */ } }
     const site = name.startsWith("ai/") ? "" : (u.searchParams.get("site") || "");
-    const id = u.searchParams.get("id") || "";
+    const id = u.searchParams.get("id") || bodyId;
     await metaReady;
     const r = await realFetch(`data/${fnv(`${name}|${site}|${id}|${name.startsWith("ai/") ? lang : ""}`)}.json`);
     if (!r.ok) return json({ error: "not in the online demo" }, 404);

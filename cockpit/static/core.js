@@ -147,7 +147,11 @@ const App = (() => {
     const site = state.site && !/[?&]site=/.test(path) && !path.startsWith("api/node") && !path.startsWith("api/ai") ? `${sep}site=${encodeURIComponent(state.site)}` : "";
     const r = await fetch(path + site, Object.assign({ cache: "no-store" }, opts || {}));
     if (r.status === 401) { location.href = "login" + location.hash; throw new Error("401"); }
-    if (!r.ok) throw new Error(`${r.status}`);
+    if (!r.ok) {
+      let why = "";
+      try { why = (await r.json()).error || ""; } catch (e) { /* not JSON */ }
+      const err = new Error(why || `HTTP ${r.status}`); err.status = r.status; throw err;
+    }
     return r.json();
   }
   const post = (path, body) => api(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body || {}) });
@@ -223,6 +227,7 @@ const App = (() => {
       seg.innerHTML = sites.map((s) => `<button data-site="${esc(s)}">${s ? esc(I18n.name(s)) : esc(allSites())}</button>`).join("");
       $$("button", seg).forEach((b) => b.addEventListener("click", () => { state.site = b.dataset.site; store.set("site", state.site); markSite(); refresh(true); }));
     }
+    if (state.site && !(f.sites || []).includes(state.site)) { state.site = ""; store.set("site", ""); }   // bâtiment retiré
     markSite();
     const src = [["Prometheus", true, true], [t("src.scan"), true, true],
       ...(f.vcenter || !f.proxmox ? [["vCenter", f.vcenter && f.vcenter.up, !!f.vcenter]] : []),
@@ -243,7 +248,15 @@ const App = (() => {
     $("#ext-links").classList.toggle("hidden", !ext.length);
     $("#btn-ai").classList.toggle("hidden", !f.ai);
   }
-  function markSite() { $$("#site-seg button").forEach((b) => b.classList.toggle("on", b.dataset.site === (state.site || ""))); }
+  function markSite() {
+    $$("#site-seg button").forEach((b) => b.classList.toggle("on", b.dataset.site === (state.site || "")));
+    // filtre actif toujours visible (sur téléphone, les boutons des bâtiments sont masqués) ; un appui = tous les bâtiments
+    const chip = $("#site-chip");
+    if (!chip) return;
+    if (!chip.dataset.wired) { chip.dataset.wired = "1"; chip.addEventListener("click", () => { state.site = ""; store.set("site", ""); markSite(); refresh(true); }); }
+    chip.classList.toggle("hidden", !state.site);
+    if (state.site) { chip.textContent = `${I18n.name(state.site)} ✕`; chip.title = allSites(); chip.setAttribute("aria-label", allSites()); }
+  }
 
   function setAlertCount(c) {
     const el = $("#nav-alerts"); const n = (c.critical || 0) + (c.warning || 0);
@@ -315,7 +328,7 @@ const App = (() => {
     if (b) b.addEventListener("click", async () => {
       b.disabled = true; $("#d-ai-out").innerHTML = `<div class="ai-box"><span class="spinner"></span>${t("d.aiRunning")}</div>`;
       try { const r = await post("api/ai/explain", { id, lang: I18n.lang }); $("#d-ai-out").innerHTML = aiBox(r); }
-      catch (e) { $("#d-ai-out").innerHTML = `<div class="ai-box">${t("d.aiErr")}</div>`; }
+      catch (e) { $("#d-ai-out").innerHTML = `<div class="ai-box">${t("d.aiErr")}${e && e.message ? `<div class="muted">${esc(e.message)}</div>` : ""}</div>`; }
       b.disabled = false;
     });
     if (window.Topo && Topo.highlight) Topo.highlight(id);

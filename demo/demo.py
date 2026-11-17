@@ -88,6 +88,7 @@ for i in range(150, 154):
     add(f"10.20.0.{i}", "Yealink", [80], None, None, "80:5e:c0", local=False)
 ABSENT = {"10.10.0.117", "10.10.0.121", "10.20.0.111", "10.20.0.115", "10.10.0.153"}   # PC éteints
 DOWN = {"10.10.0.24"}  # PRINTSRV01 en panne
+LATE = {"10.20.0.153"}  # téléphone branché après le premier scan : « nouvel équipement », comme l'alerte
 NB_MAC = {ip: mac(int(ip.split('.')[2]), int(ip.split('.')[3]), "3c:52:82") for ip, d in DEV.items() if d["netbios"]}
 for ip, d in DEV.items():
     if d["mac"] is None and d["netbios"]:
@@ -100,6 +101,8 @@ def ping_sweep(subnet, exclude=(), dns_servers=()):
     SWEEPS[0] += 1
     first = SWEEPS[0] <= 2
     for ip, d in DEV.items():
+        if first and ip in LATE:
+            continue
         if ip.rsplit(".", 1)[0] == pre and (first or (ip not in ABSENT and ip not in DOWN)):
             out[ip] = {"ip": ip, "mac": d["mac"], "vendor": d["vendor"], "hostname": d["hostname"] if dns_servers else None,
                        "ports": [], "netbios": None}
@@ -322,6 +325,9 @@ class Fake(BaseHTTPRequestHandler):
                    "2. Vérifier que la carte réseau est **connectée** dans les paramètres de la VM.\n"
                    "3. Les logs montrent *Spouleur d'impression arrêté* juste avant : redémarrer le service `Spooler` si la VM répond.\n"
                    "4. Sinon : redémarrage de l'invité (`Restart Guest OS`), puis arrêt forcé si besoin.\n\n### Impact\nL'impression est bloquée sur les deux sites.")
+            msgs = json.dumps(body.get("messages", []), ensure_ascii=False)
+            if "Analyse cet" in msgs and "PRINTSRV01" not in msgs:
+                txt = fake_explain(body, en)   # any other device: an answer about THAT device, built from its data
             return self._j({"choices": [{"message": {"content": txt}}]})
         if u.path == "/api_jsonrpc.php":
             m = body["method"]; p = body.get("params") or {}
@@ -336,6 +342,29 @@ class Fake(BaseHTTPRequestHandler):
                 return self._j({"jsonrpc": "2.0", "error": {"message": "Incorrect", "data": "login"}, "id": body["id"]})
             return self._j({"jsonrpc": "2.0", "result": R.get(m, {}), "id": body["id"]})
         self._j({}, 404)
+
+def fake_explain(body, en):
+    """Demo only: a plausible AI answer built from the device's own monitoring data (no AI is called)."""
+    text = next((m.get("content", "") for m in body.get("messages", []) if m.get("role") == "user"), "")
+    try:
+        d = json.loads(text.split("```json", 1)[1].split("```", 1)[0])
+    except Exception:
+        d = {}
+    name = d.get("name") or "?"
+    alerts = [a.get("summary") or a.get("name") for a in (d.get("alertes") or []) if isinstance(a, dict)]
+    m = d.get("metrics") or {}
+    usage = ", ".join(f"{k.upper()} {v:.0f} %" for k, v in m.items() if k in ("cpu", "mem", "disk") and isinstance(v, (int, float)))
+    disk = isinstance(m.get("disk"), (int, float)) and m["disk"] >= 85
+    if en:
+        out = f"### Diagnosis\n**{name}** is {d.get('status') or 'unknown'}" + (f" ({usage})" if usage else "") + "."
+        out += ("\n\nOpen alerts: " + "; ".join(alerts) + ".") if alerts else "\n\nNo open alert: quick health check below."
+        out += "\n\n### Checks\n" + ("1. Find what fills the disk (`WinDirStat`, `du -sh /*`), old logs and backups first.\n2. Clean up or extend the volume before 95 %.\n" if disk else "1. Compare with its usual load in Grafana over 7 days.\n2. Check the latest error lines in its logs.\n")
+        return out + "\n*Online demo: this answer is pre-written from the simulated data.*"
+    out = f"### Diagnostic\n**{name}** est {'en alerte' if alerts else 'en bon état'}" + (f" ({usage})" if usage else "") + "."
+    out += ("\n\nAlertes en cours : " + " ; ".join(alerts) + ".") if alerts else "\n\nAucune alerte en cours : bilan rapide ci-dessous."
+    out += "\n\n### Vérifications\n" + ("1. Trouver ce qui remplit le disque (`WinDirStat`, `du -sh /*`), d'abord les vieux logs et sauvegardes.\n2. Nettoyer ou agrandir le volume avant 95 %.\n" if disk else "1. Comparer avec sa charge habituelle dans Grafana sur 7 jours.\n2. Regarder les dernières erreurs dans ses logs.\n")
+    return out + "\n*Démo en ligne : cette réponse est préparée à partir des données simulées.*"
+
 
 threading.Thread(target=ThreadingHTTPServer(("127.0.0.1", 19090), Fake).serve_forever, daemon=True).start()
 print(f"NetCockpit demo: http://localhost:{PORT}  (simulated network, nothing is scanned)", flush=True)

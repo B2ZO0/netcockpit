@@ -181,7 +181,8 @@ def overview(site=None):
         "internet_series": inet_series[0]["points"] if inet_series else [],
         "alerts": alerts[:12], "alerts_count": {s: sum(1 for a in alerts if a["severity"] == s) for s in ("critical", "warning", "info")},
         "servers": servers,
-        "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"])},
+        "agents": ({"total": len(live["agents"]), "alive": len(live["agents_alive"])} if not site else
+                   {"total": len(servers), "alive": sum(1 for x in servers if x["status"] not in ("down", "unknown"))}),
         "virt_detected": ", ".join(f"{lab} {ip}" for lab, k in (("VMware ESXi", "vmware"), ("Proxmox", "proxmox"))
                                    for ip in detected_hypervisors()[k][:2]) or None,
         "vmware": None if not vc else {"up": vc["up"], "hosts": len(vc["hosts"]),
