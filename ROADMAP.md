@@ -14,8 +14,8 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 
 | Weeks · Semaines | Version | Focus |
 |---|---|---|
-| Nov 2026 | **1.2** | Proxmox, one-command update that follows releases, security, ready-made Docker image, install test in CI |
-| Dec 2026 | **1.3** | Network diagram export (draw.io, SVG), light install, compatibility reports |
+| Nov 2026 | **1.2** | Proxmox, one-command update that follows releases, agent install over HTTPS, security, ready-made Docker image |
+| Dec 2026 | **1.3** | Network diagram export (draw.io, SVG), install test in CI, light install, compatibility reports |
 | Jan–Feb 2027 | **1.4** | Setup from the browser, doctor, backup and restore, printable network report |
 | Mar–Apr 2027 | **1.5** | Connectors: firewalls, NAS, UPS, SNMPv3, VLANs on links, what changed, Zabbix templates |
 | Later | **1.6** | Your cockpit: layout, map, icons, themes, more languages |
@@ -30,7 +30,7 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 - [x] Security: protected `/metrics`, Secure session cookie, optional vCenter TLS verification. *Sécurité : `/metrics` protégé, cookie sécurisé, vérification TLS de vCenter.*
 - [x] Ready-made Docker image on GitHub Container Registry: nothing to build on the host, faster install and update. *Image Docker prête à l'emploi : rien à compiler, installation et mise à jour plus rapides.*
 - [ ] **Updates follow releases**: `./setup.sh --update` moves to the latest published version, never to work in progress (`--update --edge` for testers). It never goes backwards. *Les mises à jour suivent les versions publiées : `--update` installe la dernière version publiée, jamais le travail en cours (`--edge` pour les testeurs), et ne revient jamais en arrière.*
-- [ ] **Install test on every change**: CI installs NetCockpit from scratch on a clean Debian and a clean Ubuntu, starts it and checks that the cockpit answers; shell scripts are linted. A change that breaks the install cannot be merged. *Test d'installation à chaque changement : la CI installe NetCockpit de zéro sur un Debian et un Ubuntu propres et vérifie que le cockpit répond. Un changement qui casse l'installation ne peut pas être fusionné.*
+- [ ] **Agent install over HTTPS**: install scripts and agent binaries served over HTTPS with the cockpit's certificate, and checked against a checksum before they run, so nobody on the network can swap them on the way. *Installation des agents en HTTPS : scripts et agents servis en HTTPS et vérifiés par une empreinte avant exécution, pour que personne sur le réseau ne puisse les remplacer en route.*
 
 ## 1.3 · Your network on paper
 
@@ -38,6 +38,7 @@ The map becomes something you can hand over: an editable diagram. And NetCockpit
 *La carte devient un document à remettre : un schéma modifiable. Et NetCockpit tourne sur de petites machines.*
 
 - [ ] **Network diagram export**: the topology as a draw.io file (editable) and SVG, by building. *Export du schéma réseau : la topologie en fichier draw.io (modifiable) et en SVG, par bâtiment.*
+- [ ] **Install test on every change**: CI installs NetCockpit from scratch on a clean Debian and a clean Ubuntu, starts it and checks that the cockpit answers; shell scripts are linted. A change that breaks the install cannot be merged. *Test d'installation à chaque changement : la CI installe NetCockpit de zéro sur un Debian et un Ubuntu propres et vérifie que le cockpit répond. Un changement qui casse l'installation ne peut pas être fusionné.*
 - [ ] **Light install**: cockpit, scan and map only, for a Raspberry Pi or a small container; metrics, logs and Zabbix can be added later without reinstalling. *Installation légère : cockpit, scan et carte seulement, pour un Raspberry Pi ou un petit conteneur ; métriques, logs et Zabbix s'ajoutent plus tard sans réinstaller.*
 - [ ] **Compatibility report**: `./setup.sh --report` prints what NetCockpit detected (hypervisors and versions, switches, SNMP), without addresses or names, ready to paste in an issue. *Rapport de compatibilité : ce que NetCockpit a détecté, sans adresses ni noms, prêt à coller dans un ticket.*
 - [ ] **"Works on my setup" issue template**: 30 seconds to say what runs NetCockpit fine. *Modèle de ticket « Ça marche chez moi » : 30 secondes pour dire sur quoi NetCockpit tourne bien.*
@@ -52,7 +53,6 @@ Installing and configuring without editing a single file: what makes beginners g
 - [ ] Buildings and networks editable from the cockpit. *Bâtiments et réseaux modifiables depuis le cockpit.*
 - [ ] Secrets stay in `.env`, never shown again once saved; only logged-in admins can change settings. *Les secrets restent dans `.env`, jamais réaffichés ; seuls les admins connectés modifient les réglages.*
 - [ ] First-run guide in the browser after `./setup.sh`, instead of terminal questions (the terminal assistant stays available). *Guide de premier démarrage dans le navigateur ; l'assistant en terminal reste disponible.*
-- [ ] **Agent install over HTTPS**: install scripts and agent binaries served over HTTPS with the cockpit's certificate, and checked against a checksum before they run, so nobody on the network can swap them on the way. *Installation des agents en HTTPS : scripts et agents servis en HTTPS et vérifiés par une empreinte avant exécution, pour que personne sur le réseau ne puisse les remplacer en route.*
 - [ ] **`./setup.sh --doctor`**: checks containers, ports, disk space and each source, and says in plain words what to fix. *Vérifie les conteneurs, les ports, le disque et chaque source, et dit simplement quoi corriger.*
 - [ ] **`./setup.sh --backup` and `--restore`**: one archive with settings and history, to move to another machine or come back after a mistake. *Une archive avec les réglages et l'historique, pour changer de machine ou revenir en arrière.*
 - [ ] **Network report**: one printable page (PDF from the browser) with inventory, address plan, VLANs, hypervisors and open problems, without secrets. *Rapport réseau : une page imprimable (PDF depuis le navigateur) avec inventaire, plan d'adressage, VLAN, hyperviseurs et problèmes en cours, sans secrets.*
