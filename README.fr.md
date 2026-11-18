@@ -45,7 +45,7 @@ Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les con
 - 🔔 **Une seule chaîne d'alertes.** Prometheus, Loki et Zabbix passent tous par Alertmanager vers Telegram, Discord ou email, regroupés et dédoublonnés : si le firewall tombe, tu reçois un message, pas 80.
 - 🤖 **Diagnostic IA, en option.** Un bouton « Analyser » sur chaque équipement et un briefing de la situation, avec une API d'IA dans le cloud ou un **modèle local** (Ollama : rien ne sort du réseau).
 - ✈️ **Un vrai cockpit, pas un énième template d'admin.** Une phrase te dit où en est l'infra, la route vers Internet est tracée comme la ligne magenta d'un plan de vol, et l'interface utilise [B612](https://github.com/polarsys/b612), la police conçue par Airbus pour les écrans de cockpit. Thèmes nuit et jour, français et anglais.
-- 📦 **Une seule commande, aucun YAML à écrire.** `./setup.sh` détecte ton réseau, pose quelques questions avec des valeurs par défaut, sauvegarde tes réglages et démarre tout. Le cockpit arrive en image toute prête (amd64 et arm64) : rien à compiler. Relançable à volonté.
+- 📦 **Une seule commande, aucun YAML à écrire.** `./setup.sh` détecte ton réseau, pose quelques questions avec des valeurs par défaut, sauvegarde tes réglages et démarre tout. Le cockpit arrive en image toute prête (amd64 et arm64) : rien à compiler. Plus tard, `./setup.sh --update` passe à la dernière version publiée sans toucher à tes réglages ni à l'historique.
 
 ## 📸 Captures
 
@@ -162,8 +162,10 @@ curl -fsSL http://<IP>:8088/agents/linux/install.sh | sudo bash -s <IP>
 ### Une mise à jour ne touche jamais à tes réglages
 
 ```bash
-git pull && ./setup.sh
+./setup.sh --update       # passe à la dernière version publiée, jamais au travail en cours, jamais en arrière
 ```
+
+Les testeurs peuvent suivre la branche principale avec `./setup.sh --update --edge` (pas sur une supervision de production).
 
 Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés** (le dépôt ne contient que le modèle `config/cockpit.example.yml`), l'historique vit dans les volumes Docker, et `setup.sh` copie tes réglages dans `backups/<date>/` avant chaque lancement. Détails dans [Upgrading](docs/installation.md#upgrading-your-settings-are-never-lost).
 

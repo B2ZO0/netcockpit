@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # NetCockpit : installation, configuration et mise à jour. Relançable à volonté, ne perd jamais tes réglages.
 #   ./setup.sh               installe ou met à jour (l'assistant se lance tout seul la première fois)
-#   ./setup.sh --update      télécharge la dernière version puis met à jour, sans toucher à tes réglages ni à l'historique
+#   ./setup.sh --update      passe à la dernière version publiée puis met à jour, sans toucher à tes réglages ni à l'historique
+#   ./setup.sh --update --edge   pour les testeurs : suit le travail en cours de la branche main (pas en production)
 #   ./setup.sh --configure   relance l'assistant : ajouter un bâtiment, changer d'adressage, connecter VMware...
 #   ./setup.sh --yes         sans questions (valeurs détectées automatiquement)
 #   ./setup.sh --fresh       repart de zéro même si une ancienne installation existe (déconseillé)
@@ -14,14 +15,15 @@ ok() { printf '\033[32m✔\033[0m %s\n' "$(say "$1" "$2")"; }
 warn() { printf '\033[33m!\033[0m %s\n' "$(say "$1" "$2")"; }
 die() { printf '\n\033[31m✖\033[0m %s\n\n' "$(say "$1" "$2")"; exit 1; }
 
-CONFIGURE=""; YES=""; FRESH=""; UPDATE=""; REST=()
+CONFIGURE=""; YES=""; FRESH=""; UPDATE=""; EDGE=""; REST=()
 for a in "$@"; do
   case "$a" in
     --update) UPDATE=1 ;;
+    --edge) UPDATE=1; EDGE=1 ;;
     --configure) CONFIGURE=1; REST+=("$a") ;;
     --yes|-y) YES=1; REST+=("$a") ;;
     --fresh) FRESH=1 ;;
-    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     *) die "Option inconnue : $a (voir ./setup.sh --help)" "Unknown option: $a (see ./setup.sh --help)" ;;
   esac
 done
@@ -30,26 +32,13 @@ command -v docker >/dev/null || die "Docker manque : curl -fsSL https://get.dock
 docker compose version >/dev/null 2>&1 || die "Le plugin « docker compose » manque." "The docker compose plugin is missing."
 command -v python3 >/dev/null || die "python3 manque : apt install python3" "python3 is missing: apt install python3"
 
-# ------------------------------------------------------------------ --update : récupère la dernière version, puis relance ce script (nouvelle version)
+# ------------------------------------------------------------------ --update : passe à la dernière version publiée, puis relance ce script (nouvelle version)
 # Tes réglages (.env, config/cockpit.yml) ne font pas partie du dépôt : git ne peut pas les écraser. L'historique est dans des volumes Docker.
+# Jamais en arrière, jamais le travail en cours de main (sauf --edge) : voir scripts/update.sh.
 if [[ -n "$UPDATE" ]]; then
-  command -v git >/dev/null || die "git manque : apt install git" "git is missing: apt install git"
-  [[ -d .git ]] || die "Ce dossier n'a pas été installé avec git clone : télécharge la nouvelle version, décompresse-la DANS ce dossier, puis lance ./setup.sh" \
-                       "This folder was not installed with git clone: download the new version, extract it INTO this folder, then run ./setup.sh"
-  OLD=$(git rev-parse HEAD)
-  if ! git pull --ff-only; then
-    die "La mise à jour n'a pas pu être téléchargée (voir le message de git ci-dessus). Rien n'a été modifié.
-  Cause fréquente : un fichier du projet a été modifié à la main. « git status » les liste ; « git stash » les met de côté, puis relance ./setup.sh --update" \
-        "The update could not be downloaded (see git's message above). Nothing was changed.
-  Usual cause: a project file was edited by hand. \"git status\" lists them; \"git stash\" puts them aside, then run ./setup.sh --update again"
-  fi
-  NEW=$(git rev-parse HEAD)
-  if [[ "$OLD" == "$NEW" ]]; then ok "Déjà à jour : je vérifie simplement que tout tourne" "Already up to date: just checking that everything runs"
-  else
-    ok "Nouvelle version téléchargée ($(git log --oneline "$OLD..$NEW" | wc -l | tr -d ' ') changement(s)). Nouveautés : CHANGELOG.md" \
-       "New version downloaded ($(git log --oneline "$OLD..$NEW" | wc -l | tr -d ' ') change(s)). What's new: CHANGELOG.md"
-    git log --format='    - %s' "$OLD..$NEW" | head -15
-  fi
+  [[ -f scripts/update.sh ]] || die "scripts/update.sh manque : ce dossier est incomplet. Télécharge la dernière version et décompresse-la DANS ce dossier." \
+                                    "scripts/update.sh is missing: this folder is incomplete. Download the latest version and extract it INTO this folder."
+  bash scripts/update.sh ${EDGE:+--edge} || exit 1
   exec ./setup.sh ${REST[@]+"${REST[@]}"}
 fi
 

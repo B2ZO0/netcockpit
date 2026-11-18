@@ -31,7 +31,7 @@ jobs:
         run: for f in cockpit/static/*.js; do node --check "$f"; done
 
       - name: Shell
-        run: bash -n setup.sh agents/linux/install.sh
+        run: bash -n setup.sh scripts/update.sh agents/linux/install.sh
 
       - name: YAML and dashboards
         run: |

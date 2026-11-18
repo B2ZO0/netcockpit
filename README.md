@@ -45,7 +45,7 @@ It does not replace Prometheus, Grafana or Zabbix: it **ships them, configures t
 - 🔔 **One alert pipeline.** Prometheus, Loki and Zabbix all go through Alertmanager to Telegram, Discord or email, grouped and de-duplicated: if the firewall dies, you get one message, not 80.
 - 🤖 **AI diagnosis, optional.** "Explain this problem" on any device and a situation briefing, with a cloud LLM API or a **local model** (Ollama: nothing leaves your network).
 - ✈️ **A real cockpit, not another admin template.** One sentence tells you how things are, the route to the Internet is drawn like the magenta line of a flight plan, and the UI uses [B612](https://github.com/polarsys/b612), the typeface Airbus designed for cockpit screens. Night and day themes, English and French.
-- 📦 **One command, no YAML to write.** `./setup.sh` detects your network, asks a few questions with sensible defaults, backs up your settings and starts everything. The cockpit arrives as a ready-made image (amd64 and arm64): nothing to compile. Later, `./setup.sh --update` upgrades without touching your settings or history.
+- 📦 **One command, no YAML to write.** `./setup.sh` detects your network, asks a few questions with sensible defaults, backs up your settings and starts everything. The cockpit arrives as a ready-made image (amd64 and arm64): nothing to compile. Later, `./setup.sh --update` moves to the latest published version without touching your settings or history.
 
 ## 📸 Screenshots
 
@@ -162,8 +162,10 @@ curl -fsSL http://<host>:8088/agents/linux/install.sh | sudo bash -s <host>
 ### Upgrading never touches your settings
 
 ```bash
-git pull && ./setup.sh
+./setup.sh --update       # moves to the latest published version, never to work in progress, never backwards
 ```
+
+Testers can follow the main branch with `./setup.sh --update --edge` (not on a production host).
 
 Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten** (the repository only ships `config/cockpit.example.yml`), history lives in Docker volumes, and `setup.sh` copies your settings to `backups/<date>/` before every run. Details in [Upgrading](docs/installation.md#upgrading-your-settings-are-never-lost).
 

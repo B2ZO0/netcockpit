@@ -211,10 +211,16 @@ Then `./setup.sh --configure`: answer the SNMP question with the community, then
 
 ```bash
 cd /opt/netcockpit           # ALWAYS the folder where NetCockpit is already installed
-./setup.sh --update          # downloads the latest version, then updates everything
+./setup.sh --update          # moves to the latest published version, then updates everything
 ```
 
 Without git (installed from an archive): extract the new version INTO that same folder, then run `./setup.sh`.
+
+**You only get published versions** (the ones on the [Releases](https://github.com/B2ZO0/netcockpit/releases) page, tested on a real network), never work in progress:
+
+- `./setup.sh --update` moves to the **latest published version** and shows its number and its changes.
+- It **never goes backwards**. If your folder is already newer than the latest published version (the case if you installed NetCockpit from the main branch before 1.2), it says so and changes nothing: you will move to the next published version by itself. Same if you made your own commits: they are never erased.
+- To **test** work in progress (on a test machine, not on your production monitoring host): `./setup.sh --update --edge`, which follows the `main` branch as before.
 
 - Your `.env` (passwords, VMware, Telegram) and your `config/cockpit.yml` (buildings, networks) are **never overwritten**: they are not part of the downloaded project.
 - `setup.sh` copies them to `backups/<date>/` before every run (the last 10 copies are kept).

@@ -53,9 +53,10 @@ docker compose logs -f cockpit
 ## Upgrading (your settings are never lost)
 
 ```bash
-git pull            # or unzip the new release over the folder
-./setup.sh
+./setup.sh --update       # or unzip the new release over the folder, then ./setup.sh
 ```
+
+`--update` moves to the **latest published version** (the newest `vX.Y.Z` tag on the [Releases](https://github.com/B2ZO0/netcockpit/releases) page), never to work in progress on `main`, and **never backwards**: if the folder is already newer than that version, or holds commits of your own, nothing changes and it says why. Testers can follow `main` with `./setup.sh --update --edge` (avoid it on a production host). It stops without changing anything if a project file was edited by hand (`git status` lists them).
 
 What is yours stays yours:
 
