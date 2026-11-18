@@ -67,13 +67,21 @@ def system_dns_servers():
 
 # ---------------------------------------------------------------- nmap
 
+def _xml(text):
+    """nmap's own XML output. Device names and banners inside it are escaped by nmap, but refuse any
+    entity declaration anyway: no entity expansion is ever needed to read a scan."""
+    if "<!ENTITY" in text:
+        raise ET.ParseError("entity declaration refused")
+    return ET.fromstring(text)  # nosec B314 - local nmap output, entities refused above
+
+
 def parse_nmap_xml(xml_text):
     """{ip: {ip, mac, vendor, hostname, ports, netbios, netbios_mac}} pour les hôtes 'up'."""
     hosts = {}
     if not xml_text.strip():
         return hosts
     try:
-        root = ET.fromstring(xml_text)
+        root = _xml(xml_text)
     except ET.ParseError as e:
         log.warning("XML nmap illisible : %s", e)
         return hosts
@@ -156,7 +164,7 @@ def reverse_dns(ips, dns_servers):
     out = {}
     text = _run(cmd, 300)
     try:
-        root = ET.fromstring(text) if text.strip() else None
+        root = _xml(text) if text.strip() else None
     except ET.ParseError:
         root = None
     if root is None:

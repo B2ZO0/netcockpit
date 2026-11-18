@@ -73,5 +73,12 @@ class WebSecurity(unittest.TestCase):
         self.assertEqual(code, 202)
 
 
+class NmapXml(unittest.TestCase):
+    def test_entity_declarations_are_refused(self):
+        import scanner
+        bomb = '<?xml version="1.0"?><!DOCTYPE r [<!ENTITY a "aaaaaaaa"><!ENTITY b "&a;&a;&a;&a;">]><nmaprun>&b;</nmaprun>'
+        self.assertEqual(scanner.parse_nmap_xml(bomb), {})
+
+
 if __name__ == "__main__":
     unittest.main()

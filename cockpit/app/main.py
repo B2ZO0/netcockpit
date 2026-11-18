@@ -794,7 +794,7 @@ def main():
         threading.Thread(target=vcenter_loop, daemon=True, name="vcenter").start()
     if ZBX:
         threading.Thread(target=zabbix_loop, daemon=True, name="zabbix").start()
-    ThreadingHTTPServer(("0.0.0.0", C.PORT), Handler).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", C.PORT), Handler).serve_forever()  # nosec B104 - runs in its container, published by docker-compose
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ class VCenter:
             self.si = None
         # Par défaut le certificat n'est pas vérifié (vCenter est souvent en auto-signé).
         # VCENTER_VERIFY_TLS=true le vérifie avec les autorités de confiance du système.
-        ctx = ssl.create_default_context() if self.verify_tls else ssl._create_unverified_context()
+        ctx = ssl.create_default_context() if self.verify_tls else ssl._create_unverified_context()  # nosec B323 - opt-in VCENTER_VERIFY_TLS, see above
         self.si = SmartConnect(host=self.host, port=self.port, user=self.user, pwd=self.password, sslContext=ctx)
         log.info("connecté à vCenter %s", self.host)
 

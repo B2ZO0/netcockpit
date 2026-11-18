@@ -32,7 +32,7 @@ def key(name, site="", id_="", lang=""):
 def get(path, body=None):
     req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
                                  headers={"content-type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
+    with urllib.request.urlopen(req, timeout=60) as r:  # nosec B310 - local demo server only
         return r.read()
 
 
