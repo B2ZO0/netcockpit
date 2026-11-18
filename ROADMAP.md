@@ -88,6 +88,12 @@ Everything works without touching anything; all customisation lives in one "Cust
 - [ ] **Theme files**: a theme is one small file you can import, export and share; a few ready-made themes ship with NetCockpit. *Fichiers de thème : un thème est un petit fichier à importer, exporter et partager ; quelques thèmes prêts à l'emploi sont fournis.*
 - [ ] **More languages for the interface**, chosen by the size of the self-hosting and sysadmin communities: German, Spanish, Portuguese (Brazil), Simplified Chinese first; then Italian, Polish, Russian, Japanese. One file per language, picked from the browser language. Each language is marked "needs review" until a native speaker has checked it, and corrections are welcome as first contributions. Guides stay in English and French. *D'autres langues pour l'interface : allemand, espagnol, portugais (Brésil), chinois simplifié d'abord ; puis italien, polonais, russe, japonais. Chaque langue reste marquée « à relire » tant qu'un natif ne l'a pas vérifiée ; les corrections sont de bonnes premières contributions. Les guides restent en anglais et en français.*
 
+## Ideas · Idées
+
+Proposals not scheduled yet; they join a version once the maintainer agrees. *Propositions pas encore programmées ; elles entrent dans une version une fois validées par le mainteneur.*
+
+- **`./setup.sh --update --check`**: says which published version an update would install and lists its changes, without downloading or restarting anything. For admins who plan upgrades in a maintenance window. *Dit quelle version publiée la mise à jour installerait et ses changements, sans rien télécharger ni redémarrer. Pour les admins qui planifient leurs mises à jour sur un créneau de maintenance.*
+
 ## Later · Plus tard
 
 - Several vCenter, ESXi or Proxmox endpoints. *Plusieurs vCenter, ESXi ou Proxmox.*
