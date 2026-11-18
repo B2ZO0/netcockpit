@@ -1,0 +1,57 @@
+name: Security
+
+# Automatic security checks, on every change and every Monday:
+# CodeQL reads the Python and JavaScript code for vulnerabilities (results in the Security tab),
+# Bandit looks for risky Python patterns, ShellCheck checks the install scripts,
+# pip-audit checks the Python dependencies against known vulnerabilities.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "27 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+          config: |
+            paths-ignore:
+              - cockpit/static/lib
+      - uses: github/codeql-action/analyze@v4
+
+  scanners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Python dependencies (pip-audit)
+        run: |
+          pip install pip-audit
+          pip-audit -r cockpit/requirements.txt
+
+      - name: Python code (Bandit)
+        run: |
+          pip install bandit
+          # medium and high severity only; the cockpit is a read-only network tool that runs ping and nmap on purpose
+          bandit -q -r cockpit/app scripts -ll -ii
+
+      - name: Shell scripts (ShellCheck)
+        run: shellcheck -S error setup.sh scripts/update.sh agents/linux/install.sh
