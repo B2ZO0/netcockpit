@@ -46,7 +46,7 @@ _docker = {"at": 0.0, "nets": []}
 # scripts d'installation des agents (publics de toute façon).
 # /metrics n'en fait pas partie : il contient tout l'inventaire (voir metrics_source).
 PUBLIC_PREFIXES = ("/login", "/api/login", "/health", "/-/healthy", "/agents/",
-                   "/lib/fonts/", "/style.css", "/i18n.js", "/favicon")
+                   "/lib/fonts/", "/style.css", "/i18n.js", "/favicon", "/login.js", "/theme.js")
 
 _fails: dict[str, list[float]] = {}
 _lock = threading.Lock()

@@ -618,6 +618,10 @@ def inventory_csv():
     return "\ufeff" + buf.getvalue()
 
 
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+       "font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'; object-src 'none'")
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "cockpit/2.0"
 
@@ -635,6 +639,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
         self.send_header("Referrer-Policy", "same-origin")
+        # Scripts only from the cockpit itself: an injected <script> or onclick= cannot run.
+        self.send_header("Content-Security-Policy", CSP)
+        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -714,8 +721,20 @@ class Handler(BaseHTTPRequestHandler):
             log.exception("erreur HTTP %s", self.path)
             return self._send(500, {"error": str(e)})
 
+    def _same_origin(self):
+        """A browser sends Origin on POST: refuse requests started by another site (CSRF),
+        including on trusted networks where no login is asked."""
+        origin = self.headers.get("Origin")
+        if origin is None:          # not a browser (curl, scripts): nothing to forge
+            return True
+        if origin == "null":        # sandboxed page or file:// : never the cockpit itself
+            return False
+        return urlparse(origin).netloc.lower() == (self.headers.get("Host") or "").lower()
+
     def do_POST(self):
         url = urlparse(self.path)
+        if not self._same_origin():
+            return self._send(403, {"error": "cross-site request refused"})
         try:
             length = min(int(self.headers.get("Content-Length") or 0), 1_000_000)
             body = json.loads(self.rfile.read(length) or b"{}") if length else {}
