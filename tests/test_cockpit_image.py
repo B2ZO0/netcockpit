@@ -119,14 +119,14 @@ class WiredIn(unittest.TestCase):
     def test_setup_downloads_then_falls_back_to_building(self):
         setup = (ROOT / "setup.sh").read_text(encoding="utf-8")
         self.assertIn("python3 scripts/cockpit_image.py", setup)
-        self.assertIn("docker tag \"$ref\" netcockpit/cockpit:local", setup)
+        self.assertIn("docker tag \"$ref\" localhost/netcockpit/cockpit:local", setup)
         self.assertIn("docker compose build -q cockpit", setup)
         self.assertNotIn("up -d --build", setup)  # would rebuild over the downloaded image
 
     def test_compose_still_uses_the_local_tag(self):
         for f in ("docker-compose.yml", "docker-compose.demo.yml"):
             text = (ROOT / f).read_text(encoding="utf-8")
-            self.assertIn("image: netcockpit/cockpit:local", text, f)
+            self.assertIn("image: localhost/netcockpit/cockpit:local", text, f)
             self.assertIn("build: ./cockpit", text, f)
 
     def test_workflow_uses_the_same_tag_and_name(self):

@@ -69,18 +69,18 @@ jobs:
         with:
           context: cockpit
           load: true
-          tags: netcockpit/cockpit:test
+          tags: localhost/netcockpit/cockpit:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: The image starts and serves the demo
         run: |
           docker run -d --name smoke -p 8088:8088 -v "$PWD/demo:/demo:ro" -v "$PWD/config:/config:ro" \
-            netcockpit/cockpit:test python /demo/demo.py
+            localhost/netcockpit/cockpit:test python /demo/demo.py
           for i in $(seq 1 30); do curl -fs http://localhost:8088/health && break; sleep 2; done
           curl -fs http://localhost:8088/health
-          docker run --rm netcockpit/cockpit:test python -c "import yaml, requests, pyVmomi; print('python deps ok')"
-          docker run --rm netcockpit/cockpit:test sh -c "command -v nmap traceroute snmpwalk ip"
+          docker run --rm localhost/netcockpit/cockpit:test python -c "import yaml, requests, pyVmomi; print('python deps ok')"
+          docker run --rm localhost/netcockpit/cockpit:test sh -c "command -v nmap traceroute snmpwalk ip"
 
       - name: Logs on failure
         if: failure()

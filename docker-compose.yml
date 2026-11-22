@@ -12,7 +12,7 @@ services:
   # ------------------------------------------------------------ cockpit
   cockpit:
     build: ./cockpit
-    image: netcockpit/cockpit:local
+    image: localhost/netcockpit/cockpit:local   # local only: no public registry can ever serve this name
     restart: unless-stopped
     network_mode: host            # voit le LAN (ARP, NetBIOS, traceroute)
     cap_add: [NET_RAW, NET_ADMIN]

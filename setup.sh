@@ -136,7 +136,7 @@ cockpit_image() {
   command -v timeout >/dev/null && t=(timeout 600)
   if [[ -n "$ref" ]]; then
     say "Téléchargement de l'image du cockpit…" "Downloading the cockpit image…"
-    if ${t[@]+"${t[@]}"} docker pull -q "$ref" >/dev/null 2>&1 && docker tag "$ref" netcockpit/cockpit:local; then
+    if ${t[@]+"${t[@]}"} docker pull -q "$ref" >/dev/null 2>&1 && docker tag "$ref" localhost/netcockpit/cockpit:local; then
       ok "Image du cockpit téléchargée, rien à construire ($ref)" "Cockpit image downloaded, nothing to build ($ref)"
       IMAGE_READY=1; return 0
     fi
@@ -158,7 +158,7 @@ if [[ -n "$NEED_WIZARD" ]]; then
   tty=(-i); [[ -t 0 && -z "$YES" ]] && tty=(-it)
   wl="en"; [[ -n "$FR" ]] && wl="fr"
   docker run --rm "${tty[@]}" --network host --user "$(id -u):$(id -g)" -v "$HERE:/work" -w /work \
-    netcockpit/cockpit:local python /app/app/configure.py --lang "$wl" ${YES:+--yes} \
+    localhost/netcockpit/cockpit:local python /app/app/configure.py --lang "$wl" ${YES:+--yes} \
     || { [[ -f config/cockpit.yml ]] || die "Configuration annulée : rien n'a été démarré." "Setup cancelled: nothing was started."; }
 fi
 
@@ -193,6 +193,8 @@ elif [[ -z "$(envget PROXMOX_URL)" ]]; then warn "Ni VMware ni Proxmox configur�
 cockpit_image
 docker compose up -d --remove-orphans
 docker compose restart prometheus alertmanager cockpit >/dev/null 2>&1 || true
+# ancien nom de l'image locale (avant 1.2) : retiré, seul localhost/netcockpit/cockpit:local sert désormais
+docker image rm netcockpit/cockpit:local >/dev/null 2>&1 || true
 
 echo
 ok "NetCockpit démarré" "NetCockpit is running"

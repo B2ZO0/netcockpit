@@ -7,8 +7,8 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def compose():
-    return yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
+def compose(name="docker-compose.yml"):
+    return yaml.safe_load((ROOT / name).read_text(encoding="utf-8"))
 
 
 class Deployment(unittest.TestCase):
@@ -27,6 +27,24 @@ class Deployment(unittest.TestCase):
 
     def test_alertmanager_listens_on_the_host_only(self):
         self.assertEqual(compose()["services"]["alertmanager"]["ports"], ["127.0.0.1:9093:9093"])
+
+
+class LocalImages(unittest.TestCase):
+    def test_images_built_here_can_only_come_from_this_machine(self):
+        # "localhost/" is a registry name: no public registry can ever serve this image,
+        # even to "docker compose pull" or an automatic image updater.
+        for name in ("docker-compose.yml", "docker-compose.demo.yml"):
+            for svc, conf in compose(name)["services"].items():
+                if "build" in conf:
+                    self.assertTrue(conf.get("image", "").startswith("localhost/"), f"{name}: {svc}")
+
+    def test_setup_and_ci_use_the_local_only_name(self):
+        setup = (ROOT / "setup.sh").read_text(encoding="utf-8")
+        self.assertIn('docker tag "$ref" localhost/netcockpit/cockpit:local', setup)
+        self.assertIn("localhost/netcockpit/cockpit:local python /app/app/configure.py", setup)
+        self.assertNotIn(" netcockpit/cockpit:local python", setup)
+        wf = (ROOT / ".github" / "workflows" / "image.yml").read_text(encoding="utf-8")
+        self.assertNotIn(" netcockpit/cockpit:test", wf)
 
 
 if __name__ == "__main__":

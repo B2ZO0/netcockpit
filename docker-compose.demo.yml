@@ -4,7 +4,7 @@ name: netcockpit-demo
 services:
   demo:
     build: ./cockpit
-    image: netcockpit/cockpit:local
+    image: localhost/netcockpit/cockpit:local   # local only: no public registry can ever serve this name
     command: ["python", "/demo/demo.py"]
     environment:
       DEMO_SNMP: "1"          # 0 = without the provider's SNMP access (topology from vCenter/LLDP only)
