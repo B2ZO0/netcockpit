@@ -11,6 +11,7 @@ Please report vulnerabilities **privately**, through GitHub's "Report a vulnerab
 - **Behind an HTTPS reverse proxy** that sends `X-Forwarded-Proto: https`, the session cookie is marked `Secure`.
 - **vCenter certificate**: not verified by default (self-signed is common). Set `VCENTER_VERIFY_TLS=true` once vCenter has a certificate your system trusts.
 - **Alertmanager (9093) listens on the host only**: nobody on the network can silence alerts.
+- **Prometheus and Loki only accept what agents need**: Prometheus cannot be stopped or reloaded over HTTP, and Loki refuses log deletion requests (logs are only removed by the retention period).
 - **Prometheus remote-write (9090), Loki push (3100), syslog (514) and the Zabbix trapper (10051) are unauthenticated by design**: agents and devices push to them. Allow them **only from your server and device networks** with a firewall, for example:
   ```bash
   ufw allow from 192.0.2.0/24 to any port 9090,3100 proto tcp   # servers with an agent

@@ -142,7 +142,7 @@ The setup assistant detects the local network, gateway and DNS servers, then ask
 | **Cockpit** | `http://<host>:8088` (password shown by `./setup.sh`, `COCKPIT_PASSWORD`) |
 | Grafana | `http://<host>:3000` (admin / `GRAFANA_ADMIN_PASSWORD`) |
 | Zabbix | `http://<host>:8081` (Admin / `ZABBIX_ADMIN_PASSWORD`) |
-| Prometheus · Alertmanager | `:9090` · `:9093` (host only, see [SECURITY.md](SECURITY.md)) |
+| Prometheus · Alertmanager | `:9090` (agents push to it: allow it only from your server networks) · `:9093` (host only); see [SECURITY.md](SECURITY.md) |
 
 Then install the agents (the cockpit serves the scripts):
 
