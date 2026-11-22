@@ -126,5 +126,20 @@ class Grafana(unittest.TestCase):
         self.assertIn("yesoreyeram-infinity-datasource", env["GF_PLUGINS_PREINSTALL_SYNC"])
 
 
+class CockpitPrivileges(unittest.TestCase):
+    def test_cockpit_can_send_probes_but_not_change_the_host_network(self):
+        # nmap and traceroute need raw packets (NET_RAW); NET_ADMIN would let the container
+        # reconfigure the host's interfaces, routes and firewall (network_mode: host). CI checks discovery without it.
+        cockpit = compose()["services"]["cockpit"]
+        self.assertEqual(cockpit["network_mode"], "host")
+        self.assertEqual(cockpit["cap_add"], ["NET_RAW"])
+        self.assertNotIn("privileged", cockpit)
+
+    def test_ci_checks_discovery_with_these_capabilities(self):
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("--cap-add NET_RAW localhost/netcockpit/cockpit:local", ci)
+        self.assertNotIn("--cap-add NET_ADMIN", ci)
+
+
 if __name__ == "__main__":
     unittest.main()

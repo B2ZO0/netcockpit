@@ -126,6 +126,38 @@ jobs:
           sleep 15
           curl -fs http://localhost:8088/api/overview | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['stats']['total'] > 50, d['stats']; print(d['stats'])"
           curl -fs http://localhost:8088/api/graph | python3 -c "import json,sys; d=json.load(sys.stdin); assert any(n['role']=='esxi' for n in d['nodes']); print(len(d['nodes']), 'nodes')"
+      - name: Discovery works with the capabilities of docker-compose.yml (host network, NET_RAW, no NET_ADMIN)
+        run: |
+          # The only target is a throwaway container on this runner's Docker bridge: nothing else is scanned.
+          docker run -d --name scan-target --entrypoint python localhost/netcockpit/cockpit:local -m http.server 8000
+          T=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' scan-target)
+          sleep 2
+          cockpit() { docker run --rm --network host --cap-add NET_RAW localhost/netcockpit/cockpit:local "$@"; }
+          caps=$(cockpit sh -c 'grep CapEff /proc/self/status')
+          echo "effective capabilities: $caps"
+          python3 -c "import sys; eff = int(sys.argv[1].split()[1], 16); assert eff & (1 << 13), 'NET_RAW missing'; assert not eff & (1 << 12), 'NET_ADMIN present'" "$caps"
+          out=$(cockpit nmap -sn -n -oX - "$T"); echo "$out" | grep -E 'address|status' || true
+          [[ "$out" == *'addrtype="mac"'* ]]                                   # ARP ping on the local segment
+          out=$(cockpit nmap -Pn -n -sS -p 8000 -oX - "$T"); echo "$out" | grep -E '<port ' || true
+          [[ "$out" == *'portid="8000"><state state="open"'* ]]                # SYN scan (raw packets)
+          out=$(cockpit nmap -Pn -n -sU -p 137 -oX - "$T"); echo "$out" | grep -E '<port ' || true
+          [[ "$out" == *'protocol="udp" portid="137"><state state='* ]]        # UDP scan, as for NetBIOS names
+          out=$(cockpit traceroute -n -I -q 1 -w 2 -m 3 "$T"); echo "$out"
+          [[ "$out" == *"$T"* ]]                                                # ICMP traceroute
+          docker run --rm --network host --cap-add NET_RAW -w /app/app localhost/netcockpit/cockpit:local python -c '
+          import sys, scanner
+          t = sys.argv[1]
+          hosts = scanner.ping_sweep(t + "/32")
+          ports = scanner.port_scan([t], [8000])
+          print("ping_sweep:", hosts, "port_scan:", ports)
+          assert hosts.get(t, {}).get("mac"), "the cockpit scan found no MAC address"
+          assert ports.get(t) == [8000], "the cockpit port scan missed the open port"
+          ' "$T"
+          # sanity check: without raw packets the same scan fails, so the checks above do test the capability
+          out=$(docker run --rm --network host --cap-drop NET_RAW localhost/netcockpit/cockpit:local nmap -Pn -n -sS -p 8000 "$T" 2>&1 || true)
+          echo "$out" | tail -3
+          if [[ "$out" == *"8000/tcp open"* ]]; then echo "SYN scan worked without NET_RAW: this check proves nothing"; exit 1; fi
+          docker rm -f scan-target
       - name: Logs on failure
         if: failure()
         run: docker compose -f docker-compose.demo.yml logs

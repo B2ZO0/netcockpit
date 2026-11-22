@@ -17,7 +17,7 @@ services:
     image: localhost/netcockpit/cockpit:local   # local only: no public registry can ever serve this name
     restart: unless-stopped
     network_mode: host            # voit le LAN (ARP, NetBIOS, traceroute)
-    cap_add: [NET_RAW, NET_ADMIN]
+    cap_add: [NET_RAW]            # paquets bruts pour nmap et traceroute (ping, ARP, SYN) ; rien qui modifie le réseau de la machine
     environment:
       TZ: ${TZ:-Europe/Paris}
       COCKPIT_PORT: "8088"

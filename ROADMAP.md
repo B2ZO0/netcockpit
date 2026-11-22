@@ -26,7 +26,7 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 - [ ] **Agent token**: agents send metrics and logs with a token created at install, so that only your servers can push. *Jeton d'agent : les agents envoient leurs métriques et leurs logs avec un jeton créé à l'installation, pour que seuls tes serveurs puissent envoyer.*
 - [x] **Pinned stack versions**: Prometheus, Loki, Grafana, Alertmanager, Alloy and the exporters use tested versions, moved forward by `./setup.sh --update`. *Versions de la pile épinglées : des versions testées, mises à jour par `./setup.sh --update`.*
 - [x] Notification and SNMP secrets readable only by the containers that use them. *Secrets de notification et SNMP lisibles uniquement par les conteneurs qui s'en servent.*
-- [ ] Cockpit container with the fewest privileges it needs (non-root user, network capabilities checked on a real network). *Conteneur du cockpit avec le minimum de droits (utilisateur non root, capacités réseau vérifiées sur un vrai réseau).*
+- [ ] Cockpit container running as a non-root user; it already only keeps the raw-packet capability that discovery needs. *Conteneur du cockpit sous un utilisateur non root ; il ne garde déjà que la capacité « paquets bruts » nécessaire à la découverte.*
 - [x] **Proxmox VE**: nodes, VMs, LXC containers and storages, with a read-only API token. *Proxmox VE : nœuds, VM, conteneurs LXC et stockages, avec un jeton en lecture seule.*
 - [x] **`./setup.sh --update`**: one command, settings and history kept. *Une commande, réglages et historique conservés.*
 - [x] Hypervisors detected automatically; the menu hides what you do not have. *Hyperviseurs détectés automatiquement ; le menu masque ce que tu n'as pas.*
