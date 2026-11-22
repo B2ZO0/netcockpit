@@ -12,6 +12,7 @@ Not published yet: these changes will make the next release.
 - Roadmap published in ROADMAP.md.
 - **Security**: strict Content-Security-Policy (scripts only from the cockpit itself, no inline script, no framing by other sites) and a Permissions-Policy; requests started by another website are refused, including on trusted networks without login (CSRF).
 - Fix: behind a reverse proxy that rewrites the `Host` header (nginx's default), signing in and every other action was refused as a cross-site request. The browser's own same-origin signal is now accepted; requests from other websites are still refused.
+- Fix: the Alerts screen now follows the building filter like the overview; before, it listed every building's alerts and the alert counter in the menu changed from one screen to the other.
 - On phones, the active building filter shows as a chip at the top; one tap goes back to all buildings. The agents card on the overview follows the building filter.
 - Online demo: "Analyse with AI" works on every device and errors say why; agent install commands use a placeholder address instead of the address serving the demo; the new-device alert and the new devices panel agree.
 - Lighter requirements, from real measurements: the whole stack including Zabbix uses about 1.2 GB of RAM in production on a company network (~230 devices across 2 buildings, 20 VMs, 8 servers with the agent). Minimum is now 2 vCPU and 4 GB RAM (was 4 vCPU and 8 GB); 8 GB stays recommended for several hundred devices. Zabbix is now listed at ~0.5 GB instead of 1.5 GB.

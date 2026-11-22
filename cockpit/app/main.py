@@ -161,11 +161,15 @@ def features():
 
 # ---------------------------------------------------------------- vues API
 
+def site_alerts(mdl, live, site=None):
+    """Alerts of one building (all of them without a filter): same list on the overview and the alerts screen."""
+    alerts = M.alerts_view(mdl, live["alerts"])
+    return [a for a in alerts if a.get("site") == site] if site else alerts
+
+
 def overview(site=None):
     mdl, live = current()
-    alerts = M.alerts_view(mdl, live["alerts"])
-    if site:
-        alerts = [a for a in alerts if a.get("site") == site]
+    alerts = site_alerts(mdl, live, site)
     servers = []
     for n in mdl.nodes.values():
         if n.get("agent") and (not site or n.get("site") == site):
@@ -691,7 +695,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, v)
             if p == "/api/alerts":
                 mdl, live = current()
-                return self._send(200, {"alerts": M.alerts_view(mdl, live["alerts"]), "features": features()})
+                return self._send(200, {"alerts": site_alerts(mdl, live, site), "features": features()})
             if p == "/api/services":
                 return self._send(200, services())
             if p == "/api/node":
