@@ -2,6 +2,7 @@
 .env
 config/cockpit.yml
 backups/
+secrets/
 alertmanager/alertmanager.yml
 snmp/auth.yml
 data/

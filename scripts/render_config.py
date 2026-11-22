@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Génère, à partir du .env : alertmanager/alertmanager.yml et snmp/auth.yml (bibliothèque standard uniquement).
-Les fichiers produits sont du JSON, qui est du YAML valide."""
+"""Génère, à partir du .env : secrets/alertmanager.yml et secrets/snmp-auth.yml (bibliothèque standard uniquement).
+Les fichiers produits sont du JSON, qui est du YAML valide.
+
+secrets/ est en 700 : les autres utilisateurs de la machine ne peuvent pas l'ouvrir. Les fichiers sont en 644 car les
+conteneurs (Alertmanager, SNMP exporter) tournent sous un autre utilisateur et les lisent par un montage du fichier lui-même,
+qui ne passe pas par le dossier."""
 import json
 import sys
 from pathlib import Path
@@ -92,23 +96,41 @@ def build(env):
     return config, channels
 
 
-def main():
-    env_path = ROOT / ".env"
+def _write(path, text):
+    path.write_text(text, encoding="utf-8")
+    path.chmod(0o644)
+
+
+def render(root):
+    env_path = root / ".env"
     if not env_path.exists():
         sys.exit("Fichier .env introuvable : lance ./setup.sh")
-    config, channels = build(load_env(env_path))
-    out = ROOT / "alertmanager" / "alertmanager.yml"
-    out.write_text("# Généré par scripts/render_alertmanager.py à partir du .env : ne pas modifier à la main\n"
-                   + json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    out.chmod(0o644)
-    print(f"Alertmanager configuré. Canaux : {', '.join(channels) if channels else 'aucun (renseigne le .env)'}")
     env = load_env(env_path)
-    snmp_dir = ROOT / "snmp"
-    snmp_dir.mkdir(exist_ok=True)
-    auth = {"auths": {"site": {"version": 2, "community": env.get("SNMP_COMMUNITY") or "public"}}}
-    (snmp_dir / "auth.yml").write_text("# Généré par scripts/render_config.py (SNMP_COMMUNITY du .env)\n" + json.dumps(auth, indent=2) + "\n", encoding="utf-8")
-    (snmp_dir / "auth.yml").chmod(0o644)
+    secrets = root / "secrets"
+    secrets.mkdir(exist_ok=True)
+    secrets.chmod(0o700)
 
+    config, channels = build(env)
+    _write(secrets / "alertmanager.yml", "# Généré par scripts/render_config.py à partir du .env : ne pas modifier à la main\n"
+           + json.dumps(config, indent=2, ensure_ascii=False) + "\n")
+    print(f"Alertmanager configuré. Canaux : {', '.join(channels) if channels else 'aucun (renseigne le .env)'}")
+    auth = {"auths": {"site": {"version": 2, "community": env.get("SNMP_COMMUNITY") or "public"}}}
+    _write(secrets / "snmp-auth.yml", "# Généré par scripts/render_config.py (SNMP_COMMUNITY du .env)\n" + json.dumps(auth, indent=2) + "\n")
+
+    # Copies des versions précédentes, lisibles par tous les utilisateurs de la machine : retirées.
+    for old in (root / "alertmanager" / "alertmanager.yml", root / "snmp" / "auth.yml"):
+        try:
+            old.unlink(missing_ok=True)
+        except OSError as e:
+            print(f"! {old} n'a pas pu être supprimé ({e}) : supprime-le à la main, il contient des secrets")
+    try:
+        (root / "snmp").rmdir()
+    except OSError:
+        pass
+
+
+def main():
+    render(ROOT)
 
 if __name__ == "__main__":
     main()

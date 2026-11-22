@@ -22,6 +22,6 @@ Please report vulnerabilities **privately**, through GitHub's "Report a vulnerab
 - **Remote access**: use a VPN, or a reverse proxy with HTTPS (Caddy, Nginx, Traefik) in front of the cockpit (8088) and Grafana (3000). Never publish them directly on the Internet.
 - **Cockpit image**: `./setup.sh` downloads `ghcr.io/b2zo0/netcockpit`, built by GitHub Actions from this repository (workflow `image.yml`), tagged with the hash of the `cockpit/` folder it was built from. To build it yourself from the code you have instead: `COCKPIT_IMAGE=build` in `.env`.
 - Use **read-only** accounts: vCenter/ESXi "Read-only" role, SNMP read-only community.
-- `.env` holds all secrets (mode 600) and `backups/` its previous versions (mode 700). Never commit them.
+- `.env` holds all secrets (mode 600) and `backups/` its previous versions (mode 700); the notification and SNMP settings generated from it live in `secrets/` (mode 700). Never commit them.
 - The internal scan uses nmap (ping, a few TCP ports, NetBIOS). Get the network owner's approval and use `scan.exclude` for fragile devices.
 - The optional AI feature sends the analysed device's data (name, IP, alerts, log excerpts) to the configured provider. Use a local model (`AI_PROVIDER=openai` + Ollama) if that is not acceptable.

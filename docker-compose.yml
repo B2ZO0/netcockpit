@@ -78,9 +78,14 @@ services:
   alertmanager:
     image: prom/alertmanager:${ALERTMANAGER_VERSION:-v0.35.0}
     restart: unless-stopped
-    command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
+    command: [--config.file=/etc/alertmanager-config/alertmanager.yml, --storage.path=/alertmanager]
     volumes:
-      - ./alertmanager:/etc/alertmanager:ro
+      - ./alertmanager:/etc/alertmanager:ro      # message templates
+      - type: bind                               # generated from .env; secrets/ is private to the host user
+        source: ./secrets/alertmanager.yml
+        target: /etc/alertmanager-config/alertmanager.yml
+        read_only: true
+        bind: { create_host_path: false }
       - alertmanager-data:/alertmanager
     ports: ["127.0.0.1:9093:9093"]   # local only: the cockpit reads it, nobody else can silence alerts
 
@@ -107,7 +112,12 @@ services:
     image: prom/snmp-exporter:${SNMP_EXPORTER_VERSION:-v0.31.0}
     restart: unless-stopped
     command: [--config.file=/etc/snmp_exporter/snmp.yml, --config.file=/etc/snmp-auth/auth.yml]
-    volumes: ["./snmp:/etc/snmp-auth:ro"]
+    volumes:
+      - type: bind                               # SNMP community, generated from .env; secrets/ is private to the host user
+        source: ./secrets/snmp-auth.yml
+        target: /etc/snmp-auth/auth.yml
+        read_only: true
+        bind: { create_host_path: false }
 
   # Réception des logs syslog des firewalls / switchs (port 514 UDP/TCP) -> Loki
   syslog:

@@ -24,7 +24,7 @@ On the first run `setup.sh`:
 
 1. creates `.env` from `.env.example`, with random passwords and your IP as `PUBLIC_HOST`;
 2. starts the **setup assistant**, which detects the local network, gateway and DNS servers and asks for your buildings, other networks, VMware, SNMP, Telegram and Zabbix (walkthrough: [getting-started.md](getting-started.md#3-answer-the-setup-assistant));
-3. renders `alertmanager/alertmanager.yml` and `snmp/auth.yml` from `.env`, and the Grafana dashboards;
+3. renders `secrets/alertmanager.yml` and `secrets/snmp-auth.yml` from `.env` (`secrets/` only opens for your user), and the Grafana dashboards;
 4. downloads the ready-made cockpit image matching your version from GitHub Container Registry (nothing to build), or builds it on the host when it is not available, then starts the stack (`docker compose up -d`). See [Ready-made image](#ready-made-cockpit-image).
 
 Re-run the assistant at any time with `./setup.sh --configure` (add a building, change addressing, connect VMware). `./setup.sh --yes` skips the questions and uses the detected values.

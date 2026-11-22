@@ -62,7 +62,7 @@ jobs:
           echo "TELEGRAM_BOT_TOKEN=123:abc" >> .env && echo "TELEGRAM_CHAT_ID=-100123" >> .env
           python scripts/render_config.py
           docker compose config -q
-          docker run --rm -v "$PWD/alertmanager:/am" --entrypoint amtool prom/alertmanager check-config /am/alertmanager.yml
+          docker run --rm -v "$PWD/secrets/alertmanager.yml:/am/alertmanager.yml:ro" --entrypoint amtool prom/alertmanager check-config /am/alertmanager.yml
 
   stack:
     runs-on: ubuntu-latest
