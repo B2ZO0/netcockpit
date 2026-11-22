@@ -39,6 +39,7 @@ if [[ -n "$UPDATE" ]]; then
   [[ -f scripts/update.sh ]] || die "scripts/update.sh manque : ce dossier est incomplet. Télécharge la dernière version et décompresse-la DANS ce dossier." \
                                     "scripts/update.sh is missing: this folder is incomplete. Download the latest version and extract it INTO this folder."
   bash scripts/update.sh ${EDGE:+--edge} || exit 1
+  export NETCOCKPIT_UPDATING=1   # la nouvelle version de ce script télécharge aussi les images de la pile (étape 5)
   exec ./setup.sh ${REST[@]+"${REST[@]}"}
 fi
 
@@ -191,6 +192,16 @@ elif [[ -z "$(envget PROXMOX_URL)" ]]; then warn "Ni VMware ni Proxmox configur�
 
 # ------------------------------------------------------------------ 5. démarrage
 cockpit_image
+# Mise à jour : Prometheus, Grafana, Loki… passent aux versions testées avec cette version de NetCockpit, et les lignes
+# suivies (PostgreSQL 16, Zabbix 7.0) reçoivent leurs correctifs. Jamais bloquant : les images déjà là restent utilisables.
+if [[ -n "${NETCOCKPIT_UPDATING:-}" ]]; then
+  say "Téléchargement des versions de Prometheus, Grafana, Loki… prévues pour cette version" \
+      "Downloading the Prometheus, Grafana, Loki… versions planned for this release"
+  docker compose pull --quiet --ignore-buildable 2>/dev/null \
+    || docker compose pull --quiet --ignore-pull-failures 2>/dev/null \
+    || warn "Certaines images n'ont pas pu être téléchargées : celles déjà présentes sont gardées" \
+            "Some images could not be downloaded: the ones already here are kept"
+fi
 docker compose up -d --remove-orphans
 docker compose restart prometheus alertmanager cockpit >/dev/null 2>&1 || true
 # ancien nom de l'image locale (avant 1.2) : retiré, seul localhost/netcockpit/cockpit:local sert désormais

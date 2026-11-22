@@ -58,6 +58,8 @@ docker compose logs -f cockpit
 
 `--update` moves to the **latest published version** (the newest `vX.Y.Z` tag on the [Releases](https://github.com/B2ZO0/netcockpit/releases) page), never to work in progress on `main`, and **never backwards**: if the folder is already newer than that version, or holds commits of your own, nothing changes and it says why. Testers can follow `main` with `./setup.sh --update --edge` (avoid it on a production host). It stops without changing anything if a project file was edited by hand (`git status` lists them).
 
+Each NetCockpit version comes with tested versions of Prometheus, Alertmanager, Loki, Grafana, Alloy and the exporters (see `docker-compose.yml`): `--update` downloads them, so these components receive their security fixes with NetCockpit, and PostgreSQL 16 and Zabbix 7.0 get their latest patch. A `*_VERSION` line in `.env` (for example `GRAFANA_VERSION=...`) forces another version; it is not tested, so only use it if you know why.
+
 What is yours stays yours:
 
 | Your data | Where it lives | On upgrade |

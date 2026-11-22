@@ -1,5 +1,7 @@
 # Supervision : cockpit + Prometheus + Loki + Alertmanager + Blackbox + SNMP + syslog + Grafana + Zabbix
 # Lancement : ./setup.sh   (génère la config à partir de .env puis démarre tout)
+# Versions : chaque image a une version testée avec cette version de NetCockpit ; ./setup.sh --update les fait avancer.
+# Une variable *_VERSION dans .env force une autre version (déconseillé : non testée).
 name: supervision
 
 x-zbx-db: &zbx-db
@@ -59,7 +61,7 @@ services:
 
   # ------------------------------------------------------------ métriques, alertes, logs
   prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION:-latest}
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v3.16.0}
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -74,7 +76,7 @@ services:
     extra_hosts: ["host.docker.internal:host-gateway"]
 
   alertmanager:
-    image: prom/alertmanager:${ALERTMANAGER_VERSION:-latest}
+    image: prom/alertmanager:${ALERTMANAGER_VERSION:-v0.35.0}
     restart: unless-stopped
     command: [--config.file=/etc/alertmanager/alertmanager.yml, --storage.path=/alertmanager]
     volumes:
@@ -83,7 +85,7 @@ services:
     ports: ["127.0.0.1:9093:9093"]   # local only: the cockpit reads it, nobody else can silence alerts
 
   loki:
-    image: grafana/loki:${LOKI_VERSION:-latest}
+    image: grafana/loki:${LOKI_VERSION:-3.7.10}
     restart: unless-stopped
     command: -config.file=/etc/loki/loki.yml
     volumes:
@@ -93,7 +95,7 @@ services:
     ports: ["3100:3100"]
 
   blackbox:
-    image: prom/blackbox-exporter:${BLACKBOX_VERSION:-latest}
+    image: prom/blackbox-exporter:${BLACKBOX_VERSION:-v0.29.1}
     restart: unless-stopped
     command: --config.file=/etc/blackbox/blackbox.yml
     volumes: ["./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro"]
@@ -102,21 +104,21 @@ services:
 
   # Trafic et état des ports des switchs / firewalls (dès que le prestataire ouvre le SNMP)
   snmp-exporter:
-    image: prom/snmp-exporter:${SNMP_EXPORTER_VERSION:-latest}
+    image: prom/snmp-exporter:${SNMP_EXPORTER_VERSION:-v0.31.0}
     restart: unless-stopped
     command: [--config.file=/etc/snmp_exporter/snmp.yml, --config.file=/etc/snmp-auth/auth.yml]
     volumes: ["./snmp:/etc/snmp-auth:ro"]
 
   # Réception des logs syslog des firewalls / switchs (port 514 UDP/TCP) -> Loki
   syslog:
-    image: grafana/alloy:${ALLOY_VERSION:-latest}
+    image: grafana/alloy:${ALLOY_VERSION:-v1.22.0}
     restart: unless-stopped
     command: [run, /etc/alloy/syslog.alloy, --server.http.listen-addr=0.0.0.0:12345, --storage.path=/var/lib/alloy]
     volumes: ["./syslog/syslog.alloy:/etc/alloy/syslog.alloy:ro"]
     ports: ["514:1514/udp", "514:1514/tcp"]
 
   grafana:
-    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    image: grafana/grafana:${GRAFANA_VERSION:-13.3.1}
     restart: unless-stopped
     environment:
       TZ: ${TZ:-Europe/Paris}

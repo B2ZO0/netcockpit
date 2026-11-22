@@ -64,6 +64,18 @@ jobs:
           docker compose config -q
           docker run --rm -v "$PWD/alertmanager:/am" --entrypoint amtool prom/alertmanager check-config /am/alertmanager.yml
 
+  stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Every pinned image of the stack exists (Zabbix included)
+        run: |
+          cp .env.example .env
+          sed -i 's/__RANDOM__/ci-password/g' .env
+          docker compose --profile zabbix pull --quiet --ignore-buildable
+          docker compose --profile zabbix config --images | sort
+
   demo-smoke-test:
     runs-on: ubuntu-latest
     steps:
