@@ -729,6 +729,10 @@ class Handler(BaseHTTPRequestHandler):
             return True
         if origin == "null":        # sandboxed page or file:// : never the cockpit itself
             return False
+        # Behind a reverse proxy, Host is often rewritten (nginx sends its upstream name by default):
+        # the browser's own Sec-Fetch-Site header, which no web page can set, then says it is the same origin.
+        if (self.headers.get("Sec-Fetch-Site") or "").lower() == "same-origin":
+            return True
         return urlparse(origin).netloc.lower() == (self.headers.get("Host") or "").lower()
 
     def do_POST(self):

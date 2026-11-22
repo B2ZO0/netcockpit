@@ -72,6 +72,20 @@ class WebSecurity(unittest.TestCase):
         code, _ = self.req("/api/rescan", "POST")   # curl, scripts: no Origin header
         self.assertEqual(code, 202)
 
+    def test_same_origin_post_behind_reverse_proxy_is_accepted(self):
+        # The proxy forwards Host as its upstream name (nginx default) or drops the port:
+        # the browser itself says the request comes from the page's own origin.
+        for host in ("cockpit-upstream:8088", "cockpit.example.org"):
+            code, _ = self.req("/api/rescan", "POST", {"Origin": "https://cockpit.example.org:8443", "Host": host,
+                                                       "Sec-Fetch-Site": "same-origin"})
+            self.assertEqual(code, 202, host)
+
+    def test_cross_site_post_behind_reverse_proxy_is_refused(self):
+        for site in ("cross-site", "same-site", "none"):
+            code, _ = self.req("/api/rescan", "POST", {"Origin": "https://evil.example", "Host": "cockpit-upstream:8088",
+                                                       "Sec-Fetch-Site": site})
+            self.assertEqual(code, 403, site)
+
 
 class NmapXml(unittest.TestCase):
     def test_entity_declarations_are_refused(self):
