@@ -142,7 +142,7 @@ L'assistant détecte le réseau local, la passerelle et les DNS, puis te demande
 | **Cockpit** | `http://<IP>:8088` (mot de passe affiché par `./setup.sh`, `COCKPIT_PASSWORD`) |
 | Grafana | `http://<IP>:3000` (admin / `GRAFANA_ADMIN_PASSWORD`) |
 | Zabbix | `http://<IP>:8081` (Admin / `ZABBIX_ADMIN_PASSWORD`) |
-| Prometheus · Alertmanager | `:9090` (les agents y envoient leurs données : ne l'ouvre qu'à tes réseaux de serveurs) · `:9093` (local uniquement) ; voir [SECURITY.md](SECURITY.md) |
+| Prometheus · Loki · Alertmanager | sur la machine seulement : `127.0.0.1:9091` · `127.0.0.1:3101` · `127.0.0.1:9093` (depuis ton poste : `ssh -L 9091:127.0.0.1:9091 <machine>`, ou Grafana → Explore). Les agents envoient sur `:9090` et `:3100`, qui n'acceptent rien d'autre ; voir [SECURITY.md](SECURITY.md) |
 
 Ensuite, installe les agents. Le cockpit sert lui-même les scripts :
 
@@ -184,7 +184,7 @@ Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés
 
 **Est-ce lourd ?** Moins qu'on ne croit. Mesuré en production sur un réseau d'entreprise (~230 équipements sur 2 bâtiments, 20 VM, 8 serveurs avec agent), toute la pile, Zabbix compris, occupe environ 1,2 Go de RAM (Prometheus et Grafana ~250 Mo chacun, Loki ~150 Mo, Zabbix ~250 Mo au total, le cockpit ~60 Mo) et moins de 5 % de CPU au repos. Prévois 4 Go pour être à l'aise, 8 Go pour un gros réseau ou une longue rétention.
 
-**Peut-on l'installer à côté d'autres conteneurs ?** Oui. Il utilise les ports 8088, 3000, 9090, 9093, 3100 et 514, plus 8081 et 10051 quand Zabbix est activé.
+**Peut-on l'installer à côté d'autres conteneurs ?** Oui. Il utilise les ports 8088, 3000, 9090, 3100 et 514 (plus 9091, 3101 et 9093 sur la machine seulement), et 8081 et 10051 quand Zabbix est activé.
 
 **Seulement VMware ?** Non : **Proxmox VE** est aussi pris en charge (nœuds, VM, conteneurs LXC, stockages, avec un jeton d'API en lecture seule), plus tout serveur physique équipé d'un agent. Hyper-V est prévu.
 
@@ -192,7 +192,7 @@ Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés
 
 ## 🔐 Sécurité
 
-- Le remote-write de Prometheus, le push de Loki et le syslog n'ont **pas d'authentification** : garde-les sur ton réseau interne, n'expose jamais ces ports sur Internet.
+- Les envois des agents (9090, 3100) et le syslog (514) n'ont **pas d'authentification** : garde-les sur ton réseau interne, n'expose jamais ces ports sur Internet. 9090 et 3100 n'acceptent que les envois des agents : les métriques et les logs ne se consultent que sur la machine de supervision ou dans Grafana.
 - Les secrets sont dans `.env` (droits 600), les sauvegardes dans `backups/` (droits 700). vCenter/ESXi n'a besoin que d'un rôle en **lecture seule**.
 - L'IA est **désactivée par défaut**. Avec un fournisseur dans le cloud, les données de l'équipement analysé (nom, IP, alertes, extraits de logs) lui sont envoyées. Utilise un modèle local si ce n'est pas acceptable.
 

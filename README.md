@@ -142,7 +142,7 @@ The setup assistant detects the local network, gateway and DNS servers, then ask
 | **Cockpit** | `http://<host>:8088` (password shown by `./setup.sh`, `COCKPIT_PASSWORD`) |
 | Grafana | `http://<host>:3000` (admin / `GRAFANA_ADMIN_PASSWORD`) |
 | Zabbix | `http://<host>:8081` (Admin / `ZABBIX_ADMIN_PASSWORD`) |
-| Prometheus · Alertmanager | `:9090` (agents push to it: allow it only from your server networks) · `:9093` (host only); see [SECURITY.md](SECURITY.md) |
+| Prometheus · Loki · Alertmanager | on the host only: `127.0.0.1:9091` · `127.0.0.1:3101` · `127.0.0.1:9093` (from your workstation: `ssh -L 9091:127.0.0.1:9091 <host>`, or Grafana → Explore). Agents push to `:9090` and `:3100`, which accept nothing else; see [SECURITY.md](SECURITY.md) |
 
 Then install the agents (the cockpit serves the scripts):
 
@@ -184,7 +184,7 @@ Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten
 
 **Is it heavy?** Less than you'd think. Measured in production on a company network (~230 devices across 2 buildings, 20 VMs, 8 servers with the agent), the whole stack including Zabbix uses about 1.2 GB of RAM (Prometheus and Grafana ~250 MB each, Loki ~150 MB, Zabbix ~250 MB in total, the cockpit ~60 MB) and under 5 % CPU at rest. Plan 4 GB to be comfortable, 8 GB for a large network or long retention.
 
-**Can I run it next to other containers?** Yes. It uses ports 8088, 3000, 9090, 9093, 3100 and 514, plus 8081 and 10051 when Zabbix is enabled.
+**Can I run it next to other containers?** Yes. It uses ports 8088, 3000, 9090, 3100 and 514 (plus 9091, 3101 and 9093 on the host only), and 8081 and 10051 when Zabbix is enabled.
 
 **Only VMware?** No: **Proxmox VE** is supported too (nodes, VMs, LXC containers, storages, with a read-only API token), plus any physical server with an agent. Hyper-V is on the roadmap.
 
@@ -196,17 +196,18 @@ Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten
 flowchart TB
   subgraph Host["Monitoring VM (docker compose)"]
     NM["Cockpit<br/>Python · Cytoscape.js<br/>:8088"]
-    PR[Prometheus :9090]
+    GW["Agent gateway<br/>:9090 · :3100"]
+    PR[Prometheus]
     AM[Alertmanager :9093]
-    LK[Loki :3100]
+    LK[Loki]
     BB[Blackbox exporter]
     SE[SNMP exporter]
     SY["Alloy syslog :514"]
     GF[Grafana :3000]
     ZB["Zabbix server + web :8081"]
   end
-  AG["Alloy agents<br/>Linux / Windows"] -- metrics --> PR
-  AG -- logs --> LK
+  AG["Alloy agents<br/>Linux / Windows"] -- metrics, logs --> GW
+  GW --> PR & LK
   FW[Firewalls / switches] -- syslog --> SY --> LK
   NM -- writes targets --> PR
   PR --> BB & SE
@@ -221,7 +222,7 @@ flowchart TB
 
 ## 🔐 Security notes
 
-- Prometheus remote-write, Loki push and syslog have **no authentication**: keep them on your internal network, never expose these ports to the Internet.
+- Agent pushes (9090, 3100) and syslog (514) have **no authentication**: keep them on your internal network, never expose these ports to the Internet. 9090 and 3100 accept nothing but agent pushes: metrics and logs can only be read on the monitoring host or through Grafana.
 - Secrets live in `.env` (mode 600), backups in `backups/` (mode 700). vCenter/ESXi only needs a **read-only** role.
 - The AI feature is **off by default**. When enabled with a cloud provider, the data of the analysed device (name, IP, alerts, log excerpts) is sent to that provider. Use a local model if that is not acceptable.
 

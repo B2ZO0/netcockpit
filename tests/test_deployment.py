@@ -72,5 +72,50 @@ class PinnedVersions(unittest.TestCase):
         self.assertLess(pull, setup.index("docker compose up -d", start))
 
 
+class AgentGateway(unittest.TestCase):
+    """From the network, 9090 and 3100 only take what agents send; reading and administering stay on the host."""
+
+    def test_only_these_ports_are_reachable_from_the_network(self):
+        public = {}
+        for svc, conf in compose()["services"].items():
+            for port in conf.get("ports", []):
+                if not str(port).startswith("127.0.0.1:"):
+                    public.setdefault(svc, []).append(str(port))
+        self.assertEqual(public, {
+            "agent-gateway": ["9090:9090", "3100:3100"],
+            "syslog": ["514:1514/udp", "514:1514/tcp"],
+            "grafana": ["3000:3000"],
+            "zabbix-server": ["10051:10051"],
+            "zabbix-web": ["${ZABBIX_WEB_PORT:-8081}:8080"],
+        })
+
+    def test_prometheus_and_loki_listen_on_the_host_only(self):
+        services = compose()["services"]
+        self.assertEqual(services["prometheus"]["ports"], ["127.0.0.1:9091:9090"])
+        self.assertEqual(services["loki"]["ports"], ["127.0.0.1:3101:3100"])
+        env = services["cockpit"]["environment"]
+        self.assertEqual(env["PROMETHEUS_URL"], "http://127.0.0.1:9091")
+        self.assertEqual(env["LOKI_URL"], "http://127.0.0.1:3101")
+
+    def test_gateway_is_pinned_and_starts_after_prometheus_and_loki(self):
+        gw = compose()["services"]["agent-gateway"]
+        self.assertRegex(gw["image"], r"^nginx:\$\{NGINX_VERSION:-1\.\d+\.\d+-alpine\}$")
+        self.assertEqual(sorted(gw["depends_on"]), ["loki", "prometheus"])
+        self.assertIn("./gateway/nginx.conf:/etc/nginx/nginx.conf:ro", gw["volumes"])
+
+    def test_gateway_only_forwards_agent_pushes(self):
+        conf = (ROOT / "gateway" / "nginx.conf").read_text(encoding="utf-8")
+        code = "\n".join(line.split("#", 1)[0] for line in conf.splitlines())
+        locations = re.findall(r"location\s+(=?)\s*(\S+)\s*\{", code)
+        self.assertEqual(sorted(locations), [("", "/"), ("", "/"), ("=", "/api/v1/write"), ("=", "/loki/api/v1/push")])
+        self.assertEqual(code.count("limit_except POST { deny all; }"), 2)
+        self.assertEqual(re.findall(r"proxy_pass\s+([^;]+);", code), ["$prometheus", "$loki"])
+        self.assertIn("set $prometheus http://prometheus:9090;", code)
+        self.assertIn("set $loki http://loki:3100;", code)
+        self.assertEqual(code.count("return 403;"), 2)
+        self.assertRegex(code, r"resolver 127\.0\.0\.11\b")
+        self.assertIn("server_tokens off;", code)
+
+
 if __name__ == "__main__":
     unittest.main()

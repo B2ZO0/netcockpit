@@ -11,8 +11,8 @@ Please report vulnerabilities **privately**, through GitHub's "Report a vulnerab
 - **Behind an HTTPS reverse proxy** that sends `X-Forwarded-Proto: https`, the session cookie is marked `Secure`.
 - **vCenter certificate**: not verified by default (self-signed is common). Set `VCENTER_VERIFY_TLS=true` once vCenter has a certificate your system trusts.
 - **Alertmanager (9093) listens on the host only**: nobody on the network can silence alerts.
-- **Prometheus and Loki only accept what agents need**: Prometheus cannot be stopped or reloaded over HTTP, and Loki refuses log deletion requests (logs are only removed by the retention period).
-- **Prometheus remote-write (9090), Loki push (3100), syslog (514) and the Zabbix trapper (10051) are unauthenticated by design**: agents and devices push to them. Allow them **only from your server and device networks** with a firewall, for example:
+- **Ports 9090 and 3100 only accept what agents send**: a small gateway (nginx, service `agent-gateway`) forwards the metrics they push to Prometheus and the logs to Loki, and refuses everything else. Reading metrics or logs, and administering Prometheus or Loki, is only possible on the monitoring host itself (`127.0.0.1:9091` and `127.0.0.1:3101`; from your workstation: `ssh -L 9091:127.0.0.1:9091 <host>`, then http://localhost:9091) or through Grafana (Explore). Prometheus cannot be stopped or reloaded over HTTP either, and Loki refuses log deletion requests (logs are only removed by the retention period).
+- **Agent pushes (9090, 3100), syslog (514) and the Zabbix trapper (10051) are not authenticated**: agents and devices push to them. Allow them **only from your server and device networks** with a firewall, for example:
   ```bash
   ufw allow from 192.0.2.0/24 to any port 9090,3100 proto tcp   # servers with an agent
   ufw allow from 192.0.2.0/24 to any port 514                    # syslog from network devices

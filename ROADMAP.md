@@ -22,7 +22,8 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 
 ## 1.2 · Proxmox and painless updates *(in progress)*
 
-- [ ] **Authenticated agent pushes**: agents send metrics and logs with a token created at install; the Prometheus and Loki query interfaces listen on the monitoring host only. *Envoi authentifié des agents : métriques et logs envoyés avec un jeton créé à l'installation ; les interfaces de consultation de Prometheus et Loki n'écoutent que sur la machine de supervision.*
+- [x] **Agents only push**: from the network, ports 9090 and 3100 only accept what agents send; Prometheus and Loki can only be read on the monitoring host or through Grafana. *Les agents ne font qu'envoyer : depuis le réseau, les ports 9090 et 3100 n'acceptent que les envois des agents ; Prometheus et Loki ne se consultent que sur la machine de supervision ou dans Grafana.*
+- [ ] **Agent token**: agents send metrics and logs with a token created at install, so that only your servers can push. *Jeton d'agent : les agents envoient leurs métriques et leurs logs avec un jeton créé à l'installation, pour que seuls tes serveurs puissent envoyer.*
 - [x] **Pinned stack versions**: Prometheus, Loki, Grafana, Alertmanager, Alloy and the exporters use tested versions, moved forward by `./setup.sh --update`. *Versions de la pile épinglées : des versions testées, mises à jour par `./setup.sh --update`.*
 - [x] Notification and SNMP secrets readable only by the containers that use them. *Secrets de notification et SNMP lisibles uniquement par les conteneurs qui s'en servent.*
 - [ ] Cockpit container with the fewest privileges it needs (non-root user, network capabilities checked on a real network). *Conteneur du cockpit avec le minimum de droits (utilisateur non root, capacités réseau vérifiées sur un vrai réseau).*

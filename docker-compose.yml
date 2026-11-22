@@ -30,9 +30,9 @@ services:
       COCKPIT_CONFIG: /config/cockpit.yml
       COCKPIT_TARGETS_DIR: /targets
       COCKPIT_DATA_DIR: /data
-      PROMETHEUS_URL: http://127.0.0.1:9090
+      PROMETHEUS_URL: http://127.0.0.1:9091
       ALERTMANAGER_URL: http://127.0.0.1:9093
-      LOKI_URL: http://127.0.0.1:3100
+      LOKI_URL: http://127.0.0.1:3101
       GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
       ALERTMANAGER_PUBLIC_URL: ${ALERTMANAGER_PUBLIC_URL:-}
       ZABBIX_URL: ${COCKPIT_ZABBIX_URL:-}
@@ -72,7 +72,7 @@ services:
       - ./prometheus:/etc/prometheus:ro
       - ./data/targets:/etc/prometheus-targets:ro
       - prometheus-data:/prometheus
-    ports: ["9090:9090"]
+    ports: ["127.0.0.1:9091:9090"]   # this host only (cockpit); agents push through agent-gateway (9090)
     extra_hosts: ["host.docker.internal:host-gateway"]
 
   alertmanager:
@@ -97,7 +97,16 @@ services:
       - ./loki/loki.yml:/etc/loki/loki.yml:ro
       - ./loki/rules:/etc/loki/rules:ro
       - loki-data:/loki
-    ports: ["3100:3100"]
+    ports: ["127.0.0.1:3101:3100"]   # this host only (cockpit); agents push through agent-gateway (3100)
+
+  # Point d'entrée des agents : 9090 (métriques) et 3100 (logs) n'acceptent que leurs envois.
+  # Consulter les métriques ou les logs, ou administrer Prometheus et Loki : depuis cette machine seulement, ou par Grafana.
+  agent-gateway:
+    image: nginx:${NGINX_VERSION:-1.30.7-alpine}
+    restart: unless-stopped
+    depends_on: [prometheus, loki]   # libère 9090 et 3100 de l'ancienne installation avant de les prendre
+    volumes: ["./gateway/nginx.conf:/etc/nginx/nginx.conf:ro"]
+    ports: ["9090:9090", "3100:3100"]
 
   blackbox:
     image: prom/blackbox-exporter:${BLACKBOX_VERSION:-v0.29.1}

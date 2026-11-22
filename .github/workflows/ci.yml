@@ -76,6 +76,44 @@ jobs:
           docker compose --profile zabbix pull --quiet --ignore-buildable
           docker compose --profile zabbix config --images | sort
 
+      - name: Settings and generated files, as ./setup.sh does
+        run: |
+          echo "TELEGRAM_BOT_TOKEN=123:abc" >> .env && echo "TELEGRAM_CHAT_ID=-100123" >> .env
+          echo "SNMP_COMMUNITY=ci-community" >> .env
+          python3 scripts/render_config.py
+          mkdir -p data/targets && for f in icmp tcp http dns snmp; do echo "[]" > "data/targets/$f.json"; done
+          stat -c '%a %n' secrets secrets/*
+
+      - name: Start the stack (without the cockpit and Zabbix)
+        run: docker compose up -d prometheus loki alertmanager agent-gateway snmp-exporter blackbox syslog grafana
+
+      - name: Agents can push; nobody on the network can read or administer Prometheus and Loki
+        run: python3 tests/stack_check.py "$(hostname -I | awk '{print $1}')"
+
+      - name: Alertmanager and the SNMP exporter read their secret files; every service keeps running
+        run: |
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:9093/-/ready >/dev/null && break; sleep 2; done
+          curl -fs http://127.0.0.1:9093/api/v2/status | python3 -c "import json,sys; c=json.load(sys.stdin)['config']['original']; assert 'telegram_configs' in c and 'chat_id: -100123' in c and 'bot_token: <secret>' in c, c; print('alertmanager: telegram receiver loaded (token masked by Alertmanager)')"
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:3000/api/health >/dev/null && break; sleep 2; done
+          for ds in prometheus loki; do   # Grafana still reaches them on the Docker network
+            curl -fs -u admin:ci-password "http://127.0.0.1:3000/api/datasources/uid/$ds/health" \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); print('grafana -> $ds:', d); assert d.get('status') == 'OK'"
+          done
+          sleep 5
+          for svc in prometheus loki alertmanager agent-gateway snmp-exporter blackbox syslog grafana; do
+            state=$(docker inspect -f '{{.State.Status}} {{.RestartCount}}' "$(docker compose ps -q "$svc")")
+            echo "$svc: $state"; [ "$state" = "running 0" ]
+          done
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker compose logs --tail 80
+          for svc in prometheus loki alertmanager agent-gateway snmp-exporter blackbox syslog grafana; do
+            echo "== $svc: $(docker inspect -f '{{.State.Status}} restarts={{.RestartCount}} exit={{.State.ExitCode}} error={{.State.Error}}' "$(docker compose ps -aq "$svc")")"
+          done
+          echo "== grafana, first lines (all runs of the container)"; docker compose logs --no-log-prefix grafana | grep -iE 'error|fatal|panic|exit|shutdown|stopp|signal' | head -60
+
   demo-smoke-test:
     runs-on: ubuntu-latest
     steps:
