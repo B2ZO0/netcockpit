@@ -145,7 +145,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Lance ./setup.sh pour générer le .env}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
-      GF_PLUGINS_PREINSTALL: yesoreyeram-infinity-datasource,alexanderzobnin-zabbix-app
+      # installés avant le démarrage : la configuration du plugin Zabbix ne fait plus planter le premier lancement
+      GF_PLUGINS_PREINSTALL_SYNC: yesoreyeram-infinity-datasource,alexanderzobnin-zabbix-app
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/00-vue-ensemble.json
       ZABBIX_GRAFANA_PASSWORD: ${ZABBIX_GRAFANA_PASSWORD:-}
     volumes:

@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Fix: Grafana stopped once on its first start (the Zabbix plugin was configured before it was installed) and only worked after Docker restarted it.
 - **Proxmox VE (experimental)**: nodes, QEMU VMs, LXC containers and storages in the map, the Virtualization screen, the metrics and the alerts, like VMware. Read-only API token (PVEAuditor role). VMware and Proxmox can be connected at the same time. VMs without a guest agent get their address from the network scan, matched by MAC address. Checked against a simulated Proxmox API in automated tests; not yet tested on a real Proxmox server — feedback welcome.
 - **One-command update**: `./setup.sh --update` downloads the latest published version and updates everything. Settings (`.env`, `config/cockpit.yml`) and history are never touched; settings are backed up first. If a project file was edited by hand, it stops without changing anything and says what to do.
 - **Updates follow releases**: `./setup.sh --update` moves to the latest published version (newest `vX.Y.Z` tag), never to work in progress on `main`, and never goes backwards: a folder already newer than the latest version (installs that followed `main`, newer than 1.1.0) or holding its own commits stays where it is and says why, then moves on with the next published version. Testers can keep following `main` with `./setup.sh --update --edge`. Release candidates (`v1.2.0-rc1`) and tags deleted on GitHub are ignored.

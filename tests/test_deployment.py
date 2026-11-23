@@ -117,5 +117,14 @@ class AgentGateway(unittest.TestCase):
         self.assertIn("server_tokens off;", code)
 
 
+class Grafana(unittest.TestCase):
+    def test_plugins_are_installed_before_provisioning(self):
+        # With the background installer, provisioning the Zabbix app failed on the first start and Grafana exited.
+        env = compose()["services"]["grafana"]["environment"]
+        self.assertNotIn("GF_PLUGINS_PREINSTALL", env)
+        self.assertIn("alexanderzobnin-zabbix-app", env["GF_PLUGINS_PREINSTALL_SYNC"])
+        self.assertIn("yesoreyeram-infinity-datasource", env["GF_PLUGINS_PREINSTALL_SYNC"])
+
+
 if __name__ == "__main__":
     unittest.main()
