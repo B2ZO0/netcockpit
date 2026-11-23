@@ -75,6 +75,20 @@ class UpdateFollowsReleases(unittest.TestCase):
         return (self.install / "VERSION").read_text().strip()
 
     # ------------------------------------------------------------------ cas
+    def test_a_release_with_many_changes_is_applied(self):
+        # The list of changes is cut to 15 lines: that must never make the update itself fail.
+        for i in range(300):
+            (self.dev / "VERSION").write_text(f"1.1.0-{i}\n")
+            self.git(self.dev, "commit", "-q", "-am", f"Change {i}")
+        release = self.commit("1.1.0", "Big release", tag="v1.1.0")
+        self.push()
+        for _ in range(3):
+            self.git(self.install, "reset", "-q", "--hard", "v1.0.0")
+            r = self.update()
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(self.head(), release)
+            self.assertEqual(r.stdout.count("    - "), 15)
+
     def test_moves_to_the_latest_release_not_to_work_in_progress(self):
         release = self.commit("1.1.0", "Second release", tag="v1.1.0")
         self.commit("1.2.0-dev", "Work in progress")
@@ -235,6 +249,25 @@ class UpdateFollowsReleases(unittest.TestCase):
         r = subprocess.run(["bash", str(ROOT / "setup.sh"), "--help"], capture_output=True, text=True, env=self.env)
         self.assertEqual(r.returncode, 0)
         self.assertIn("--update --edge", r.stdout)
+
+
+@unittest.skipUnless(HAS_GIT, "bash is not installed")
+class ExistingInstallGuard(unittest.TestCase):
+    def test_project_name_is_found_without_env_file(self):
+        # Folder named like the git clone, no .env yet, docker unusable: the project is still "supervision",
+        # so setup.sh recognises the volumes of an existing installation and stops instead of starting fresh.
+        setup = (ROOT / "setup.sh").read_text(encoding="utf-8")
+        start = setup.index("HERE=$(pwd -P)")
+        lines = setup[start:setup.index("\n", setup.index("PROJ=${PROJ:-", start))]
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "netcockpit"
+            (folder / "bin").mkdir(parents=True)
+            shutil.copy(ROOT / "docker-compose.yml", folder / "docker-compose.yml")
+            (folder / "bin" / "docker").write_text("#!/bin/sh\necho 'required variable is missing' >&2\nexit 1\n")
+            (folder / "bin" / "docker").chmod(0o755)
+            out = subprocess.run(["bash", "-c", "set -euo pipefail\n" + lines + '\necho "PROJ=$PROJ"'], cwd=folder,
+                                 capture_output=True, text=True, env={"PATH": f"{folder / 'bin'}:/usr/bin:/bin"})
+            self.assertIn("PROJ=supervision", out.stdout, out.stderr)
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ report() {  # $1 = nouveau commit, $2 = nom de la version (facultatif)
     ok "Nouvelle version de test téléchargée ($n changement(s)). Nouveautés : CHANGELOG.md, section Unreleased" \
        "New test version downloaded ($n change(s)). What's new: CHANGELOG.md, Unreleased section"
   fi
-  git log --no-merges --format='    - %s' "$OLD..$new" | head -15
+  git log --no-merges -n 15 --format='    - %s' "$OLD..$new"   # -n, not | head: with pipefail, head closing the pipe failed the update
 }
 
 # ------------------------------------------------------------------ --edge : la branche main, travail en cours compris

@@ -47,7 +47,9 @@ HOST_IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==
 rand() { python3 -c "import secrets,string;print(''.join(secrets.choice(string.ascii_letters+string.digits) for _ in range(24)))"; }
 envget() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2- | sed -e "s/^[\"']//" -e "s/[\"']\$//"; }
 HERE=$(pwd -P)
-PROJ=$(docker compose config 2>/dev/null | awk '/^name:/{print $2; exit}' || true)
+# nom du projet Docker, lu dans docker-compose.yml lui-même : « docker compose config » échoue tant que .env manque,
+# justement quand il faut reconnaître une installation existante (volumes supervision_…)
+PROJ=$(awk '/^name:/{print $2; exit}' docker-compose.yml 2>/dev/null || true)
 PROJ=${PROJ:-$(basename "$HERE" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')}
 
 # ------------------------------------------------------------------ garde-fous : ne jamais écraser une installation existante
@@ -91,8 +93,7 @@ if [[ -f .env ]]; then
 fi
 
 # ------------------------------------------------------------------ 1. .env : création, ou ajout des nouveaux réglages (tes valeurs ne sont jamais modifiées)
-FIRST_RUN=""
-[[ -f .env ]] || { touch .env; chmod 600 .env; FIRST_RUN=1; }
+[[ -f .env ]] || { touch .env; chmod 600 .env; }
 MANAGED='COMPOSE_PROFILES|GRAFANA_PUBLIC_URL|COCKPIT_PUBLIC_URL|ALERTMANAGER_PUBLIC_URL|ZABBIX_PUBLIC_URL|COCKPIT_ZABBIX_URL|COCKPIT_INSTALL_DIR'
 sed -i -E "/^# --- (géré par setup.sh|managed by setup.sh)/d; /^(${MANAGED})=/d" .env
 added=0
