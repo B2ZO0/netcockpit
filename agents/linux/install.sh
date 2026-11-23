@@ -26,7 +26,6 @@ if command -v apt-get >/dev/null; then
   apt-get update -qq
   apt-get install -y -qq alloy >/dev/null
   echo 'DAEMON_ARGS="-c"' > /etc/default/lldpd           # écoute aussi CDP (switchs Cisco)
-  ALLOY_ENV=/etc/default/alloy
 elif command -v dnf >/dev/null || command -v yum >/dev/null; then
   PM=$(command -v dnf || command -v yum)
   cat > /etc/yum.repos.d/grafana.repo <<'EOF'
@@ -43,20 +42,22 @@ EOF
   $PM install -y -q epel-release >/dev/null 2>&1 || true   # lldpd est dans EPEL
   $PM install -y -q alloy lldpd python3 >/dev/null
   echo 'LLDPD_OPTIONS="-c"' > /etc/sysconfig/lldpd
-  ALLOY_ENV=/etc/sysconfig/alloy
 else
   echo "Gestionnaire de paquets non géré."; exit 1
 fi
 
 # ------------------------------------------------------------ LLDP -> métrique lldp_neighbor_info
-TEXTFILE=/var/lib/alloy/textfile
+# Dossier à root (lisible par Alloy) : le script LLDP tourne en root, rien de ce qu'Alloy contrôle ne doit guider ses écritures.
+TEXTFILE=/var/lib/alloy-lldp
 mkdir -p "$TEXTFILE" /usr/local/lib/alloy-lldp
+chown root:root "$TEXTFILE" && chmod 755 "$TEXTFILE"
+rm -f /var/lib/alloy/textfile/lldp.prom 2>/dev/null || true   # ancien emplacement (versions précédentes)
 cat > /usr/local/lib/alloy-lldp/lldp2prom.py <<'EOF'
 #!/usr/bin/env python3
 """Convertit les voisins LLDP/CDP (lldpcli) en métriques Prometheus pour le collecteur textfile."""
-import json, os, subprocess, sys
+import json, os, subprocess, sys, tempfile
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "/var/lib/alloy/textfile/lldp.prom"
+OUT = sys.argv[1] if len(sys.argv) > 1 else "/var/lib/alloy-lldp/lldp.prom"
 
 def val(x):
     """Déroule les listes/objets {'value': ...} du format json0 de lldpcli."""
@@ -85,10 +86,11 @@ for lldp in data.get("lldp", []) or []:
             "mgmt_ip": val(ch.get("mgmt-ip")), "port_id": val(pt.get("id")), "port_descr": val(pt.get("descr")),
         }
         lines.append("lldp_neighbor_info{" + ",".join(f'{k}="{esc(v)}"' for k, v in labels.items()) + "} 1")
-tmp = OUT + ".tmp"
-with open(tmp, "w") as f:
+# fichier temporaire au nom imprévisible, créé par ce script (jamais un lien laissé là par quelqu'un d'autre)
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(OUT)), prefix=".lldp-")
+with os.fdopen(fd, "w") as f:
+    os.fchmod(f.fileno(), 0o644)
     f.write("\n".join(lines) + "\n")
-os.chmod(tmp, 0o644)
 os.replace(tmp, OUT)
 EOF
 chmod 755 /usr/local/lib/alloy-lldp/lldp2prom.py
@@ -182,7 +184,6 @@ EOF
 
 # Alloy doit pouvoir lire le journal système
 usermod -aG systemd-journal,adm alloy 2>/dev/null || usermod -aG systemd-journal alloy || true
-chown -R alloy: "$TEXTFILE" 2>/dev/null || true
 
 systemctl daemon-reload
 systemctl enable --now lldpd >/dev/null 2>&1 || true
@@ -195,7 +196,7 @@ sleep 3
 
 if systemctl is-active --quiet alloy; then
   echo "==> Alloy actif. '${NAME}' apparaîtra dans Grafana et sur la carte d'ici 1 minute."
-  NB=$(grep -c '^lldp_neighbor_info' "${TEXTFILE}/lldp.prom" 2>/dev/null || echo 0)
+  NB=$(grep -c '^lldp_neighbor_info' "${TEXTFILE}/lldp.prom" 2>/dev/null) || NB=0
   echo "    Voisins switch détectés pour l'instant : ${NB} (les switchs annoncent toutes les 30 s environ)"
 else
   echo "!! Alloy ne démarre pas : journalctl -u alloy -n 50"
