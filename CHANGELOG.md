@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Fix: the setup assistant silently removed apostrophes from passwords, and a password ending with a backslash made `.env` unreadable for Docker. It now keeps `$`, `#`, spaces and quotes as typed and asks again for a password it cannot store unchanged.
 - Security (Linux agent): the LLDP export that runs as root now writes into a folder owned by root and never follows a file left there by another account. Re-run the agent installer on Linux servers to apply it.
 - Security: errors from the AI provider no longer show its address, which can contain a user name and password. Zabbix is no longer configured when `ZABBIX_ADMIN_PASSWORD` is empty, instead of staying on its default password. Only real IP addresses become probe targets, and one malformed address sent by an agent no longer breaks the inventory. The SNMP community no longer appears in debug logs.
 - Security: numbers read from the Proxmox API are checked to be numbers, and the interface escapes them like every other value. In the inventory CSV, names that would start like a spreadsheet formula are kept as plain text.

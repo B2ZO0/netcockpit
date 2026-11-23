@@ -56,6 +56,7 @@ T = {
         "pve_keep": "Proxmox déjà configuré ({v}). Entrée pour garder, ou nouvelle adresse",
         "pvei": "Identifiant du jeton (ex. netcockpit@pve!cockpit)",
         "pves": "Secret du jeton (rien ne s'affiche) : ",
+        "badchars": "Ce mot de passe contient une apostrophe, une barre oblique inverse (\\) ou un caractère invisible : le fichier .env ne peut pas le garder tel quel. Choisis-en un autre pour ce compte.",
         "vc_keep": "VMware déjà configuré ({v}). Entrée pour garder, ou nouvelle adresse",
         "vcu": "Utilisateur en lecture seule (ex. supervision ou supervision@vsphere.local)",
         "vcp": "Mot de passe de cet utilisateur (rien ne s'affiche) : ",
@@ -106,6 +107,7 @@ T = {
         "pve_keep": "Proxmox already configured ({v}). Enter to keep, or a new address",
         "pvei": "Token ID (e.g. netcockpit@pve!cockpit)",
         "pves": "Token secret (nothing is shown): ",
+        "badchars": "This password contains an apostrophe, a backslash (\\) or an invisible character: the .env file cannot keep it unchanged. Please use another one for this account.",
         "vc_keep": "VMware already configured ({v}). Enter to keep, or a new address",
         "vcu": "Read-only user (e.g. monitoring or monitoring@vsphere.local)",
         "vcp": "Password of that user (nothing is shown): ",
@@ -212,17 +214,36 @@ def env_read():
         for line in ENVF.read_text(encoding="utf-8").splitlines():
             m = re.match(r"^([A-Z0-9_]+)=(.*)$", line)
             if m:
-                out[m.group(1)] = m.group(2).strip().strip("'\"")
+                v = m.group(2).strip()
+                if len(v) >= 2 and v[0] == v[-1] and v[0] in "'\"":   # une seule paire de guillemets autour
+                    v = v[1:-1]
+                out[m.group(1)] = v
     return out
+
+
+def env_check(value):
+    """Une valeur que .env ne peut pas garder telle quelle (lue par docker compose, setup.sh et Python) : refusée."""
+    v = str(value)
+    if "'" in v or "\\" in v or any(ord(c) < 32 or ord(c) == 127 for c in v):
+        raise ValueError("apostrophe, backslash or control character")
+    return v
+
+
+def _env_ok(value):
+    try:
+        env_check(value)
+        return True
+    except ValueError:
+        return False
 
 
 def env_set(values):
     """Modifie des clés du .env en place (ou les ajoute), sans toucher au reste."""
     lines = ENVF.read_text(encoding="utf-8").splitlines() if ENVF.exists() else []
     for k, v in values.items():
-        v = str(v)
-        if any(c in v for c in " $#\"'"):
-            v = "'" + v.replace("'", "") + "'"
+        v = env_check(v)
+        if any(c in v for c in " $#\""):
+            v = "'" + v + "'"   # entre apostrophes : docker compose lit la valeur telle quelle ($, #, espaces, guillemets)
         for i, line in enumerate(lines):
             if line.startswith(f"{k}="):
                 lines[i] = f"{k}={v}"
@@ -260,7 +281,14 @@ class Ask:
             print("\n" + "\n".join("\033[2m  › " + l + "\033[0m" for l in textwrap.wrap(self.s[key], 92)))
 
     def secret(self, key):
-        return getpass.getpass(self.s[key]) if self.i else ""
+        if not self.i:
+            return ""
+        while True:
+            value = getpass.getpass(self.s[key])
+            try:
+                return env_check(value)
+            except ValueError:
+                print("  " + self.s["badchars"])
 
 
 def parse_nets(text, s):
@@ -454,6 +482,10 @@ def main():
         print(s["cancel"])
         return 1
 
+    bad = [k for k, v in env_new.items() if not _env_ok(v)]
+    if bad:   # rien n'est écrit : mieux vaut reposer la question que garder une valeur abîmée
+        print(f"\n  ✖ {', '.join(bad)} : {s['badchars']}")
+        return 1
     CONFIG.parent.mkdir(parents=True, exist_ok=True)
     head = ("# NetCockpit : what to discover and monitor (written by ./setup.sh --configure; you can edit it by hand)\n"
             "# Reference of every option: config/cockpit.example.yml and docs/configuration.md\n\n")
