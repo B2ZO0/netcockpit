@@ -22,6 +22,19 @@ def _pct(used, total):
     return round(used / total * 100, 1) if total else None
 
 
+def _num(value, default=0):
+    """Un nombre de l'API, ou default : une réponse inattendue (ou falsifiée) ne devient jamais du texte affiché."""
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, (int, float)):
+        return value
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return default
+    return int(f) if f.is_integer() else f
+
+
 class Proxmox:
     def __init__(self, url, token_id, token_secret, verify_tls=False, timeout=8):
         u = urlparse(url if "://" in url else f"https://{url}")
@@ -102,7 +115,7 @@ class Proxmox:
             for n in (r for r in resources if r.get("type") == "node"):
                 name = n.get("node")
                 online = n.get("status") == "online"
-                cores = n.get("maxcpu") or 0
+                cores = int(_num(n.get("maxcpu")))
                 model = version = ""
                 mhz = 0.0
                 if online:
@@ -110,7 +123,7 @@ class Proxmox:
                         st = self._get(f"/nodes/{name}/status") or {}
                         ci = st.get("cpuinfo") or {}
                         model = ci.get("model") or ""
-                        mhz = float(ci.get("mhz") or 0) * (ci.get("cpus") or cores)
+                        mhz = float(_num(ci.get("mhz"))) * (int(_num(ci.get("cpus"))) or cores)
                         pv = (st.get("pveversion") or "").split("/")
                         version = f"Proxmox VE {pv[1]}" if len(pv) > 1 else "Proxmox VE"
                     except Exception as e:
@@ -118,8 +131,8 @@ class Proxmox:
                 ip = node_ips.get(name)
                 if not ip and len([r for r in resources if r.get("type") == "node"]) == 1 and re.fullmatch(r"[\d.]+", self.host or ""):
                     ip = self.host
-                cpu = n.get("cpu") or 0
-                mem, maxmem = n.get("mem") or 0, n.get("maxmem") or 0
+                cpu = _num(n.get("cpu"))
+                mem, maxmem = _num(n.get("mem")), _num(n.get("maxmem"))
                 hosts.append({
                     "platform": "proxmox", "moid": f"pve/node/{name}", "name": name, "ips": [ip] if ip else [],
                     "state": "connected" if online else "disconnected", "maintenance": False,
@@ -128,7 +141,7 @@ class Proxmox:
                     "cpu_mhz_total": round(mhz), "cpu_mhz_used": round(cpu * mhz),
                     "cpu_pct": round(cpu * 100, 1) if online else None,
                     "mem_gb": round(maxmem / GB, 1), "mem_used_gb": round(mem / GB, 1),
-                    "mem_pct": _pct(mem, maxmem) if online else None, "uptime_s": n.get("uptime"),
+                    "mem_pct": _pct(mem, maxmem) if online else None, "uptime_s": _num(n.get("uptime"), None),
                 })
             vms, seen = [], set()
             for g in (r for r in resources if r.get("type") in ("qemu", "lxc")):
@@ -138,15 +151,15 @@ class Proxmox:
                 running = g.get("status") == "running"
                 seen.add((kind, vmid))
                 info = self._guest(kind, node, vmid, running)
-                maxmem = g.get("maxmem") or 0
+                maxmem = _num(g.get("maxmem"))
                 vms.append({
                     "platform": "proxmox", "kind": kind, "vmid": vmid, "moid": f"pve/{kind}/{vmid}",
                     "name": g.get("name") or f"{kind}-{vmid}", "ips": list(info["ips"]), "macs": list(info["macs"]),
                     "power": "poweredOn" if running else "poweredOff", "host": node, "hostname": None, "os": info["os"],
-                    "tools": "", "health": "green", "vcpu": g.get("maxcpu") or 0, "mem_gb": round(maxmem / GB, 1),
-                    "cpu_pct": round((g.get("cpu") or 0) * 100, 1) if running else None,
-                    "mem_pct": _pct(g.get("mem") or 0, maxmem) if running else None,
-                    "disk_gb": round((g.get("maxdisk") or 0) / GB, 1), "uptime_s": g.get("uptime") if running else None,
+                    "tools": "", "health": "green", "vcpu": int(_num(g.get("maxcpu"))), "mem_gb": round(maxmem / GB, 1),
+                    "cpu_pct": round(_num(g.get("cpu")) * 100, 1) if running else None,
+                    "mem_pct": _pct(_num(g.get("mem")), maxmem) if running else None,
+                    "disk_gb": round(_num(g.get("maxdisk")) / GB, 1), "uptime_s": _num(g.get("uptime"), None) if running else None,
                 })
             for key in [k for k in self._guest_cache if k not in seen]:
                 del self._guest_cache[key]
@@ -154,7 +167,7 @@ class Proxmox:
             for s in (r for r in resources if r.get("type") == "storage"):
                 shared = bool(s.get("shared"))
                 label = s.get("storage") if shared else f"{s.get('storage')} ({s.get('node')})"
-                cap, used = s.get("maxdisk") or 0, s.get("disk") or 0
+                cap, used = _num(s.get("maxdisk")), _num(s.get("disk"))
                 d = stores.setdefault(label, {"platform": "proxmox", "name": label, "type": s.get("plugintype") or "",
                                               "accessible": False, "capacity_gb": 0, "free_gb": 0, "used_pct": None, "hosts": []})
                 d["hosts"].append(s.get("node"))

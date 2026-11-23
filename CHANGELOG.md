@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Security: numbers read from the Proxmox API are checked to be numbers, and the interface escapes them like every other value. In the inventory CSV, names that would start like a spreadsheet formula are kept as plain text.
 - Fix: `./setup.sh --update` could stop right after downloading a release with many changes, without restarting anything (so the new version was not applied). It now always goes on.
 - Fix: when `.env` was missing next to an existing installation, setup.sh did not always recognise the installation and could start with new passwords; it now stops and explains, as intended.
 - Security: signing out ends the session for good, and changing `COCKPIT_PASSWORD` ends every open session (everyone signs in again once after this update). `/metrics` and the Grafana node graph answer without a session only to the local Docker networks, never through a reverse proxy; a Prometheus installed on the host itself goes in `COCKPIT_METRICS_NETWORKS`. The web server frees silent connections after 30 s, refuses malformed request sizes and reads nothing from a client that is not signed in.

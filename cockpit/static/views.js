@@ -135,16 +135,16 @@
           const on = v.power === "poweredOn";
           return `<div class="vm ${on ? "" : "off"}" ${v.id ? `data-node="${esc(v.id)}"` : ""} title="${esc(v.os || "")}">
           <b>${lamp(on ? v.status : "off")}${esc(v.name)}</b>
-          <small>${t("vm.line", { ip: esc(v.ip || (on ? t("vm.noIp") : t("vm.off"))), c: v.vcpu, m: v.mem_gb })}</small>
+          <small>${t("vm.line", { ip: esc(v.ip || (on ? t("vm.noIp") : t("vm.off"))), c: esc(v.vcpu), m: esc(v.mem_gb) })}</small>
           ${on ? `<div class="mini"><div title="CPU ${fmt.pct(v.cpu_pct)}">${bar(v.cpu_pct, 75, 90)}</div><div title="RAM ${fmt.pct(v.mem_pct)}">${bar(v.mem_pct, 85, 95)}</div></div>` : ""}
-          ${v.alerts ? `<span class="badge b-warning">${v.alerts}</span>` : ""}</div>`;
+          ${v.alerts ? `<span class="badge b-warning">${esc(v.alerts)}</span>` : ""}</div>`;
         }).join("");
         return `<div class="panel"><div class="host-head"><div class="tile-ic" style="--c:var(--${h.state !== "connected" ? "down" : esc(h.status)})">${icon("layers")}</div>
           <div style="flex:1;min-width:0"><h3 class="click" data-node="${esc(h.id || "")}">${esc(h.name)}</h3><div class="muted">${[h.model, (h.version || "").replace(/ build.*/, ""), h.cluster].filter(Boolean).map(esc).join(", ")}</div></div>
           <div style="text-align:right">${statusBadge(h.state !== "connected" ? "down" : h.status)}${h.maintenance ? `<div class="badge b-info" style="margin-top:4px">${t("d.maint")}</div>` : ""}</div></div>
           <div class="host-meters">${meter("CPU", h.cpu_pct, 75, 90)}${meter("RAM", h.mem_pct, 85, 95)}
-            <div class="muted" style="font-size:12px">${t("vm.cores", { n: h.cores, u: Math.round(h.cpu_mhz_used / 1000), t: Math.round(h.cpu_mhz_total / 1000) })}</div>
-            <div class="muted" style="font-size:12px">${t("vm.mem", { u: h.mem_used_gb, t: h.mem_gb, d: fmt.dur(h.uptime_s) })}</div></div>
+            <div class="muted" style="font-size:12px">${t("vm.cores", { n: esc(h.cores), u: Math.round(h.cpu_mhz_used / 1000), t: Math.round(h.cpu_mhz_total / 1000) })}</div>
+            <div class="muted" style="font-size:12px">${t("vm.mem", { u: esc(h.mem_used_gb), t: esc(h.mem_gb), d: fmt.dur(h.uptime_s) })}</div></div>
           ${h.alerts.length ? `<div class="alist" style="margin-bottom:10px">${h.alerts.map((a) => `<div class="aitem" style="cursor:default"><span class="sev" style="background:var(--warning)"></span><div><b>${esc(a)}</b></div><span></span></div>`).join("")}</div>` : ""}
           <h4 class="muted" style="margin:8px 0 0;font-weight:400">${t("vm.vmsOn", { on: h.vms_on, n: h.vms.length })}</h4><div class="vmgrid">${vms}</div></div>`;
       }).join("");

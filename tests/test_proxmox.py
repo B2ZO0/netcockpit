@@ -104,6 +104,25 @@ class ProxmoxTest(unittest.TestCase):
         self.assertEqual(ds["nas"]["hosts"], ["pve1", "pve2"])         # stockage partagé : une seule ligne
         self.assertEqual(ds["nas"]["capacity_gb"], 1000)
 
+    def test_numbers_from_the_api_stay_numbers(self):
+        # A rogue or intercepted API answer must not turn a "number" into text shown in the interface.
+        hostile = "<img src=x onerror=alert(1)>"
+        saved = API["/cluster/resources"]
+        API["/cluster/resources"] = [dict(r) for r in saved]
+        try:
+            for r in API["/cluster/resources"]:
+                if r["type"] in ("node", "qemu", "lxc"):
+                    r.update(maxcpu=hostile, cpu=hostile, uptime=hostile, mem=hostile, maxmem=[1])
+            st = self.pve().poll()
+        finally:
+            API["/cluster/resources"] = saved
+        self.assertTrue(st["up"], st["error"])
+        for item in st["hosts"] + st["vms"]:
+            for key in ("cores", "vcpu", "cpu_pct", "mem_gb", "uptime_s", "cpu_mhz_used"):
+                if key in item and item[key] is not None:
+                    self.assertIsInstance(item[key], (int, float), (item["name"], key, item[key]))
+        self.assertNotIn("<img", json.dumps(st))
+
     def test_bad_token(self):
         st = self.pve("wrong").poll()
         self.assertFalse(st["up"])

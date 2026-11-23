@@ -610,6 +610,13 @@ def metrics_text():
 
 # ---------------------------------------------------------------- HTTP
 
+def csv_cell(value):
+    """Texte d'une cellule du CSV. Les noms viennent du réseau (NetBIOS, DNS, agents) : une valeur qui commencerait
+    par = + - @ ou une tabulation deviendrait une formule dans Excel ou LibreOffice, elle est précédée d'une apostrophe."""
+    text = str(value or "")
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
+
+
 def inventory_csv():
     mdl, _ = current()
     rows = M.inventory(mdl)
@@ -618,7 +625,7 @@ def inventory_csv():
     w = csv.writer(buf, delimiter=";")
     w.writerow(["État", "Nom", "DNS", "NetBIOS", "IP", "MAC", "Constructeur", "Type", "Site", "Réseau", "Switch", "Port", "OS", "Vu par"])
     for r in rows:
-        w.writerow([r.get(c) or "" for c in cols])
+        w.writerow([csv_cell(r.get(c)) for c in cols])
     return "\ufeff" + buf.getvalue()
 
 
