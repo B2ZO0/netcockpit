@@ -4,6 +4,8 @@
 
 Not published yet: these changes will make the next release.
 
+- Security: signing out ends the session for good, and changing `COCKPIT_PASSWORD` ends every open session (everyone signs in again once after this update). `/metrics` and the Grafana node graph answer without a session only to the local Docker networks, never through a reverse proxy; a Prometheus installed on the host itself goes in `COCKPIT_METRICS_NETWORKS`. The web server frees silent connections after 30 s, refuses malformed request sizes and reads nothing from a client that is not signed in.
+- Fix: the network graph of the Grafana overview dashboard stayed empty when the cockpit asked for a password.
 - Fix: Grafana stopped once on its first start (the Zabbix plugin was configured before it was installed) and only worked after Docker restarted it.
 - **Proxmox VE (experimental)**: nodes, QEMU VMs, LXC containers and storages in the map, the Virtualization screen, the metrics and the alerts, like VMware. Read-only API token (PVEAuditor role). VMware and Proxmox can be connected at the same time. VMs without a guest agent get their address from the network scan, matched by MAC address. Checked against a simulated Proxmox API in automated tests; not yet tested on a real Proxmox server — feedback welcome.
 - **One-command update**: `./setup.sh --update` downloads the latest published version and updates everything. Settings (`.env`, `config/cockpit.yml`) and history are never touched; settings are backed up first. If a project file was edited by hand, it stops without changing anything and says what to do.

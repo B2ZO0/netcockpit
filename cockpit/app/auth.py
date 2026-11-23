@@ -5,8 +5,9 @@ COCKPIT_AUTH               on (défaut) | off
 COCKPIT_SECRET             clé de signature des sessions (générée par setup.sh)
 COCKPIT_TRUSTED_NETWORKS   réseaux autorisés sans connexion (écran mural), ex. "192.0.2.50/32,10.0.9.0/24"
 COCKPIT_SESSION_HOURS      durée d'une session (défaut 12)
-COCKPIT_METRICS_NETWORKS   réseaux autorisés à lire /metrics sans connexion, en plus de la machine elle-même
-                           et des réseaux Docker locaux (d'où Prometheus interroge le cockpit)
+COCKPIT_METRICS_NETWORKS   réseaux autorisés à lire /metrics sans connexion, en plus des réseaux Docker locaux
+                           (d'où Prometheus et Grafana interrogent le cockpit), ex. "127.0.0.1/32" pour un Prometheus
+                           installé directement sur la machine
 """
 import hashlib
 import hmac
@@ -48,7 +49,12 @@ _docker = {"at": 0.0, "nets": []}
 PUBLIC_PREFIXES = ("/login", "/api/login", "/health", "/-/healthy", "/agents/",
                    "/lib/fonts/", "/style.css", "/i18n.js", "/favicon", "/login.js", "/theme.js")
 
+# Chemins lus par des machines (Prometheus, le graphe de Grafana) : ouverts aux réseaux Docker locaux et à
+# COCKPIT_METRICS_NETWORKS, jamais à une requête relayée par un reverse proxy (voir allowed).
+MACHINE_PATHS = ("/metrics", "/api/nodegraph")
+
 _fails: dict[str, list[float]] = {}
+_revoked: dict[str, float] = {}   # sessions fermées par « Se déconnecter » -> leur date d'expiration
 _lock = threading.Lock()
 
 
@@ -63,7 +69,9 @@ def misconfigured() -> bool:
 
 
 def _sign(expiry: int) -> str:
-    mac = hmac.new(SECRET, f"{expiry}".encode(), hashlib.sha256).hexdigest()
+    # Le mot de passe entre dans la clé : en changer ferme toutes les sessions ouvertes avec l'ancien.
+    key = hmac.new(SECRET, PASSWORD.encode(), hashlib.sha256).digest()
+    mac = hmac.new(key, f"{expiry}".encode(), hashlib.sha256).hexdigest()
     return f"{expiry}.{mac}"
 
 
@@ -73,12 +81,27 @@ def new_session() -> tuple[str, int]:
 
 
 def valid(token: str | None) -> bool:
-    if not token or "." not in token:
+    if not token or not token.isascii() or "." not in token:
         return False
-    exp, _, mac = token.partition(".")
-    if not exp.isdigit() or int(exp) < time.time():
+    exp, _, _mac = token.partition(".")
+    if not re.fullmatch(r"[0-9]{1,12}", exp) or int(exp) < time.time():
         return False
+    with _lock:
+        if token in _revoked:
+            return False
     return hmac.compare_digest(_sign(int(exp)), token)
+
+
+def revoke(token: str | None) -> None:
+    """Déconnexion : ce cookie ne vaut plus rien, même copié ailleurs (jusqu'au redémarrage du cockpit)."""
+    if not valid(token):
+        return
+    now = time.time()
+    with _lock:
+        for t, exp in list(_revoked.items()):
+            if exp < now:
+                del _revoked[t]
+        _revoked[token] = float(token.partition(".")[0])
 
 
 def cookie_value(cookie_header: str | None) -> str | None:
@@ -133,19 +156,21 @@ def docker_networks() -> list:
 
 
 def metrics_source(ip: str) -> bool:
-    """Qui peut lire /metrics sans connexion : la machine elle-même, les conteneurs Docker locaux
-    (Prometheus), et les réseaux de COCKPIT_METRICS_NETWORKS."""
+    """Qui peut lire /metrics sans connexion : les conteneurs Docker locaux (Prometheus, Grafana) et les réseaux de
+    COCKPIT_METRICS_NETWORKS. Pas 127.0.0.1 : un reverse proxy installé sur la machine arrive de là."""
     try:
         a = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    if a.is_loopback or any(a in n for n in METRICS_NETWORKS):
+    if any(a in n for n in METRICS_NETWORKS):
         return True
     return any(a in n for n in docker_networks())
 
 
-def allowed(path: str, ip: str, cookie_header: str | None) -> bool:
-    if path == "/metrics" and metrics_source(ip):
+def allowed(path: str, ip: str, cookie_header: str | None, forwarded: bool = False) -> bool:
+    """forwarded : la requête porte un en-tête de reverse proxy (X-Forwarded-For…). Prometheus et Grafana n'en
+    envoient pas ; une personne passée par un proxy doit se connecter comme les autres."""
+    if path in MACHINE_PATHS and not forwarded and metrics_source(ip):
         return True
     if misconfigured():
         return is_public(path) and path not in ("/api/login",)

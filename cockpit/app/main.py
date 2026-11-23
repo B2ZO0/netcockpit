@@ -626,8 +626,13 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
        "font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'; object-src 'none'")
 
 
+FORWARD_HEADERS = ("X-Forwarded-For", "Forwarded", "X-Real-IP", "X-Forwarded-Proto", "X-Forwarded-Host")
+MAX_BODY = 1_000_000
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "cockpit/2.0"
+    timeout = 30   # a silent client frees its thread after 30 s instead of holding it forever
 
     def log_message(self, fmt, *args):
         log.debug("%s - %s", self.address_string(), fmt % args)
@@ -653,7 +658,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _gate(self, path):
         """True si la requête peut continuer ; sinon la réponse (401 ou page de connexion) est envoyée."""
-        if auth.allowed(path, self.client_address[0], self.headers.get("Cookie")):
+        forwarded = any(self.headers.get(h) for h in FORWARD_HEADERS)
+        if auth.allowed(path, self.client_address[0], self.headers.get("Cookie"), forwarded):
             return True
         if path.startswith("/api/") or path == "/metrics":
             self._send(401, {"error": "login required"})
@@ -744,9 +750,19 @@ class Handler(BaseHTTPRequestHandler):
         if not self._same_origin():
             return self._send(403, {"error": "cross-site request refused"})
         try:
-            length = min(int(self.headers.get("Content-Length") or 0), 1_000_000)
-            body = json.loads(self.rfile.read(length) or b"{}") if length else {}
+            length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
+            length = -1
+        if length < 0:
+            return self._send(400, {"error": "bad Content-Length"})
+        # Nothing is read from a client that is not allowed in (except to sign in or out).
+        if url.path not in ("/api/login", "/api/logout") and not self._gate(url.path):
+            return
+        try:
+            body = json.loads(self.rfile.read(min(length, MAX_BODY)) or b"{}") if length else {}
+        except (ValueError, RecursionError):
+            body = {}
+        if not isinstance(body, dict):
             body = {}
         if url.path == "/api/login":
             if auth.misconfigured():
@@ -763,9 +779,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True}, headers={
                 "Set-Cookie": f"{auth.COOKIE}={token}; Max-Age={age}; Path=/; HttpOnly; SameSite=Lax{secure}"})
         if url.path == "/api/logout":
+            auth.revoke(auth.cookie_value(self.headers.get("Cookie")))
             return self._send(200, {"ok": True}, headers={"Set-Cookie": f"{auth.COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"})
-        if not self._gate(url.path):
-            return
         try:
             if url.path == "/api/rescan":
                 RESCAN.set()

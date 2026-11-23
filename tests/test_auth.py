@@ -100,10 +100,12 @@ class Metrics(unittest.TestCase):
         self.assertFalse(a.allowed("/metrics", "192.0.2.50", None))
         self.assertFalse(a.allowed("/metrics", "192.0.2.10", None))   # eth0 n'est pas une interface Docker
 
-    def test_local_host_and_docker_networks_can_scrape(self):
+    def test_docker_networks_can_scrape(self):
         a = load()
-        for ip in ("127.0.0.1", "172.17.0.2", "172.18.0.5"):
+        for ip in ("172.17.0.2", "172.18.0.5"):
             self.assertTrue(a.allowed("/metrics", ip, None), ip)
+        # a reverse proxy on the host itself connects from 127.0.0.1: no exemption (see test_http_hardening)
+        self.assertFalse(a.allowed("/metrics", "127.0.0.1", None))
 
     def test_only_metrics_is_opened_to_docker_networks(self):
         a = load()
