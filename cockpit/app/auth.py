@@ -68,10 +68,13 @@ def misconfigured() -> bool:
     return ENABLED and not PASSWORD
 
 
+# Clé des sessions, dérivée du mot de passe par scrypt (fonction lente, faite pour les mots de passe), une seule fois au
+# démarrage : changer COCKPIT_PASSWORD ferme toutes les sessions ouvertes avec l'ancien.
+_KEY = hashlib.scrypt(PASSWORD.encode(), salt=SECRET, n=2 ** 14, r=8, p=1, dklen=32)
+
+
 def _sign(expiry: int) -> str:
-    # Le mot de passe entre dans la clé : en changer ferme toutes les sessions ouvertes avec l'ancien.
-    key = hmac.new(SECRET, PASSWORD.encode(), hashlib.sha256).digest()
-    mac = hmac.new(key, f"{expiry}".encode(), hashlib.sha256).hexdigest()
+    mac = hmac.new(_KEY, f"{expiry}".encode(), hashlib.sha256).hexdigest()
     return f"{expiry}.{mac}"
 
 

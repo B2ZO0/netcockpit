@@ -51,6 +51,12 @@ class SessionEnd(unittest.TestCase):
         self.assertFalse(load(COCKPIT_PASSWORD="new-password").valid(token))
         self.assertTrue(load(COCKPIT_PASSWORD="old-password").valid(token))
 
+    def test_session_key_comes_from_a_slow_password_hash(self):
+        # the password only enters the session key through scrypt, never through a fast hash
+        src = (Path(__file__).resolve().parent.parent / "cockpit" / "app" / "auth.py").read_text(encoding="utf-8")
+        self.assertIn("hashlib.scrypt(PASSWORD.encode()", src)
+        self.assertNotRegex(src, r"hmac\.new\([^)]*PASSWORD")
+
     def test_garbage_cookies_are_refused_without_error(self):
         a = load()
         for token in ("².ab", "1" * 40 + ".ab", "9999999999.éé", ".", "12.", "-5.ab", None, ""):
