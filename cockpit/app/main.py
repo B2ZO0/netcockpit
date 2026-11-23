@@ -376,7 +376,7 @@ def write_targets():
     watch_ports = {str(w.get("ip")): w.get("port") for w in CFG["watch"] if w.get("port")}
     for n in mdl.nodes.values():
         ip = n.get("ip")
-        if not ip or n["role"] in ("subnet", "site", "internet"):
+        if not probe_address(ip) or n["role"] in ("subnet", "site", "internet"):
             continue
         labels = {"node": n["id"], "name": n["name"] or ip, "role": n["role"], "site": n.get("site") or "",
                   "subnet": n.get("subnet") or "", "critical": str(n["critical"]).lower(),
@@ -615,6 +615,15 @@ def csv_cell(value):
     par = + - @ ou une tabulation deviendrait une formule dans Excel ou LibreOffice, elle est précédée d'une apostrophe."""
     text = str(value or "")
     return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
+
+
+def probe_address(value):
+    """Une adresse IP, et rien d'autre, devient une cible de sonde (les IP d'agents ou de LLDP viennent du réseau)."""
+    try:
+        ipaddress.ip_address(str(value))
+        return bool(value)
+    except ValueError:
+        return False
 
 
 def inventory_csv():

@@ -44,7 +44,7 @@ def walk(ip, community, oid, timeout=60):
     try:
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
     except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-        log.debug("snmpwalk %s %s : %s", ip, oid, e)
+        log.debug("snmpwalk %s %s : %s", ip, oid, type(e).__name__)   # pas le message : il contient la commande et la communauté
         return {}
     res = {}
     base = oid.rstrip(".") + "."

@@ -1,6 +1,7 @@
 """Analyse IA optionnelle (API Anthropic, ou toute API compatible OpenAI : OpenAI, Mistral, Ollama, LM Studio...)."""
 import json
 import logging
+import re
 import time
 
 import requests
@@ -62,6 +63,11 @@ def _call(prompt, lang="fr"):
     return r.json()["choices"][0]["message"]["content"]
 
 
+def _redact(text):
+    """Retire l'identifiant et le mot de passe d'une URL (http://user:pass@hote -> http://***@hote)."""
+    return re.sub(r"(\w+://)[^/@\s]+@", r"\1***@", text or "")
+
+
 def ask(key, prompt, ttl=300, lang="fr"):
     key = f"{lang}:{key}"
     if not enabled():
@@ -72,12 +78,14 @@ def ask(key, prompt, ttl=300, lang="fr"):
     try:
         text = _call(prompt, lang)
     except requests.HTTPError as e:
-        body = e.response.text[:300] if e.response is not None else ""
-        log.warning("IA : %s %s", e, body)
-        return {"error": f"L'API IA a répondu une erreur : {e}. {body}"}
+        # Jamais l'URL dans le message : AI_BASE_URL peut contenir un identifiant et un mot de passe.
+        code = e.response.status_code if e.response is not None else "?"
+        body = _redact(e.response.text[:300]) if e.response is not None else ""
+        log.warning("IA : réponse HTTP %s %s", code, body)
+        return {"error": f"L'API IA a répondu une erreur : HTTP {code}. {body}"}
     except Exception as e:
-        log.warning("IA : %s", e)
-        return {"error": f"Impossible de joindre l'API IA : {e}"}
+        log.warning("IA : %s", _redact(str(e)))
+        return {"error": f"Impossible de joindre l'API IA : {_redact(str(e))}"}
     _cache[key] = (time.time(), text)
     return {"text": text, "cached": False, **info()}
 

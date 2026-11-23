@@ -42,13 +42,15 @@ class Zabbix:
 
     def login(self):
         self.state["version"] = self.call("apiinfo.version")
-        target = self.password or "zabbix"
+        if not self.password:
+            # Sans mot de passe défini, Zabbix resterait ouvert avec Admin / zabbix : on ne le configure pas.
+            raise ZabbixError("ZABBIX_ADMIN_PASSWORD est vide dans .env : relance ./setup.sh pour en générer un")
+        target = self.password
         try:
             self.token = self.call("user.login", {"username": "Admin", "password": target})
             return
         except ZabbixError:
-            if target == "zabbix":
-                raise
+            pass
         self.token = self.call("user.login", {"username": "Admin", "password": "zabbix"})
         uid = self.call("user.get", {"output": ["userid"], "filter": {"username": "Admin"}})[0]["userid"]
         self.call("user.update", {"userid": uid, "passwd": target, "current_passwd": "zabbix"})

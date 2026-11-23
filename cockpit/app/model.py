@@ -554,6 +554,14 @@ def graph_view(m, site=None):
     return {"nodes": nodes, "extra_edges": extra}
 
 
+def _ip_order(ip):
+    """Ordre de tri par adresse ; une valeur qui n'est pas une adresse IPv4 (donnée d'un agent, par ex.) va à la fin."""
+    try:
+        return (0, int(ipaddress.IPv4Address(str(ip))))
+    except (ValueError, TypeError):
+        return (1, 0)
+
+
 def inventory(m):
     rows = []
     for n in m.nodes.values():
@@ -569,7 +577,7 @@ def inventory(m):
                      "os": n.get("os"), "sources": ", ".join(n["sources"]), "first_seen": n.get("first_seen"),
                      "last_seen": n.get("last_seen"), "latency_ms": n.get("latency_ms"), "new": bool(n.get("new")),
                      "alerts": len(n["alerts"])})
-    rows.sort(key=lambda r: [int(x) for x in r["ip"].split(".")] if r.get("ip") and re.fullmatch(r"[\d.]+", r["ip"]) else [999])
+    rows.sort(key=lambda r: _ip_order(r.get("ip")))
     return rows
 
 

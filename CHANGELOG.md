@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Security: errors from the AI provider no longer show its address, which can contain a user name and password. Zabbix is no longer configured when `ZABBIX_ADMIN_PASSWORD` is empty, instead of staying on its default password. Only real IP addresses become probe targets, and one malformed address sent by an agent no longer breaks the inventory. The SNMP community no longer appears in debug logs.
 - Security: numbers read from the Proxmox API are checked to be numbers, and the interface escapes them like every other value. In the inventory CSV, names that would start like a spreadsheet formula are kept as plain text.
 - Fix: `./setup.sh --update` could stop right after downloading a release with many changes, without restarting anything (so the new version was not applied). It now always goes on.
 - Fix: when `.env` was missing next to an existing installation, setup.sh did not always recognise the installation and could start with new passwords; it now stops and explains, as intended.
