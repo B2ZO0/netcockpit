@@ -350,5 +350,8 @@ pre.cmd { background: var(--sunken); border: 1px solid var(--line); border-radiu
   .gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gauge { border-left: 0; border-top: 1px solid var(--line); }
   .verdict h2 { font-size: 22px; } .verdict .ai { display: none; }
   #drawer { width: 100vw; }
+  /* au doigt : tout ce qu'on touche fait au moins 40 px de haut ; les liens texte gardent leur place mais se touchent plus facilement */
+  .chip, button.sm, button.ai, .site-chip { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+  .notice a, span.right a, #view p a { display: inline-block; padding: 12px 0; margin: -12px 0; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

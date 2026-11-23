@@ -66,7 +66,7 @@ def main():
 
         feats = json.loads(get("api/features"))
         sites = [""] + feats.get("sites", [])
-        for name in ("overview", "graph", "inventory", "vmware", "switches", "alerts", "services", "setup", "features"):
+        for name in ("overview", "graph", "inventory", "vmware", "switches", "alerts", "services", "setup", "features", "auth"):
             for s in sites:
                 save(key(name, s), get(f"api/{name}" + (f"?site={quote(s)}" if s else "")))
         ids = [n["id"] for n in json.loads(get("api/graph"))["nodes"]]

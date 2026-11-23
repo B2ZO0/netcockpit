@@ -74,5 +74,27 @@ class InventoryCsv(unittest.TestCase):
         self.assertIn("192.0.2.9", line)
 
 
+class OnlineDemo(unittest.TestCase):
+    def test_every_screen_call_is_recorded_for_the_online_demo(self):
+        import re
+        root = APP.parent.parent
+        used = set()
+        for js in (root / "cockpit" / "static").glob("*.js"):
+            used |= set(re.findall(r"[\"`]api/([a-z]+)(?=[\"`?])", js.read_text(encoding="utf-8")))
+        build = (root / "scripts" / "build_pages_demo.py").read_text(encoding="utf-8")
+        recorded = set(re.findall(r'"([a-z]+)"', build[build.index("for name in ("):build.index("for s in sites")]))
+        handled = {"node", "ai", "rescan", "login", "logout"}   # recorded per device / answered by the shim / never in the demo
+        self.assertEqual(sorted(used - recorded - handled), [])
+
+
+class Phone(unittest.TestCase):
+    def test_touch_targets_are_at_least_40px_high_on_phones(self):
+        # measured with Playwright at 390x844: chips, small buttons and the AI button were 26-30 px high
+        css = (APP.parent / "static" / "style.css").read_text(encoding="utf-8")
+        phone = css[css.index("@media (max-width: 760px)"):]
+        phone = phone[:phone.index("@media (prefers-reduced-motion")]
+        self.assertRegex(phone, r"\.chip, button\.sm, button\.ai, \.site-chip \{ min-height: 40px;")
+
+
 if __name__ == "__main__":
     unittest.main()
