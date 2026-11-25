@@ -6,7 +6,7 @@ from datetime import datetime
 
 import config as C
 import snmp as S
-from scanner import ROLE_LABELS, classify, is_private
+from scanner import ROLE_LABELS, VENDOR_ROLES, classify, is_private
 
 RETAIN_SECONDS = 7 * 86400
 IMPORTANT = {"firewall", "router", "gateway", "switch", "network", "wifi", "esxi", "hypervisor", "server", "dc", "nas", "vm"}
@@ -300,6 +300,17 @@ def build(cfg, scan, vc, snmp_state, agents, lldp, now=None):
                     return n["id"]
         return None
 
+    def neighbor_role(name, model):
+        """Un téléphone IP annonce aussi CDP/LLDP (Yealink : « T54W » + MAC, plateforme « Yealink SIP-T54W ») :
+        c'est un téléphone, pas un switch, même vu depuis la carte d'un ESXi ou d'un serveur."""
+        text = f"{model or ''} {name or ''}"
+        for rx, r in VENDOR_ROLES:
+            if r == "phone" and rx.search(text):
+                return "phone"
+        if name and re.fullmatch(r"(?:SIP-)?[TW]\d{2,3}[A-Z]{0,3}[0-9A-Fa-f]{12}", name.strip()):
+            return "phone"
+        return "switch"
+
     def ensure_switch(name, ip, model=None, via=None):
         name = switch_name(name)
         sid = switch_id(name, ip)
@@ -307,7 +318,7 @@ def build(cfg, scan, vc, snmp_state, agents, lldp, now=None):
             sid = m.by_ip(ip) if ip else f"sw:{norm(name)}"
         site, subnet = C.site_of(cfg, ip) if ip else (None, None)
         ex = m.nodes.get(sid)
-        role = ex["role"] if ex and ex["role"] in ("firewall", "router") else "switch"
+        role = ex["role"] if ex and ex["role"] in ("firewall", "router", "phone") else neighbor_role(name, model)
         m.node(sid, ip=ip, role=role, source=(via or "lldp").lower(), alert=True, site=site, subnet=subnet,
                details={"modèle": model})
         n = m.nodes[sid]
@@ -329,12 +340,14 @@ def build(cfg, scan, vc, snmp_state, agents, lldp, now=None):
         t = host_ids.get(l["host"])
         if t:
             sid = ensure_switch(l.get("switch"), l.get("switch_ip"), l.get("platform"), l.get("proto"))
-            links.append((sid, f"{l.get('port')}", t, f"{l.get('proto')} (ESXi {l.get('nic')})"))
+            if m.nodes[sid]["role"] != "phone":   # annonce d'un téléphone passée par un petit switch : pas un lien
+                links.append((sid, f"{l.get('port')}", t, f"{l.get('proto')} (ESXi {l.get('nic')})"))
     for l in lldp:
         t = m.by_ip(l["ip"]) if l.get("ip") and m.by_ip(l["ip"]) in m.nodes else m.find_name(l.get("instance"))
         if t and (l.get("chassis_name") or l.get("chassis_id")):
             sid = ensure_switch(l.get("chassis_name") or l.get("chassis_id"), l.get("mgmt_ip") or None, None, l.get("protocol") or "LLDP")
-            links.append((sid, l.get("port_descr") or l.get("port_id"), t, f"{l.get('protocol') or 'LLDP'} ({l.get('interface')})"))
+            if m.nodes[sid]["role"] != "phone":
+                links.append((sid, l.get("port_descr") or l.get("port_id"), t, f"{l.get('protocol') or 'LLDP'} ({l.get('interface')})"))
 
     snmp_devices = (snmp_state or {}).get("devices") or []
     if snmp_devices:
