@@ -52,6 +52,37 @@ HERE=$(pwd -P)
 PROJ=$(awk '/^name:/{print $2; exit}' docker-compose.yml 2>/dev/null || true)
 PROJ=${PROJ:-$(basename "$HERE" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')}
 
+# ------------------------------------------------------------------ espace disque : là où Docker range images et volumes
+# Debian « partitions séparées » donne souvent un /var de 2 Go : l'installation planterait en plein téléchargement.
+# Avec le stockage containerd (Docker 29+, pilote « overlayfs »), les images sont dans /var/lib/containerd.
+disk_check() {
+  local dirs=() d free min="" where=""
+  d=$(docker info -f '{{.DockerRootDir}}' 2>/dev/null || true); [[ -n "$d" ]] && dirs+=("$d")
+  [[ "$(docker info -f '{{.Driver}}' 2>/dev/null || true)" == overlayfs && -d /var/lib/containerd ]] && dirs+=(/var/lib/containerd)
+  for d in ${dirs[@]+"${dirs[@]}"}; do
+    free=$(df -Pk "$d" 2>/dev/null | awk 'NR==2{print int($4/1048576)}' || true)
+    [[ -z "$free" ]] && continue
+    if [[ -z "$min" || "$free" -lt "$min" ]]; then min=$free; where=$d; fi
+  done
+  [[ -z "$min" ]] && return 0
+  if [[ ! -f .env && "$min" -lt 10 && -z "${NETCOCKPIT_SKIP_DISK_CHECK:-}" ]]; then
+    die "Pas assez de place pour Docker : ${min} Go libres dans $where (il en faut au moins 10, 60 Go de disque conseillés).
+  Vérifie avec : df -h $where
+  Si ton disque est découpé (un petit /var et un grand /home), déplace les données Docker vers la grande partition :
+  https://github.com/B2ZO0/netcockpit/blob/main/docs/installation.md#not-enough-disk-space
+  Pour passer outre (à tes risques) : NETCOCKPIT_SKIP_DISK_CHECK=1 ./setup.sh" \
+        "Not enough space for Docker: ${min} GB free in $where (at least 10 GB needed, a 60 GB disk recommended).
+  Check with: df -h $where
+  If your disk is split (a small /var and a large /home), move Docker's data to the large partition:
+  https://github.com/B2ZO0/netcockpit/blob/main/docs/installation.md#not-enough-disk-space
+  To skip this check (at your own risk): NETCOCKPIT_SKIP_DISK_CHECK=1 ./setup.sh"
+  elif [[ "$min" -lt 5 ]]; then
+    warn "Seulement ${min} Go libres dans $where : l'historique risque de remplir le disque (df -h $where)." \
+         "Only ${min} GB free in $where: history may fill the disk (df -h $where)."
+  fi
+}
+disk_check
+
 # ------------------------------------------------------------------ garde-fous : ne jamais écraser une installation existante
 for svc in cockpit netmap; do
   other=$(docker ps -a --filter "label=com.docker.compose.service=$svc" --format '{{.Label "com.docker.compose.project.working_dir"}}' 2>/dev/null | sort -u | grep -vxF "$HERE" | head -1 || true)

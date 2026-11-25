@@ -36,6 +36,24 @@ Advanced settings live in two files, both yours and never overwritten:
 
 `setup.sh` is idempotent. When a new version adds settings to `.env.example`, it appends them to your `.env` without touching existing values.
 
+### Not enough disk space
+
+Docker keeps images and history in `/var/lib/docker` (and, with Docker 29 and later, images in `/var/lib/containerd`). Before installing, `setup.sh` checks that at least 10 GB are free there and stops otherwise.
+
+The Debian installer's "separate /home, /var and /tmp partitions" option often leaves `/var` with only 2–3 GB, even on a 30 GB disk. `lsblk` shows it. The simplest fix is to reinstall with "All files in one partition". Otherwise, on a fresh host, put Docker's data on the large partition (here `/home`):
+
+```bash
+sudo systemctl stop docker docker.socket containerd
+sudo mkdir -p /home/varlib/docker /home/varlib/containerd
+sudo cp -a /var/lib/docker/. /home/varlib/docker/
+sudo cp -a /var/lib/containerd/. /home/varlib/containerd/
+echo '/home/varlib/docker /var/lib/docker none bind 0 0' | sudo tee -a /etc/fstab
+echo '/home/varlib/containerd /var/lib/containerd none bind 0 0' | sudo tee -a /etc/fstab
+sudo systemctl daemon-reload && sudo mount -a
+sudo systemctl start containerd docker
+df -h /var/lib/docker /var/lib/containerd
+```
+
 ## First minutes
 
 | When | What happens |
