@@ -234,6 +234,7 @@ Without git (installed from an archive): extract the new version INTO that same 
 |---|---|
 | The cockpit shows "Site A", "10.10.0.x", DC01, DC02 | That is the demo's example configuration. Run `./setup.sh --configure`. |
 | A network does not appear | It is not declared in any building: `./setup.sh --configure`. Also check the host reaches it: `ping <an IP in that network>`. |
+| Change the cockpit password | In `.env`, edit the `COCKPIT_PASSWORD=` line (`nano .env`), then `./setup.sh`. Open sessions end: everyone signs in again with the new password. |
 | Zabbix light red right after install | Zabbix is creating its database: wait 3 minutes. |
 | Zabbix light red and never turns green | The password in `.env` no longer matches the database, usually because `.env` was recreated (install in another folder). Put the previous `.env` back from `backups/<date>/` or the old folder, then `./setup.sh`. Otherwise: `docker compose logs --tail 50 zabbix-server zabbix-web`. |
 | vCenter light red | The reason is shown under the light. Most often: wrong password, or account without the propagated Read-only role. `docker compose logs cockpit \| grep -i vcenter`. |

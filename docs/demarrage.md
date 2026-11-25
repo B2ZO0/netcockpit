@@ -234,6 +234,7 @@ Sans git (installation par archive) : décompresse la nouvelle version DANS ce m
 |---|---|
 | Le cockpit affiche « Site A », « 10.10.0.x », DC01, DC02 | C'est la configuration d'exemple de la démo. Relance `./setup.sh --configure`. |
 | Un réseau n'apparaît pas | Il n'est déclaré dans aucun bâtiment : `./setup.sh --configure`. Vérifie aussi que la VM le joint : `ping <une IP de ce réseau>`. |
+| Changer le mot de passe du cockpit | Dans `.env`, modifie la ligne `COCKPIT_PASSWORD=` (`nano .env`), puis `./setup.sh`. Les sessions ouvertes se ferment : chacun se reconnecte avec le nouveau mot de passe. |
 | Pastille Zabbix rouge juste après l'installation | Zabbix crée sa base : attends 3 minutes. |
 | Pastille Zabbix rouge qui ne passe jamais au vert | Le mot de passe de `.env` ne correspond plus à la base, souvent parce que `.env` a été recréé (installation dans un autre dossier). Remets l'ancien `.env` depuis `backups/<date>/` ou l'ancien dossier, puis `./setup.sh`. Sinon : `docker compose logs --tail 50 zabbix-server zabbix-web`. |
 | Pastille vCenter rouge | Le motif s'affiche sous la pastille. Le plus souvent : mauvais mot de passe, ou compte sans le rôle Lecture seule propagé. `docker compose logs cockpit \| grep -i vcenter`. |
