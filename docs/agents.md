@@ -51,6 +51,21 @@ What it does:
 - exports node metrics (including systemd units) and journald logs;
 - runs a 5-minute timer converting `lldpcli` neighbours into the `lldp_neighbor_info` metric. That is how the cockpit knows **which switch and port** each physical Linux server is plugged into.
 
+### Removing the Linux agent
+
+As root on the server (Debian/Ubuntu; on RHEL-like systems use `dnf remove alloy lldpd` and `/etc/yum.repos.d/grafana.repo`):
+
+```bash
+systemctl disable --now alloy alloy-lldp.timer lldpd
+apt-get purge -y alloy lldpd
+rm -f /etc/systemd/system/alloy-lldp.service /etc/systemd/system/alloy-lldp.timer \
+      /etc/apt/sources.list.d/grafana.list /etc/apt/keyrings/grafana.gpg /etc/default/lldpd
+rm -rf /etc/alloy /usr/local/lib/alloy-lldp /var/lib/alloy-lldp
+systemctl daemon-reload && apt-get update -qq
+```
+
+Keep `lldpd` (leave it out of the first two lines) if it was already installed before the agent. The server disappears from "Servers with agent" within a few minutes; its history stays in Prometheus and Loki until retention removes it.
+
 ## Labels
 
 Each agent sends `instance` (host name), `os` and `ip`. The cockpit uses `ip` to merge agent data with scan, DNS and vCenter data.
