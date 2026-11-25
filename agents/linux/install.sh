@@ -5,6 +5,7 @@
 #   sudo bash install.sh <IP_SUPERVISION> [nom] --token <JETON_DES_AGENTS>
 #   Le jeton (AGENT_TOKEN du .env de la supervision) est aussi lu dans NETCOCKPIT_AGENT_TOKEN.
 set -euo pipefail
+export PATH="$PATH:/usr/local/sbin:/usr/sbin:/sbin"   # « su » sans « - » garde le PATH de l'utilisateur : usermod, lldpcli…
 
 SERVER=""; NAME=""; TOKEN="${NETCOCKPIT_AGENT_TOKEN:-}"
 while [[ $# -gt 0 ]]; do
@@ -16,6 +17,11 @@ while [[ $# -gt 0 ]]; do
 done
 NAME="${NAME:-$(hostname -s)}"
 [[ -z "$SERVER" ]] && { echo "Usage : sudo bash $0 <IP_DU_SERVEUR_DE_SUPERVISION> [nom] --token <JETON_DES_AGENTS>"; exit 1; }
+INNER="${TOKEN#<}"; INNER="${INNER%>}"
+if [[ "$TOKEN" == \<*\> && "$INNER" =~ ^[A-Za-z0-9_-]{16,128}$ && "$INNER" != AGENT_TOKEN ]]; then
+  echo "!! Enlève les < > autour du jeton : --token 'abc123…' et non --token '<abc123…>'."
+  exit 1
+fi
 if [[ -n "$TOKEN" && ! "$TOKEN" =~ ^[A-Za-z0-9_-]{16,128}$ ]]; then
   echo "!! Jeton invalide. Remplace <AGENT_TOKEN> par le jeton des agents : sur la machine de supervision,"
   echo "   grep AGENT_TOKEN= .env dans le dossier de NetCockpit (il est aussi affiché à la fin de ./setup.sh)."
@@ -26,8 +32,9 @@ fi
 
 TARGET=$(getent ahostsv4 "$SERVER" 2>/dev/null | awk 'NR==1{print $1}'); TARGET=${TARGET:-$SERVER}   # IP ou nom DNS
 IP=$(ip -4 route get "$TARGET" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
-. /etc/os-release
-echo "==> ${PRETTY_NAME} · nom '${NAME}' · IP ${IP:-?} · supervision ${SERVER}"
+# os-release définit NAME (« Debian GNU/Linux ») : lu dans un sous-shell pour ne pas écraser le nom du serveur
+OS_PRETTY=$(. /etc/os-release; echo "${PRETTY_NAME:-Linux}")
+echo "==> ${OS_PRETTY} · nom '${NAME}' · IP ${IP:-?} · supervision ${SERVER}"
 
 # ------------------------------------------------------------ paquets
 if command -v apt-get >/dev/null; then
@@ -240,6 +247,9 @@ if [[ "$CHECK" == 401 ]]; then
   echo "!! La supervision refuse cet agent : jeton absent ou faux. Relance ce script avec --token <AGENT_TOKEN>"
   echo "   (sur la machine de supervision : grep AGENT_TOKEN= .env dans le dossier de NetCockpit)."
   exit 1
+elif [[ "$CHECK" =~ ^2 ]]; then
+  if [[ -n "$TOKEN" ]]; then echo "==> Jeton accepté par la supervision."
+  else echo "==> Accepté sans jeton (la supervision ne l'exige pas encore) : à réinstaller avec --token avant de l'exiger."; fi
 elif [[ "$CHECK" == unreachable ]]; then
   echo "!! ${SERVER}:3100 injoignable depuis ce serveur : vérifie le pare-feu (sortie vers les ports 9090 et 3100)."
 fi

@@ -180,6 +180,19 @@ class LinuxAgent(unittest.TestCase):
         self.assertIn("grep AGENT_TOKEN=", r.stdout)
         self.assertNotIn("SERVER=", r.stdout)
 
+    def test_real_token_wrapped_in_angle_brackets_says_so(self):
+        r = linux_args("192.0.2.10", "--token", f"<{TOKEN}>")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("Enlève les < >", r.stdout)
+
+    def test_os_release_does_not_overwrite_the_server_name(self):
+        # /etc/os-release defines NAME="Debian GNU/Linux": sourced in the script itself, every server got that name
+        self.assertNotRegex(INSTALL, r"(?m)^\s*(\.|source) /etc/os-release")
+        self.assertIn('$(. /etc/os-release;', INSTALL)
+
+    def test_sbin_tools_are_found_after_plain_su(self):
+        self.assertRegex(INSTALL, r'export PATH="\$PATH:[^"]*/usr/sbin')
+
     def test_token_lives_in_a_private_file_not_in_the_config(self):
         self.assertIn('chgrp alloy "${TOKEN_FILE}.new"', INSTALL)   # stays root's file: alloy can read it, not change it
         self.assertIn('chmod 640 "${TOKEN_FILE}.new"', INSTALL)
