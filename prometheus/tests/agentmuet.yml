@@ -1,0 +1,23 @@
+# promtool test rules : l'alerte « n'envoie plus de données » (AgentMuet)
+rule_files:
+  - /p/rules/serveurs.yml
+evaluation_interval: 1m
+tests:
+  # Agent réinstallé sous un autre nom (même IP) : pas d'alerte pour l'ancien nom.
+  # Un serveur vraiment arrêté : alerte.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="node", instance="Debian GNU/Linux", os="linux", ip="10.0.0.60"}'
+        values: '1x10 _x30'
+      - series: 'up{job="node", instance="GLPI", os="linux", ip="10.0.0.60"}'
+        values: '_x10 1x30'
+      - series: 'up{job="node", instance="SRV-OLD", os="linux", ip="10.0.0.70"}'
+        values: '1x10 _x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: AgentMuet
+        exp_alerts:
+          - exp_labels: { severity: critical, instance: SRV-OLD, os: linux, ip: 10.0.0.70 }
+            exp_annotations:
+              summary: "SRV-OLD n'envoie plus de données"
+              description: "Serveur éteint, planté, ou agent Alloy arrêté."

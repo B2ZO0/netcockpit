@@ -48,6 +48,7 @@ jobs:
         run: |
           files=$(cd prometheus && ls rules/*.yml | sed 's#^#/p/#')
           docker run --rm -v "$PWD/prometheus:/p" --entrypoint promtool prom/prometheus check rules $files
+          docker run --rm -v "$PWD/prometheus:/p" --entrypoint promtool prom/prometheus test rules $(cd prometheus && ls tests/*.yml | sed "s#^#/p/#")
 
       - name: Loki rules
         run: |

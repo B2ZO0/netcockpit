@@ -1,12 +1,15 @@
 groups:
   - name: serveurs
     rules:
-      # Un agent qui envoyait des données dans les dernières 24 h et n'envoie plus rien
+      # Un agent qui envoyait des données dans les dernières 24 h et n'envoie plus rien.
+      # Un serveur dont l'agent a été réinstallé sous un autre nom envoie encore depuis la même IP : pas d'alerte pour l'ancien nom.
       - alert: AgentMuet
         expr: |
-          group by (instance, os) (max_over_time(up{job=~"node|windows"}[1d]))
-          unless
-          group by (instance, os) (up{job=~"node|windows"})
+          group by (instance, os, ip) (max_over_time(up{job=~"node|windows"}[1d]))
+          unless on (instance)
+          group by (instance) (up{job=~"node|windows"})
+          unless on (ip)
+          group by (ip) (up{job=~"node|windows", ip!=""})
         for: 2m
         labels:
           severity: critical
