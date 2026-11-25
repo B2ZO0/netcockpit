@@ -51,7 +51,7 @@ const I18n = (() => {
       "dur.dh": "{d} j {h} h", "dur.hm": "{h} h {m} min", "unit.gb": "Go", "unit.tb": "To",
       "chart.none": "Pas encore d'historique.", "chart.legend": "Actuel {c}, moyenne {a}, max {m}", "chart.span": "24 h",
 
-      "ov.nominal": "Tout est nominal", "ov.problems_one": "1 problème demande ton attention",
+      "ov.nominal": "Aucun problème", "ov.problems_one": "1 problème demande ton attention",
       "ov.problems_other": "{n} problèmes demandent ton attention", "ov.outage": "Internet est coupé",
       "ov.facts_one": "{total} équipements sur 1 {w}, scan à {t}", "ov.facts_other": "{total} équipements sur {n} {w}, scan à {t}",
       "word.one": "Site", "word.many": "Sites",
@@ -186,7 +186,7 @@ const I18n = (() => {
       "dur.dh": "{d} d {h} h", "dur.hm": "{h} h {m} min", "unit.gb": "GB", "unit.tb": "TB",
       "chart.none": "No history yet.", "chart.legend": "Now {c}, average {a}, max {m}", "chart.span": "24 h",
 
-      "ov.nominal": "All systems nominal", "ov.problems_one": "1 problem needs attention",
+      "ov.nominal": "No problems", "ov.problems_one": "1 problem needs attention",
       "ov.problems_other": "{n} problems need attention", "ov.outage": "Internet is down",
       "ov.facts_one": "{total} devices on 1 {w}, scanned at {t}", "ov.facts_other": "{total} devices across {n} {w}, scanned at {t}",
       "word.one": "Site", "word.many": "Sites",
