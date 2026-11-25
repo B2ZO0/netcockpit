@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Setup assistant: when a VMware or Proxmox address is entered without an account, the summary now says it is not connected yet, and `setup.sh` explains how to add the read-only account, instead of listing VMware as if it were set up.
 - Install: `setup.sh` checks the free space where Docker stores images and history before installing, and stops with an explanation below 10 GB, instead of failing halfway through the download. Typical case: the Debian installer's separate partitions leave `/var` with 2–3 GB; [the guide](docs/installation.md#not-enough-disk-space) shows how to fix it.
 - Phones: filter chips, small buttons and text links are easier to touch (at least 40 px high). Online demo: no more error in the browser console at load.
 - Fix: the setup assistant silently removed apostrophes from passwords, and a password ending with a backslash made `.env` unreadable for Docker. It now keeps `$`, `#`, spaces and quotes as typed and asks again for a password it cannot store unchanged.

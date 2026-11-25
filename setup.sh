@@ -218,6 +218,7 @@ COCKPIT_PUBLIC_URL="http://${PUBLIC_HOST}:8088" python3 scripts/gen_dashboards.p
 mkdir -p data/targets
 for f in icmp tcp http dns snmp; do [[ -s data/targets/$f.json ]] || echo "[]" > "data/targets/$f.json"; done
 if [[ -n "$(envget VCENTER_URL)" && -n "$(envget VCENTER_PASSWORD)" ]]; then ok "VMware configuré ($(envget VCENTER_URL))" "VMware configured ($(envget VCENTER_URL))"
+elif [[ -n "$(envget VCENTER_URL)" ]]; then warn "VMware : adresse enregistrée ($(envget VCENTER_URL)) mais pas de compte, donc pas connecté. ./setup.sh --configure pour ajouter le compte en lecture seule" "VMware: address saved ($(envget VCENTER_URL)) but no account, so not connected. ./setup.sh --configure to add the read-only account"
 elif [[ -z "$(envget PROXMOX_URL)" ]]; then warn "Ni VMware ni Proxmox configuré : ./setup.sh --configure pour en connecter un" "Neither VMware nor Proxmox configured: ./setup.sh --configure to connect one"; fi
 [[ -n "$(envget PROXMOX_URL)" && -n "$(envget PROXMOX_TOKEN_SECRET)" ]] && ok "Proxmox configuré ($(envget PROXMOX_URL))" "Proxmox configured ($(envget PROXMOX_URL))"
 [[ " ${profiles[*]} " == *" zabbix "* ]] && ok "Zabbix activé (port ${ZPORT})" "Zabbix enabled (port ${ZPORT})"

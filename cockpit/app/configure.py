@@ -66,6 +66,7 @@ T = {
         "tgc": "Telegram : identifiant de la conversation (chat id)",
         "zbx": "Installer Zabbix (VMware natif, découverte SNMP, ~0,5 Go de RAM) ? o/n",
         "summary": "Résumé",
+        "nocreds": "(pas de compte : pas encore connecté)",
         "save": "Enregistrer cette configuration ? [O/n] : ",
         "saved": "Configuration enregistrée : config/cockpit.yml et .env",
         "cancel": "Rien n'a été modifié.",
@@ -117,6 +118,7 @@ T = {
         "tgc": "Telegram: chat id",
         "zbx": "Install Zabbix (native VMware, SNMP discovery, ~0.5 GB RAM)? y/n",
         "summary": "Summary",
+        "nocreds": "(no account: not connected yet)",
         "save": "Save this configuration? [Y/n]: ",
         "saved": "Configuration saved: config/cockpit.yml and .env",
         "cancel": "Nothing was changed.",
@@ -474,9 +476,11 @@ def main():
         print(f"    {x['name']:<28} {', '.join(x['subnets'])}")
     print(f"    DNS {', '.join(dns) or '-'}   {s['gw']} {gw_ip or '-'}")
     if env_new.get("VCENTER_URL") or vc_cur:
-        print(f"    VMware {env_new.get('VCENTER_URL') or vc_cur}")
+        creds = env_new.get("VCENTER_USER") and (env_new.get("VCENTER_PASSWORD") or env.get("VCENTER_PASSWORD"))
+        print(f"    VMware {env_new.get('VCENTER_URL') or vc_cur}" + ("" if creds or not env_new.get("VCENTER_URL") else f"  {s['nocreds']}"))
     if env_new.get("PROXMOX_URL") or pve_cur:
-        print(f"    Proxmox {env_new.get('PROXMOX_URL') or pve_cur}")
+        creds = env_new.get("PROXMOX_TOKEN_ID") and (env_new.get("PROXMOX_TOKEN_SECRET") or env.get("PROXMOX_TOKEN_SECRET"))
+        print(f"    Proxmox {env_new.get('PROXMOX_URL') or pve_cur}" + ("" if creds or not env_new.get("PROXMOX_URL") else f"  {s['nocreds']}"))
     print(f"    Zabbix {env_new['ENABLE_ZABBIX']}")
     if interactive and ask.raw("\n" + s["save"], s["yes"][0]).lower() not in s["yes"]:
         print(s["cancel"])
