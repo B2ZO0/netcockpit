@@ -37,6 +37,8 @@ What it does:
 - writes a config with the Windows exporter (CPU, memory, disks, network, services) and the **System** and **Application** event logs (level mapped from the numeric value, so it works with any Windows language);
 - enables the "File and Printer Sharing (Echo Request)" firewall rule, so the cockpit can ping the server (`-NoPing` to skip).
 
+**The easy way:** in the cockpit, open **Setup** (the flag), step "Install the agent on your servers", and click **Show the token in the commands**. Each command is then complete: copy the one for your server and paste it. The button appears when you are signed in with the cockpit password.
+
 ## Linux (Debian, Ubuntu, RHEL, Rocky, Alma)
 
 ```bash

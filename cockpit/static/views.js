@@ -294,6 +294,8 @@
     en: { sites: "5-add-a-building-or-change-addressing", vmware: "6-connect-vmware-vcenter-or-standalone-esxi", zabbix: "7-zabbix",
       agents: "8-install-the-server-agents", notif: "9-get-alerts-on-telegram", snmp: "10-see-switch-ports-snmp-ubiquiti-unifi", trouble: "12-troubleshooting" },
   };
+  // jeton des agents, demandé par la personne connectée (bouton) : gardé en mémoire de cette page seulement
+  let shownToken = "";
   // étapes calculées depuis /api/setup ; essential = compte dans la progression
   function setupSteps(d) {
     const host = window.NETCOCKPIT_DEMO ? "<your-monitoring-host>" : location.hostname;
@@ -327,7 +329,8 @@
       sum: !ag.total ? t("su.ag.none") : ag.silent && ag.silent.length ? t("su.ag.silent", { list: ag.silent.join(", "), host }) : t("su.ag.ok", { n: ag.alive }),
       how: `<p>${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host} -Token '<AGENT_TOKEN>'`)}
         <p>${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | sudo bash -s ${host} --token '<AGENT_TOKEN>'`)}
-        <p>${t("su.ag.token")}</p>${cmd(`grep AGENT_TOKEN= ${dir}/.env`)}<p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
+        ${ag.token_view && !shownToken ? `<p><button class="ai" type="button" id="show-token">${esc(t("su.ag.show"))}</button></p>` : ""}
+        ${shownToken ? `<p class="muted">${esc(t("su.ag.shown"))}</p>` : `<p>${t("su.ag.token")}</p>${cmd(`grep AGENT_TOKEN= ${dir}/.env`)}`}<p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
     // mise à jour depuis une version sans jeton : les agents déjà installés sont acceptés sans lui, le temps de les réinstaller
     if (ag.token === "optional") add({ key: "token", essential: true, title: t("su.tk.t"), state: "warn", sum: t("su.tk.s"),
       how: `<p>${t("su.tk.how")}</p>${cmd(`cd ${dir}\nsed -i 's/^AGENT_AUTH=.*/AGENT_AUTH=required/' .env\n./setup.sh`)}` });
@@ -358,7 +361,7 @@
   }
   App.setupRemaining = setupRemaining; App.setupBadge = setupBadge;
 
-  App.register("setup", {
+  const setupView = {
     async render(el) {
       const d = await api("api/setup");
       setupBadge(d);
@@ -382,9 +385,19 @@
           ${segBar([{ v: done, c: "var(--up)" }, { v: ess.length - done, c: "var(--line2)" }])}</div>
         <div class="muted">${done === ess.length ? t("su.done") : t("su.intro")}</div>
         <div class="steps">${items}</div>`;
+      if (shownToken) el.querySelectorAll("pre.cmd").forEach((p) => { p.textContent = p.textContent.split("<AGENT_TOKEN>").join(shownToken); });
+      const sb = el.querySelector("#show-token");
+      if (sb) sb.addEventListener("click", async () => {
+        sb.disabled = true;
+        try {
+          const r = await api("api/agent-token");
+          if (r && /^[A-Za-z0-9_-]{16,128}$/.test(r.token || "")) { shownToken = r.token; await setupView.render(el); }
+        } catch (e) { sb.disabled = false; sb.textContent = e.message; }
+      });
       App.hydrateIcons(el);
     },
-  });
+  };
+  App.register("setup", setupView);
 
   App.init();
 })();

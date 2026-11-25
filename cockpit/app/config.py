@@ -44,8 +44,10 @@ AI_MODEL = ENV("AI_MODEL", "")
 AI_BASE_URL = ENV("AI_BASE_URL", "").rstrip("/")
 
 # jeton des agents exigé (required) ou pas encore (optional, installation mise à jour depuis une version sans jeton).
-# Le cockpit ne connaît que ce mode : le jeton lui-même reste dans .env et dans la passerelle des agents.
 AGENT_AUTH = "optional" if (ENV("AGENT_AUTH", "") or "").strip().lower() == "optional" else "required"
+# Le jeton lui-même : montré seulement à une personne connectée avec le mot de passe, à sa demande (écran « Mise en route »),
+# pour que la commande d'installation de l'agent soit prête à coller. Jamais dans /api/setup ni dans une autre réponse.
+AGENT_TOKEN = ENV("AGENT_TOKEN", "")
 INSTALL_DIR = ENV("COCKPIT_INSTALL_DIR", "")              # dossier de NetCockpit sur l'hôte (affiché dans « Mise en route »)
 SCAN_OVERRIDE = ENV("COCKPIT_SCAN")  # "0" pour désactiver (tests)
 

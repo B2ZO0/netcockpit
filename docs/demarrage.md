@@ -172,6 +172,8 @@ Zabbix est installé et **configuré automatiquement** : modèle VMware natif, d
 
 Les agents remontent CPU, RAM, disques, services et journaux. Le cockpit sert lui-même les scripts d'installation.
 
+**Le plus simple :** dans le cockpit, écran **Mise en route** (le drapeau), étape « Installer l'agent », clique sur **Afficher le jeton dans les commandes**. Les commandes sont alors complètes : copie celle de ton serveur et colle-la. Sinon, remplace `<AGENT_TOKEN>` ci-dessous par le jeton affiché à la fin de `./setup.sh`, sans les `< >`.
+
 **Windows** (PowerShell **administrateur**, sur le serveur) :
 
 ```powershell

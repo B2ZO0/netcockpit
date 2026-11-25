@@ -87,7 +87,7 @@ class Gateway(unittest.TestCase):
         self.assertEqual(binds, [{"type": "bind", "source": "./secrets/agent-gateway.conf", "target": "/etc/nginx/agent-token.conf",
                                   "read_only": True, "bind": {"create_host_path": False}}])
         cockpit_env = services["cockpit"]["environment"]
-        self.assertNotIn("AGENT_TOKEN", cockpit_env)                  # the cockpit only knows the mode
+        self.assertEqual(cockpit_env["AGENT_TOKEN"], "${AGENT_TOKEN:-}")   # shown only on request to a signed-in user
         self.assertEqual(cockpit_env["AGENT_AUTH"], "${AGENT_AUTH:-required}")
 
 
@@ -216,17 +216,57 @@ class WindowsAgent(unittest.TestCase):
 
 
 class SetupScreen(unittest.TestCase):
-    def test_commands_carry_the_token_and_the_token_never_reaches_the_browser(self):
+    def test_commands_carry_a_placeholder_until_the_user_asks(self):
         views = (ROOT / "cockpit" / "static" / "views.js").read_text(encoding="utf-8")
         self.assertIn("-Token '<AGENT_TOKEN>'", views)
         self.assertIn("--token '<AGENT_TOKEN>'", views)
+        self.assertIn('api("api/agent-token")', views)          # fetched on click only, never with /api/setup
         main = (ROOT / "cockpit" / "app" / "main.py").read_text(encoding="utf-8")
-        self.assertNotIn("AGENT_TOKEN", main)
-        self.assertNotIn("AGENT_TOKEN", (ROOT / "cockpit" / "app" / "config.py").read_text(encoding="utf-8"))
+        setup = main[main.index("def setup_status("):main.index("\n\n\n", main.index("def setup_status("))]
+        self.assertNotIn("AGENT_TOKEN", setup)
+
+
+class AgentTokenEndpoint(unittest.TestCase):
+    """/api/agent-token answers the token only to someone signed in with the password."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(ROOT / "cockpit" / "app"))
+        os.environ.setdefault("COCKPIT_AUTH", "off")
+        import main  # noqa: E402
+        cls.main = main
+
+    def answer(self, token=TOKEN, active=True, valid=True):
+        from unittest import mock
+        m = self.main
+        with mock.patch.object(m.C, "AGENT_TOKEN", token), mock.patch.object(m.auth, "active", lambda: active), \
+             mock.patch.object(m.auth, "valid", lambda v: valid and v == "s"):
+            return m.agent_token_answer(f"{self.main.auth.COOKIE}=s" if valid else None), m.agent_token_viewable()
+
+    def test_signed_in_user_gets_the_token(self):
+        (code, body), viewable = self.answer()
+        self.assertEqual((code, body), (200, {"token": TOKEN}))
+        self.assertTrue(viewable)
+
+    def test_no_session_no_token(self):
+        (code, body), _ = self.answer(valid=False)
+        self.assertEqual(code, 403)
+        self.assertNotIn(TOKEN, str(body))
+
+    def test_never_without_a_password_even_on_a_trusted_network(self):
+        (code, body), viewable = self.answer(active=False)
+        self.assertEqual(code, 403)
+        self.assertFalse(viewable)
+        self.assertNotIn(TOKEN, str(body))
+
+    def test_no_button_when_there_is_no_token(self):
+        (code, _), viewable = self.answer(token="")
+        self.assertEqual(code, 403)
+        self.assertFalse(viewable)
 
     def test_both_languages(self):
         i18n = (ROOT / "cockpit" / "static" / "i18n.js").read_text(encoding="utf-8")
-        for key in ("su.ag.token", "su.tk.t", "su.tk.s", "su.tk.how"):
+        for key in ("su.ag.token", "su.ag.show", "su.ag.shown", "su.tk.t", "su.tk.s", "su.tk.how"):
             self.assertEqual(i18n.count(f'"{key}"'), 2, key)
 
 

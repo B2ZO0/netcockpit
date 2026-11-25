@@ -172,6 +172,8 @@ Zabbix is installed and **configured automatically**: native VMware template, SN
 
 Agents report CPU, RAM, disks, services and logs. The cockpit serves the install scripts itself.
 
+**The easy way:** in the cockpit, open **Setup** (the flag), step "Install the agent", and click **Show the token in the commands**. The commands are then complete: copy the one for your server and paste it. Otherwise, replace `<AGENT_TOKEN>` below with the token shown at the end of `./setup.sh`, without the `< >`.
+
 **Windows** (PowerShell **as administrator**, on the server):
 
 ```powershell

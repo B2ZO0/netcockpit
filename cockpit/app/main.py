@@ -200,6 +200,20 @@ def overview(site=None):
     }
 
 
+def agent_token_viewable():
+    """Le jeton des agents ne se montre qu'à une personne connectée avec le mot de passe : jamais sans connexion
+    (COCKPIT_AUTH=off), ni depuis un réseau de confiance qui entre sans mot de passe."""
+    return bool(C.AGENT_TOKEN) and auth.active()
+
+
+def agent_token_answer(cookie_header):
+    if not agent_token_viewable():
+        return 403, {"error": "token not available here: grep AGENT_TOKEN= .env on the monitoring host"}
+    if not auth.valid(auth.cookie_value(cookie_header)):
+        return 403, {"error": "sign in with the cockpit password to see the agent token"}
+    return 200, {"token": C.AGENT_TOKEN}
+
+
 def setup_status():
     """État de la mise en route : ce qui est fait, ce qui reste, pour l'écran « Mise en route »."""
     mdl, live = current()
@@ -217,7 +231,7 @@ def setup_status():
                    "hosts": len(vc["hosts"]) if vc else 0, "vms": len(vc["vms"]) if vc else 0},
         "agents": {"total": len(live["agents"]), "alive": len(live["agents_alive"]),
                    "silent": sorted(a["instance"] for a in live["agents"] if not a["alive"])[:10],
-                   "token": C.AGENT_AUTH},
+                   "token": C.AGENT_AUTH, "token_view": agent_token_viewable()},
         "notifications": SRC.alertmanager_channels(),
         "zabbix": {"enabled": bool(ZBX), "up": bool(ZBX and ZBX.state["up"]), "error": ZBX and ZBX.state["error"]},
         "snmp": {"configured": bool(CFG["snmp"]["community"]), "devices": len(CFG["snmp"]["devices"]),
@@ -726,6 +740,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, d) if d else self._send(404, {"error": "équipement introuvable"})
             if p == "/api/setup":
                 return self._send(200, setup_status())
+            if p == "/api/agent-token":
+                code, body = agent_token_answer(self.headers.get("Cookie"))
+                return self._send(code, body, headers={"Cache-Control": "no-store"})
             if p == "/api/features":
                 return self._send(200, features())
             if p == "/api/nodegraph":
