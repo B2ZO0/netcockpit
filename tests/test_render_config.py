@@ -23,7 +23,7 @@ class SecretFiles(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         (self.root / ".env").write_text("TELEGRAM_BOT_TOKEN=123:abc\nTELEGRAM_CHAT_ID=-100123\n"
-                                        "SNMP_COMMUNITY=s3cret-community\n", encoding="utf-8")
+                                        "SNMP_COMMUNITY=s3cret-community\nAGENT_TOKEN=ci-agent-token-0123456789\n", encoding="utf-8")
         # copies written by earlier versions, readable by every local user
         (self.root / "alertmanager").mkdir()
         (self.root / "alertmanager" / "alertmanager.yml").write_text("old", encoding="utf-8")

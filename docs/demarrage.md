@@ -177,16 +177,20 @@ Les agents remontent CPU, RAM, disques, services et journaux. Le cockpit sert lu
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass -Force
 iwr http://<IP de la VM>:8088/agents/windows/install.ps1 -OutFile $env:TEMP\install.ps1 -UseBasicParsing
-& $env:TEMP\install.ps1 -Server <IP de la VM>
+& $env:TEMP\install.ps1 -Server <IP de la VM> -Token '<AGENT_TOKEN>'
 ```
 
 **Linux** :
 
 ```bash
-curl -fsSL http://<IP de la VM>:8088/agents/linux/install.sh | sudo bash -s <IP de la VM>
+curl -fsSL http://<IP de la VM>:8088/agents/linux/install.sh | sudo bash -s <IP de la VM> --token '<AGENT_TOKEN>'
 ```
 
-Le serveur apparaît dans « Serveurs avec agent » en une minute. Détails : [agents.md](agents.md).
+Remplace `<AGENT_TOKEN>` par le **jeton des agents** : il est affiché à la fin de `./setup.sh`, ou sur la VM de supervision avec `grep AGENT_TOKEN= .env`. La supervision refuse les métriques et les journaux envoyés sans lui : une autre machine du réseau ne peut pas envoyer de fausses données. L'écran « Mise en route » du cockpit donne ces commandes avec ton adresse.
+
+Le serveur apparaît dans « Serveurs avec agent » en une minute. Si l'installation se termine par « La supervision refuse cet agent », le jeton manque ou il est faux. Détails : [agents.md](agents.md).
+
+**Mise à jour depuis une version sans jeton** : les serveurs déjà installés continuent de fonctionner. `./setup.sh` met `AGENT_AUTH=optional`, qui accepte aussi les agents qui n'envoient pas de jeton. Réinstalle l'agent de chaque serveur avec les commandes ci-dessus, puis exige le jeton : `sed -i 's/^AGENT_AUTH=.*/AGENT_AUTH=required/' .env && ./setup.sh`. L'écran « Mise en route » te le rappelle tant que ce n'est pas fait.
 
 ## 9. Recevoir les alertes sur Telegram
 
@@ -241,6 +245,7 @@ Sans git (installation par archive) : décompresse la nouvelle version DANS ce m
 | VMware « non configuré » alors qu'il l'était | `grep ^VCENTER .env` : si c'est vide, remets l'ancien `.env` depuis `backups/<date>/`, ou refais `./setup.sh --configure`. |
 | Des machines affichées par leur IP | Pas de zone DNS inverse : renseigne les DNS internes dans l'assistant. Les PC Windows sont nommés via NetBIOS de toute façon. |
 | Un serveur Windows « en panne » alors qu'il tourne | Il bloque le ping : l'installeur de l'agent ouvre la règle « Echo Request ». |
+| L'agent d'un serveur n'envoie rien ; l'installation a dit « La supervision refuse cet agent » | Jeton des agents absent ou faux. Relance la commande d'installation avec `--token` (Linux) ou `-Token` (Windows) et la valeur de `grep AGENT_TOKEN= .env` sur la VM de supervision. |
 | « Image toute prête indisponible : construction sur cette machine » | La machine n'accède pas à `ghcr.io` (proxy, filtrage), la version vient d'être publiée il y a quelques minutes, ou le processeur n'est ni amd64 ni arm64. Rien à faire : l'image est construite sur place, c'est juste plus long. Pour toujours la construire sur place : `COCKPIT_IMAGE=build` dans `.env`. |
 | `setup.sh` s'arrête avec « NetCockpit tourne déjà depuis le dossier … » | Tu l'as lancé depuis un autre dossier : va dans celui indiqué et relance-le là. |
 

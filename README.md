@@ -150,12 +150,14 @@ Then install the agents (the cockpit serves the scripts):
 # Windows (admin PowerShell, on the server)
 Set-ExecutionPolicy -Scope Process Bypass -Force
 iwr http://<host>:8088/agents/windows/install.ps1 -OutFile $env:TEMP\install.ps1 -UseBasicParsing
-& $env:TEMP\install.ps1 -Server <host>
+& $env:TEMP\install.ps1 -Server <host> -Token '<AGENT_TOKEN>'
 ```
 ```bash
 # Linux
-curl -fsSL http://<host>:8088/agents/linux/install.sh | sudo bash -s <host>
+curl -fsSL http://<host>:8088/agents/linux/install.sh | sudo bash -s <host> --token '<AGENT_TOKEN>'
 ```
+
+`<AGENT_TOKEN>` is the agent token shown at the end of `./setup.sh` (`AGENT_TOKEN` in `.env`): the monitoring host only accepts metrics and logs sent with it. The cockpit's "Setup" screen gives the same commands with your address.
 
 ➡️ Full guides: [Installation](docs/installation.md) · [Configuration](docs/configuration.md) · [Agents](docs/agents.md) · [Topology & data sources](docs/topology.md) · [Alerts](docs/alerts.md) · [Troubleshooting](docs/troubleshooting.md)
 

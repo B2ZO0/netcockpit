@@ -150,12 +150,14 @@ Ensuite, installe les agents. Le cockpit sert lui-même les scripts :
 # Windows (PowerShell administrateur, sur le serveur)
 Set-ExecutionPolicy -Scope Process Bypass -Force
 iwr http://<IP>:8088/agents/windows/install.ps1 -OutFile $env:TEMP\install.ps1 -UseBasicParsing
-& $env:TEMP\install.ps1 -Server <IP>
+& $env:TEMP\install.ps1 -Server <IP> -Token '<AGENT_TOKEN>'
 ```
 ```bash
 # Linux
-curl -fsSL http://<IP>:8088/agents/linux/install.sh | sudo bash -s <IP>
+curl -fsSL http://<IP>:8088/agents/linux/install.sh | sudo bash -s <IP> --token '<AGENT_TOKEN>'
 ```
+
+`<AGENT_TOKEN>` est le jeton des agents affiché à la fin de `./setup.sh` (`AGENT_TOKEN` dans `.env`) : la supervision n'accepte que les métriques et les journaux envoyés avec lui. L'écran « Mise en route » du cockpit donne les mêmes commandes avec ton adresse.
 
 ➡️ Guides détaillés : [guide pas à pas en français](docs/demarrage.md) · en anglais : [installation](docs/installation.md) · [configuration](docs/configuration.md) · [agents](docs/agents.md) · [topologie](docs/topology.md) · [alertes](docs/alerts.md) · [dépannage](docs/troubleshooting.md)
 

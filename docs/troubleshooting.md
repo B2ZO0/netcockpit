@@ -14,6 +14,7 @@ More cases with step-by-step fixes: [getting-started.md](getting-started.md#12-t
 | vCenter red in the sidebar | `docker compose logs cockpit \| grep -i vcenter`: URL must end with `/sdk`, account needs Read-only on the root, propagated. |
 | Zabbix red | It needs 2–3 min to create its database on first start, then `docker compose logs zabbix-server zabbix-web`. |
 | Alert rules missing in Prometheus | `docker compose restart prometheus`, then `docker compose logs prometheus \| grep -i err`. |
+| A server's agent sends nothing; the installer said the monitoring host refuses it | Missing or wrong agent token: run the install command again with `--token` (Linux) or `-Token` (Windows) and the value of `grep AGENT_TOKEN= .env` on the monitoring host. |
 | Windows server shown down although it runs | It blocks ping: re-run the agent installer (enables Echo Request), or add it to `watch:` with `port: 3389`. |
 | Grafana node graph empty | The host firewall blocks Docker → port 8088: `ufw allow from 172.16.0.0/12 to any port 8088`. |
 | AI button missing | `AI_PROVIDER` is empty in `.env`. |

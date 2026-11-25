@@ -2,12 +2,26 @@
 # Installe l'agent Grafana Alloy (métriques + logs) et lldpd (voisins switch) sur un serveur Linux.
 # Debian / Ubuntu / Rocky / Alma / RHEL. L'agent POUSSE ses données : rien à ouvrir sur le serveur.
 #
-#   sudo bash install.sh <IP_SUPERVISION> [nom]
+#   sudo bash install.sh <IP_SUPERVISION> [nom] --token <JETON_DES_AGENTS>
+#   Le jeton (AGENT_TOKEN du .env de la supervision) est aussi lu dans NETCOCKPIT_AGENT_TOKEN.
 set -euo pipefail
 
-SERVER="${1:-}"
-NAME="${2:-$(hostname -s)}"
-[[ -z "$SERVER" ]] && { echo "Usage : sudo bash $0 <IP_DU_SERVEUR_DE_SUPERVISION> [nom]"; exit 1; }
+SERVER=""; NAME=""; TOKEN="${NETCOCKPIT_AGENT_TOKEN:-}"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --token) TOKEN="${2:-}"; shift; [[ $# -gt 0 ]] && shift ;;
+    --token=*) TOKEN="${1#--token=}"; shift ;;
+    *) if [[ -z "$SERVER" ]]; then SERVER="$1"; elif [[ -z "$NAME" ]]; then NAME="$1"; fi; shift ;;
+  esac
+done
+NAME="${NAME:-$(hostname -s)}"
+[[ -z "$SERVER" ]] && { echo "Usage : sudo bash $0 <IP_DU_SERVEUR_DE_SUPERVISION> [nom] --token <JETON_DES_AGENTS>"; exit 1; }
+if [[ -n "$TOKEN" && ! "$TOKEN" =~ ^[A-Za-z0-9_-]{16,128}$ ]]; then
+  echo "!! Jeton invalide. Remplace <AGENT_TOKEN> par le jeton des agents : sur la machine de supervision,"
+  echo "   grep AGENT_TOKEN= .env dans le dossier de NetCockpit (il est aussi affiché à la fin de ./setup.sh)."
+  exit 1
+fi
+[[ -z "$TOKEN" ]] && echo "!! Sans --token : l'agent n'est accepté que si la supervision n'exige pas encore le jeton (AGENT_AUTH=optional)."
 [[ $EUID -ne 0 ]] && { echo "Lance ce script avec sudo."; exit 1; }
 
 TARGET=$(getent ahostsv4 "$SERVER" 2>/dev/null | awk 'NR==1{print $1}'); TARGET=${TARGET:-$SERVER}   # IP ou nom DNS
@@ -113,6 +127,18 @@ OnUnitActiveSec=5min
 WantedBy=timers.target
 EOF
 
+# ------------------------------------------------------------ jeton d'agent : lisible par root et Alloy seulement, jamais dans la config
+TOKEN_FILE=/etc/alloy/netcockpit-token
+AUTH=""
+if [[ -n "$TOKEN" ]]; then
+  ( umask 077; printf '%s' "$TOKEN" > "${TOKEN_FILE}.new" )
+  chgrp alloy "${TOKEN_FILE}.new" && chmod 640 "${TOKEN_FILE}.new"   # à root, lisible par le groupe alloy, jamais modifiable par lui
+  mv -f "${TOKEN_FILE}.new" "$TOKEN_FILE"
+  AUTH="bearer_token_file = \"${TOKEN_FILE}\""
+else
+  rm -f "$TOKEN_FILE"
+fi
+
 # ------------------------------------------------------------ configuration Alloy
 cat > /etc/alloy/config.alloy <<EOF
 // Généré par install.sh : supervision ${SERVER}
@@ -145,6 +171,7 @@ prometheus.scrape "node" {
 prometheus.remote_write "main" {
   endpoint {
     url = "http://${SERVER}:9090/api/v1/write"
+    ${AUTH}
   }
   external_labels = {
     os = "linux",
@@ -178,6 +205,7 @@ loki.source.journal "journal" {
 loki.write "main" {
   endpoint {
     url = "http://${SERVER}:3100/loki/api/v1/push"
+    ${AUTH}
   }
 }
 EOF
@@ -193,6 +221,28 @@ systemctl enable alloy >/dev/null 2>&1
 systemctl restart alloy
 sleep 3
 /usr/bin/python3 /usr/local/lib/alloy-lldp/lldp2prom.py "${TEXTFILE}/lldp.prom" || true
+
+# la supervision accepte-t-elle cet agent ? (un envoi vide, refusé avec 401 si le jeton manque ou ne correspond pas)
+CHECK=$(SERVER="$SERVER" TOKEN="$TOKEN" python3 -c '
+import os, urllib.error, urllib.request
+h = {"Content-Type": "application/json"}
+if os.environ["TOKEN"]:
+    h["Authorization"] = "Bearer " + os.environ["TOKEN"]
+req = urllib.request.Request("http://" + os.environ["SERVER"] + ":3100/loki/api/v1/push", data=b"{\"streams\":[]}", headers=h, method="POST")
+try:
+    print(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=10).status)
+except urllib.error.HTTPError as e:
+    print(e.code)
+except Exception:
+    print("unreachable")
+' 2>/dev/null || true)
+if [[ "$CHECK" == 401 ]]; then
+  echo "!! La supervision refuse cet agent : jeton absent ou faux. Relance ce script avec --token <AGENT_TOKEN>"
+  echo "   (sur la machine de supervision : grep AGENT_TOKEN= .env dans le dossier de NetCockpit)."
+  exit 1
+elif [[ "$CHECK" == unreachable ]]; then
+  echo "!! ${SERVER}:3100 injoignable depuis ce serveur : vérifie le pare-feu (sortie vers les ports 9090 et 3100)."
+fi
 
 if systemctl is-active --quiet alloy; then
   echo "==> Alloy actif. '${NAME}' apparaîtra dans Grafana et sur la carte d'ici 1 minute."

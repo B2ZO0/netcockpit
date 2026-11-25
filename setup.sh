@@ -124,6 +124,7 @@ if [[ -f .env ]]; then
 fi
 
 # ------------------------------------------------------------------ 1. .env : création, ou ajout des nouveaux réglages (tes valeurs ne sont jamais modifiées)
+NEW_ENV=""; [[ -f .env ]] || NEW_ENV=1
 [[ -f .env ]] || { touch .env; chmod 600 .env; }
 MANAGED='COMPOSE_PROFILES|GRAFANA_PUBLIC_URL|COCKPIT_PUBLIC_URL|ALERTMANAGER_PUBLIC_URL|ZABBIX_PUBLIC_URL|COCKPIT_ZABBIX_URL|COCKPIT_INSTALL_DIR'
 sed -i -E "/^# --- (géré par setup.sh|managed by setup.sh)/d; /^(${MANAGED})=/d" .env
@@ -134,6 +135,8 @@ while IFS= read -r line; do
   grep -qE "^${key}=" .env && continue
   [[ "$val" == "__RANDOM__" ]] && val=$(rand)
   [[ "$key" == "PUBLIC_HOST" && -n "${HOST_IP:-}" ]] && val="$HOST_IP"
+  # mise à jour d'une version sans jeton d'agent : les agents déjà installés n'en envoient pas, on ne les coupe pas
+  [[ "$key" == "AGENT_AUTH" && -z "$NEW_ENV" ]] && val=optional
   echo "${key}=${val}" >> .env; added=$((added + 1))
 done < .env.example
 [[ $added -gt 0 ]] && ok "${added} réglage(s) ajouté(s) au .env" "${added} setting(s) added to .env"
@@ -236,16 +239,23 @@ if [[ -n "${NETCOCKPIT_UPDATING:-}" ]]; then
             "Some images could not be downloaded: the ones already here are kept"
 fi
 docker compose up -d --remove-orphans
-docker compose restart prometheus alertmanager cockpit >/dev/null 2>&1 || true
+docker compose restart prometheus alertmanager agent-gateway cockpit >/dev/null 2>&1 || true
 # ancien nom de l'image locale (avant 1.2) : retiré, seul localhost/netcockpit/cockpit:local sert désormais
 docker image rm netcockpit/cockpit:local >/dev/null 2>&1 || true
 
 echo
 ok "NetCockpit démarré" "NetCockpit is running"
+if [[ "$(envget AGENT_AUTH)" == "optional" ]]; then
+  warn "Agents : le jeton n'est pas encore exigé (AGENT_AUTH=optional). Réinstalle l'agent de chaque serveur avec le jeton
+  (écran « Mise en route » du cockpit), puis mets AGENT_AUTH=required dans .env et relance ./setup.sh" \
+       "Agents: the token is not required yet (AGENT_AUTH=optional). Reinstall each server's agent with the token
+  (\"Setup\" screen of the cockpit), then set AGENT_AUTH=required in .env and run ./setup.sh again"
+fi
 if [[ -n "$FR" ]]; then cat <<EOF
 
   Cockpit (carte, VMware, switchs, inventaire, alertes)   http://${PUBLIC_HOST}:8088   mot de passe : $(envget COCKPIT_PASSWORD)
   Grafana (historique)                                     http://${PUBLIC_HOST}:3000   admin / GRAFANA_ADMIN_PASSWORD (dans .env)
+  Jeton des agents (installation sur les serveurs)         $(envget AGENT_TOKEN)
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (dans .env)")
 
   Premier scan : 2 à 5 minutes. Zabbix : 2 à 3 minutes de plus au premier démarrage.
@@ -258,6 +268,7 @@ else cat <<EOF
 
   Cockpit (map, VMware, switches, inventory, alerts)       http://${PUBLIC_HOST}:8088   password: $(envget COCKPIT_PASSWORD)
   Grafana (history)                                        http://${PUBLIC_HOST}:3000   admin / GRAFANA_ADMIN_PASSWORD (in .env)
+  Agent token (to install agents on servers)               $(envget AGENT_TOKEN)
 $([[ -n "$ZURL" ]] && echo "  Zabbix                                                   http://${PUBLIC_HOST}:${ZPORT}   Admin / ZABBIX_ADMIN_PASSWORD (in .env)")
 
   First scan: 2 to 5 minutes. Zabbix: 2 to 3 more minutes on first start.

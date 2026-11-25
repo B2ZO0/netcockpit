@@ -112,7 +112,8 @@ class AgentGateway(unittest.TestCase):
         self.assertEqual(re.findall(r"proxy_pass\s+([^;]+);", code), ["$prometheus", "$loki"])
         self.assertIn("set $prometheus http://prometheus:9090;", code)
         self.assertIn("set $loki http://loki:3100;", code)
-        self.assertEqual(code.count("return 403;"), 2)
+        self.assertEqual(code.count("return 403;"), 4)                  # everything else, and anything but POST
+        self.assertEqual(code.count("if ($request_method != POST) { return 403; }"), 2)
         self.assertRegex(code, r"resolver 127\.0\.0\.11\b")
         self.assertIn("server_tokens off;", code)
 

@@ -177,16 +177,20 @@ Agents report CPU, RAM, disks, services and logs. The cockpit serves the install
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass -Force
 iwr http://<host IP>:8088/agents/windows/install.ps1 -OutFile $env:TEMP\install.ps1 -UseBasicParsing
-& $env:TEMP\install.ps1 -Server <host IP>
+& $env:TEMP\install.ps1 -Server <host IP> -Token '<AGENT_TOKEN>'
 ```
 
 **Linux**:
 
 ```bash
-curl -fsSL http://<host IP>:8088/agents/linux/install.sh | sudo bash -s <host IP>
+curl -fsSL http://<host IP>:8088/agents/linux/install.sh | sudo bash -s <host IP> --token '<AGENT_TOKEN>'
 ```
 
-The server shows up in "Servers with agent" within a minute. Details: [agents.md](agents.md).
+Replace `<AGENT_TOKEN>` with the **agent token**: it is shown at the end of `./setup.sh`, or on the monitoring host with `grep AGENT_TOKEN= .env`. The monitoring host refuses metrics and logs sent without it, so another machine on the network cannot send fake data. The "Setup" screen of the cockpit shows these commands with your address.
+
+The server shows up in "Servers with agent" within a minute. If the installer ends with "the monitoring host refuses this agent", the token is missing or wrong. Details: [agents.md](agents.md).
+
+**Updating from a version without the token**: servers installed earlier keep working. `./setup.sh` sets `AGENT_AUTH=optional`, which also accepts agents that send no token. Reinstall the agent on each server with the commands above, then require the token: `sed -i 's/^AGENT_AUTH=.*/AGENT_AUTH=required/' .env && ./setup.sh`. The "Setup" screen reminds you as long as it is not done.
 
 ## 9. Get alerts on Telegram
 
@@ -241,6 +245,7 @@ Without git (installed from an archive): extract the new version INTO that same 
 | VMware "not configured" although it was | `grep ^VCENTER .env`: if empty, restore the previous `.env` from `backups/<date>/`, or run `./setup.sh --configure` again. |
 | Machines shown by IP | No reverse DNS zone: enter your internal DNS servers in the assistant. Windows PCs are named through NetBIOS anyway. |
 | A Windows server shown down although it runs | It blocks ping: the agent installer opens the "Echo Request" rule. |
+| A server's agent sends nothing; the installer said "the monitoring host refuses this agent" | Missing or wrong agent token. Run the install command again with `--token` (Linux) or `-Token` (Windows) and the value of `grep AGENT_TOKEN= .env` on the monitoring host. |
 | "Ready-made image unavailable: building it on this machine" | The host cannot reach `ghcr.io` (proxy, filtering), the version was published a few minutes ago, or the CPU is not amd64/arm64. Nothing to do: it is built locally, it just takes longer. To always build locally: `COCKPIT_IMAGE=build` in `.env`. |
 | `setup.sh` stops with "NetCockpit is already running from …" | You ran it from another folder: go to the one shown and run it there. |
 

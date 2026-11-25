@@ -325,8 +325,12 @@
     add({ key: "agents", essential: true, title: t("su.ag.t"),
       state: !ag.total ? "todo" : ag.silent && ag.silent.length ? "warn" : "done",
       sum: !ag.total ? t("su.ag.none") : ag.silent && ag.silent.length ? t("su.ag.silent", { list: ag.silent.join(", "), host }) : t("su.ag.ok", { n: ag.alive }),
-      how: `<p>${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host}`)}
-        <p>${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | sudo bash -s ${host}`)}<p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
+      how: `<p>${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host} -Token '<AGENT_TOKEN>'`)}
+        <p>${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | sudo bash -s ${host} --token '<AGENT_TOKEN>'`)}
+        <p>${t("su.ag.token")}</p>${cmd(`grep AGENT_TOKEN= ${dir}/.env`)}<p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
+    // mise à jour depuis une version sans jeton : les agents déjà installés sont acceptés sans lui, le temps de les réinstaller
+    if (ag.token === "optional") add({ key: "token", essential: true, title: t("su.tk.t"), state: "warn", sum: t("su.tk.s"),
+      how: `<p>${t("su.tk.how")}</p>${cmd(`cd ${dir}\nsed -i 's/^AGENT_AUTH=.*/AGENT_AUTH=required/' .env\n./setup.sh`)}` });
     const ch = d.notifications || [];
     add({ key: "notif", essential: true, title: t("su.no.t"), state: ch.length ? "done" : "todo",
       sum: ch.length ? t("su.no.ok", { list: ch.map((c) => c[0].toUpperCase() + c.slice(1)).join(", ") }) : t("su.no.none"),

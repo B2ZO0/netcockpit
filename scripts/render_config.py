@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Génère, à partir du .env : secrets/alertmanager.yml et secrets/snmp-auth.yml (bibliothèque standard uniquement).
-Les fichiers produits sont du JSON, qui est du YAML valide.
+"""Génère, à partir du .env : secrets/alertmanager.yml, secrets/snmp-auth.yml et secrets/agent-gateway.conf
+(bibliothèque standard uniquement). Les fichiers YAML produits sont du JSON, qui est du YAML valide.
 
 secrets/ est en 700 : les autres utilisateurs de la machine ne peuvent pas l'ouvrir. Les fichiers sont en 644 car les
 conteneurs (Alertmanager, SNMP exporter) tournent sous un autre utilisateur et les lisent par un montage du fichier lui-même,
 qui ne passe pas par le dossier."""
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -96,6 +97,31 @@ def build(env):
     return config, channels
 
 
+TOKEN_RE = re.compile(r"[A-Za-z0-9_-]{16,128}")
+
+
+def agent_gateway(env):
+    """Contrôle du jeton d'agent pour la passerelle nginx : $agent_denied vaut 0 si l'envoi est accepté.
+    AGENT_AUTH=required (défaut) : le bon jeton seulement. optional (installations d'avant le jeton) : aussi sans jeton,
+    jamais avec un mauvais. Le jeton est contrôlé avant d'être écrit : rien d'autre qu'une valeur ne peut entrer dans nginx."""
+    token = env.get("AGENT_TOKEN", "")
+    if not TOKEN_RE.fullmatch(token):
+        sys.exit("AGENT_TOKEN (.env) doit faire 16 à 128 caractères parmi A-Z a-z 0-9 _ - : supprime la ligne et relance ./setup.sh, "
+                 "il en génère un nouveau. / AGENT_TOKEN in .env must be 16 to 128 characters (A-Z a-z 0-9 _ -): "
+                 "delete the line and run ./setup.sh again, it creates a new one.")
+    mode = (env.get("AGENT_AUTH") or "required").strip().lower()
+    if mode not in ("required", "optional"):
+        sys.exit(f"AGENT_AUTH (.env) : required ou optional, pas « {mode} ». / AGENT_AUTH in .env: required or optional, not \"{mode}\".")
+    lines = ["# Généré par scripts/render_config.py (AGENT_TOKEN et AGENT_AUTH du .env) : ne pas modifier à la main",
+             f"# AGENT_AUTH={mode}",
+             "map $http_authorization $agent_denied {",
+             "    default 1;"]
+    if mode == "optional":
+        lines.append('    "" 0;   # agents installés avant le jeton : à réinstaller, puis AGENT_AUTH=required')
+    lines += [f'    "~^Bearer {token}$" 0;   # expression régulière : la casse compte', "}", ""]
+    return "\n".join(lines), mode
+
+
 def _write(path, text):
     path.write_text(text, encoding="utf-8")
     path.chmod(0o644)
@@ -116,6 +142,9 @@ def render(root):
     print(f"Alertmanager configuré. Canaux : {', '.join(channels) if channels else 'aucun (renseigne le .env)'}")
     auth = {"auths": {"site": {"version": 2, "community": env.get("SNMP_COMMUNITY") or "public"}}}
     _write(secrets / "snmp-auth.yml", "# Généré par scripts/render_config.py (SNMP_COMMUNITY du .env)\n" + json.dumps(auth, indent=2) + "\n")
+    gateway, mode = agent_gateway(env)
+    _write(secrets / "agent-gateway.conf", gateway)
+    print("Agents : jeton exigé" if mode == "required" else "Agents : jeton accepté mais pas encore exigé (AGENT_AUTH=optional)")
 
     # Copies des versions précédentes, lisibles par tous les utilisateurs de la machine : retirées.
     for old in (root / "alertmanager" / "alertmanager.yml", root / "snmp" / "auth.yml"):

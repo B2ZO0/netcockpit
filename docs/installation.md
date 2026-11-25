@@ -86,6 +86,8 @@ What is yours stays yours:
 | Sites, networks, equipment, websites, SNMP | `config/cockpit.yml` | Not versioned, never overwritten. The repository only ships `config/cockpit.example.yml`. |
 | History (metrics, logs, scans), Zabbix database, Grafana | Docker volumes | Kept. `docker compose down` keeps them too; only `down -v` deletes them. |
 
+Updating from a version without the agent token: agents already installed keep working (`AGENT_AUTH=optional` is added to `.env`). Reinstall them with the token when you can, then set `AGENT_AUTH=required`; see [Agents](agents.md#agent-token).
+
 Before doing anything, `./setup.sh` copies `.env` and `config/*.yml` to `backups/<date>/` (the last 10 are kept). To roll back a setting: `cp backups/<date>/.env .`.
 
 ## Ready-made cockpit image

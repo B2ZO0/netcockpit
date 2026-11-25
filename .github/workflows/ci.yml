@@ -59,6 +59,7 @@ jobs:
         run: |
           cp .env.example .env
           sed -i 's/__RANDOM__/ci-password/g' .env
+          echo "AGENT_TOKEN=ci-agent-token-0123456789" >> .env
           echo "TELEGRAM_BOT_TOKEN=123:abc" >> .env && echo "TELEGRAM_CHAT_ID=-100123" >> .env
           python scripts/render_config.py
           docker compose config -q
@@ -73,6 +74,7 @@ jobs:
         run: |
           cp .env.example .env
           sed -i 's/__RANDOM__/ci-password/g' .env
+          echo "AGENT_TOKEN=ci-agent-token-0123456789" >> .env
           docker compose --profile zabbix pull --quiet --ignore-buildable
           docker compose --profile zabbix config --images | sort
 
@@ -87,8 +89,19 @@ jobs:
       - name: Start the stack (without the cockpit and Zabbix)
         run: docker compose up -d prometheus loki alertmanager agent-gateway snmp-exporter blackbox syslog grafana
 
-      - name: Agents can push; nobody on the network can read or administer Prometheus and Loki
+      - name: Agents can push with the token; nobody else can push, read or administer Prometheus and Loki
         run: python3 tests/stack_check.py "$(hostname -I | awk '{print $1}')"
+
+      - name: Updated installs (AGENT_AUTH=optional) still accept agents installed without the token, never a wrong one
+        run: |
+          echo "AGENT_AUTH=optional" >> .env
+          python3 scripts/render_config.py
+          docker compose restart agent-gateway
+          sleep 2
+          python3 tests/stack_check.py "$(hostname -I | awk '{print $1}')" --optional
+          sed -i '$d' .env
+          python3 scripts/render_config.py
+          docker compose restart agent-gateway
 
       - name: Alertmanager and the SNMP exporter read their secret files; every service keeps running
         run: |
