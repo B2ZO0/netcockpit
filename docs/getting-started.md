@@ -25,7 +25,7 @@ From an empty VM to a cockpit showing your buildings, your VMware and your alert
 
 ## 1. Prepare the monitoring host
 
-A Debian 12 or Ubuntu 24.04 VM is enough: **2 vCPU, 4 GB RAM, 60 GB disk** minimum; 4 vCPU and 8 GB for several hundred devices.
+A Debian 12 or Ubuntu 24.04 VM is enough: **2 vCPU, 4 GB RAM, 30 GB disk** minimum (60 GB recommended); 4 vCPU and 8 GB for several hundred devices.
 
 It must reach **every network you want to monitor** (ping and a few ports), your **vCenter or ESXi API** (port 443), and be reachable by the agents (ports 9090 and 3100). Give it a fixed IP: it is the address you will open in your browser.
 

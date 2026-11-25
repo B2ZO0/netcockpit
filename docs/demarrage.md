@@ -25,7 +25,7 @@ De la VM vide au cockpit qui affiche tes bâtiments, ton VMware et tes alertes s
 
 ## 1. Préparer la machine de supervision
 
-Une VM Debian 12 ou Ubuntu 24.04 suffit : **2 vCPU, 4 Go de RAM, 60 Go de disque** au minimum ; 4 vCPU et 8 Go pour plusieurs centaines d'équipements.
+Une VM Debian 12 ou Ubuntu 24.04 suffit : **2 vCPU, 4 Go de RAM, 30 Go de disque** au minimum (60 Go conseillés) ; 4 vCPU et 8 Go pour plusieurs centaines d'équipements.
 
 Elle doit pouvoir joindre **tous les réseaux à surveiller** (ping et quelques ports), l'**API de ton vCenter ou de ton ESXi** (port 443), et être joignable par les agents (ports 9090 et 3100). Donne-lui une IP fixe : c'est l'adresse que tu taperas dans ton navigateur.
 

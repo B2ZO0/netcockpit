@@ -125,7 +125,7 @@ flowchart LR
 
 ## 🚀 Installation
 
-**Requirements:** a Linux VM (Debian 12 / Ubuntu 24.04), **2 vCPU and 4 GB RAM minimum** (4 vCPU and 8 GB for several hundred devices), 60 GB disk, Docker with the compose plugin.
+**Requirements:** a Linux VM (Debian 12 / Ubuntu 24.04), **2 vCPU and 4 GB RAM minimum** (4 vCPU and 8 GB for several hundred devices), 30 GB disk minimum (60 GB recommended), Docker with the compose plugin.
 
 ```bash
 curl -fsSL https://get.docker.com | sh            # if Docker is not installed

@@ -66,12 +66,12 @@ disk_check() {
   done
   [[ -z "$min" ]] && return 0
   if [[ ! -f .env && "$min" -lt 10 && -z "${NETCOCKPIT_SKIP_DISK_CHECK:-}" ]]; then
-    die "Pas assez de place pour Docker : ${min} Go libres dans $where (il en faut au moins 10, 60 Go de disque conseillés).
+    die "Pas assez de place pour Docker : ${min} Go libres dans $where (il en faut au moins 10, disque de 30 Go minimum).
   Vérifie avec : df -h $where
   Si ton disque est découpé (un petit /var et un grand /home), déplace les données Docker vers la grande partition :
   https://github.com/B2ZO0/netcockpit/blob/main/docs/installation.md#not-enough-disk-space
   Pour passer outre (à tes risques) : NETCOCKPIT_SKIP_DISK_CHECK=1 ./setup.sh" \
-        "Not enough space for Docker: ${min} GB free in $where (at least 10 GB needed, a 60 GB disk recommended).
+        "Not enough space for Docker: ${min} GB free in $where (at least 10 GB needed, a 30 GB disk minimum).
   Check with: df -h $where
   If your disk is split (a small /var and a large /home), move Docker's data to the large partition:
   https://github.com/B2ZO0/netcockpit/blob/main/docs/installation.md#not-enough-disk-space
