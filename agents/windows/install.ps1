@@ -163,7 +163,9 @@ Start-Sleep -Seconds 4
 # La supervision accepte-t-elle cet agent ? (un envoi vide, refusé avec 401 si le jeton manque ou ne correspond pas)
 $headers = @{}
 if ($Token) { $headers["Authorization"] = "Bearer $Token" }
+$accepted = $false
 try {
+  $accepted = $true
   Invoke-WebRequest -UseBasicParsing -Method Post -Uri "http://${Server}:3100/loki/api/v1/push" -Headers $headers `
     -ContentType "application/json" -Body '{"streams":[]}' -TimeoutSec 10 | Out-Null
 } catch {
@@ -173,8 +175,14 @@ try {
     Write-Error "La supervision refuse cet agent : jeton absent ou faux. Relance ce script avec -Token <AGENT_TOKEN> (sur la machine de supervision : grep AGENT_TOKEN= .env dans le dossier de NetCockpit)."
     exit 1
   } elseif (-not $code) {
+    $accepted = $false
     Write-Warning "${Server}:3100 injoignable depuis ce serveur : vérifie le pare-feu (sortie vers les ports 9090 et 3100)."
   }
+  # autre code (422 pour cet envoi vide) : la passerelle a laissé passer, seul 401 vient du jeton
+}
+if ($accepted) {
+  if ($Token) { Write-Host "==> Jeton accepté par la supervision." -ForegroundColor Green }
+  else { Write-Warning "Accepté sans jeton (la supervision ne l'exige pas encore) : à réinstaller avec -Token avant de l'exiger." }
 }
 $svc = Get-Service -Name "Alloy"
 if ($svc.Status -eq "Running") {

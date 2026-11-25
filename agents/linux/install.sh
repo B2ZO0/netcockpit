@@ -247,7 +247,7 @@ if [[ "$CHECK" == 401 ]]; then
   echo "!! La supervision refuse cet agent : jeton absent ou faux. Relance ce script avec --token <AGENT_TOKEN>"
   echo "   (sur la machine de supervision : grep AGENT_TOKEN= .env dans le dossier de NetCockpit)."
   exit 1
-elif [[ "$CHECK" =~ ^2 ]]; then
+elif [[ "$CHECK" =~ ^[0-9]+$ ]]; then   # passé la passerelle : Loki répond 204, ou 4xx pour cet envoi vide (422) ; seul 401 vient du jeton
   if [[ -n "$TOKEN" ]]; then echo "==> Jeton accepté par la supervision."
   else echo "==> Accepté sans jeton (la supervision ne l'exige pas encore) : à réinstaller avec --token avant de l'exiger."; fi
 elif [[ "$CHECK" == unreachable ]]; then
