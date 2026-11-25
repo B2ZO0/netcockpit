@@ -18,7 +18,7 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 | Dec 2026 | **1.3** | Network diagram export (draw.io, SVG), install test in CI, light install, compatibility reports |
 | Jan–Feb 2027 | **1.4** | Setup from the browser, doctor, backup and restore, printable network report |
 | Mar–Apr 2027 | **1.5** | Connectors: firewalls, NAS, UPS, SNMPv3, VLANs on links, what changed, Zabbix templates |
-| Later | **1.6** | Your cockpit: layout, map, icons, themes, more languages |
+| Later | **1.6** | Your cockpit: layout, map, icons, theme files, more languages |
 
 ## 1.2 · Proxmox and painless updates *(in progress)*
 
@@ -53,6 +53,7 @@ The map becomes something you can hand over: an editable diagram. And NetCockpit
 - [ ] **Compatibility report**: `./setup.sh --report` prints what NetCockpit detected (hypervisors and versions, switches, SNMP), without addresses or names, ready to paste in an issue. *Rapport de compatibilité : ce que NetCockpit a détecté, sans adresses ni noms, prêt à coller dans un ticket.*
 - [ ] **"Works on my setup" issue template**: 30 seconds to say what runs NetCockpit fine. *Modèle de ticket « Ça marche chez moi » : 30 secondes pour dire sur quoi NetCockpit tourne bien.*
 - [ ] **"Tested with" table** in both READMEs (Proxmox, ESXi/vCenter, UniFi, Cisco, firewalls, NAS…), filled from the reports: tested, reported by a user, not tried yet. *Tableau « Testé avec » dans les deux README, rempli à partir des retours.*
+- [ ] **Accent colour**: in the settings, choose one of about eight sober accent colours that change the whole interface: violet (default), blue, green, teal, orange, red, pink, and a graphite one in black and grey for those who want nothing coloured. Status colours (green, orange, red) stay the same so an alert always looks like an alert; the red accent is a different shade from the critical red. Remembered per browser. *Couleur d'accent : dans les réglages, une huitaine de couleurs sobres qui changent toute l'interface : violet (par défaut), bleu, vert, bleu-vert, orange, rouge, rose, et un graphite noir et gris pour ceux qui ne veulent rien de coloré. Les couleurs d'état (vert, orange, rouge) ne changent pas, pour qu'une alerte ressemble toujours à une alerte ; l'accent rouge est d'une autre teinte que le rouge critique. Retenu par navigateur.*
 
 ## 1.4 · Setup from the browser
 
@@ -94,7 +95,6 @@ Everything works without touching anything; all customisation lives in one "Cust
 - [ ] **Map layout**: move nodes and keep their position, colour per building, labels shown or hidden. *Carte personnalisable : déplacer les éléments et garder leur place, couleur par bâtiment, étiquettes affichées ou non.*
 - [ ] A library of ready-made checks to switch on (certificates, DNS, AD replication, backups). *Une bibliothèque de contrôles prêts à activer (certificats, DNS, réplication AD, sauvegardes).*
 - [ ] **Your own icons**: upload an icon per device, type or brand; it is used on the map and in the inventory. NetCockpit ships no brand logos. *Tes propres icônes : une icône par équipement, type ou marque, sur la carte et dans l'inventaire. NetCockpit ne fournit aucun logo de marque.*
-- [ ] **Themes**: choose the accent colour (including a black and red theme), with the same readability on a wall screen. Animations stay light and can be turned off. *Thèmes : choix de la couleur d'accent (dont un thème noir et rouge), aussi lisible sur un écran mural. Animations légères, désactivables.*
 - [ ] **Theme files**: a theme is one small file you can import, export and share; a few ready-made themes ship with NetCockpit. *Fichiers de thème : un thème est un petit fichier à importer, exporter et partager ; quelques thèmes prêts à l'emploi sont fournis.*
 - [ ] **More languages for the interface**, chosen by the size of the self-hosting and sysadmin communities: German, Spanish, Portuguese (Brazil), Simplified Chinese first; then Italian, Polish, Russian, Japanese. One file per language, picked from the browser language. Each language is marked "needs review" until a native speaker has checked it, and corrections are welcome as first contributions. Guides stay in English and French. *D'autres langues pour l'interface : allemand, espagnol, portugais (Brésil), chinois simplifié d'abord ; puis italien, polonais, russe, japonais. Chaque langue reste marquée « à relire » tant qu'un natif ne l'a pas vérifiée ; les corrections sont de bonnes premières contributions. Les guides restent en anglais et en français.*
 
