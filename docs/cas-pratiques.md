@@ -97,7 +97,7 @@ Dans le cockpit, l'écran **Mise en route** (le drapeau dans la barre de gauche)
 
 | Matériel | Comment activer le SNMP en lecture seule |
 |---|---|
-| Ubiquiti UniFi | *UniFi Network → Settings → CyberSecure → Traffic Logging* : active SNMP v1/v2c, change la communauté `public`. Les USW Flex et Ultra ne gèrent pas le SNMP. |
+| Ubiquiti UniFi | *UniFi Network → Settings → CyberSecure → Traffic Logging* : active SNMP v1/v2c, change la communauté `public`. Les USW Flex et Ultra ne gèrent pas le SNMP. Sans passerelle UniFi sur le site, la page l'indique et le réglage peut ne pas arriver aux switchs : vérifie avec `snmpget -v2c -c 'communauté' IP-du-switch 1.3.6.1.2.1.1.5.0` (paquet `snmp`) avant de le donner à l'assistant. |
 | Cisco (IOS) | `snmp-server community <communauté> RO <ACL>`, avec une ACL limitée à l'IP de la supervision. |
 | HPE Aruba, Netgear, D-Link, TP-Link… | Menu *SNMP* de l'interface web : crée une communauté v2c en lecture seule. |
 | Géré par un prestataire | Demande-lui une communauté v2c en lecture seule depuis l'IP de la supervision. |

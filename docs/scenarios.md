@@ -97,7 +97,7 @@ In the cockpit, the **Setup** screen (the flag in the left rail) always tells yo
 
 | Hardware | How to enable read-only SNMP |
 |---|---|
-| Ubiquiti UniFi | *UniFi Network → Settings → CyberSecure → Traffic Logging*: enable SNMP v1/v2c, change the `public` community. USW Flex and Ultra do not support SNMP. |
+| Ubiquiti UniFi | *UniFi Network → Settings → CyberSecure → Traffic Logging*: enable SNMP v1/v2c, change the `public` community. USW Flex and Ultra do not support SNMP. Without a UniFi gateway on the site, the page says so and the setting may not reach the switches: check with `snmpget -v2c -c 'community' switch-IP 1.3.6.1.2.1.1.5.0` (package `snmp`) before giving it to the assistant. |
 | Cisco (IOS) | `snmp-server community <community> RO <ACL>`, with an ACL limited to the monitoring host's IP. |
 | HPE Aruba, Netgear, D-Link, TP-Link… | *SNMP* menu of the web interface: create a read-only v2c community. |
 | Managed by a provider | Ask for a read-only v2c community from the monitoring host's IP. |

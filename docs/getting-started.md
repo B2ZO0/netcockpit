@@ -208,7 +208,7 @@ Discord or email: set `DISCORD_WEBHOOK_URL` or `ALERT_EMAIL_TO` and `SMTP_*` in 
 Out of the box, the cockpit recognises switches seen by ESXi hosts (CDP/LLDP) and by Linux servers running the agent. For the **full port-by-port map** (what is plugged where, traffic, errors), it needs **read-only SNMP**:
 
 - **Switches managed by a provider**: ask for a read-only SNMP v2c community, allowed from the monitoring host's IP.
-- **Ubiquiti UniFi**: in *UniFi Network → Settings → CyberSecure → Traffic Logging*, enable **SNMP** v1/v2c and set a community (change `public`). **USW Flex and Ultra switches do not support SNMP** ([Ubiquiti documentation](https://help.ui.com/hc/en-us/articles/33502980942615-SNMP-Monitoring-in-UniFi-Network)). UniFi switches also announce their neighbours over LLDP, which the cockpit reads through the ESXi hosts.
+- **Ubiquiti UniFi**: in *UniFi Network → Settings → CyberSecure → Traffic Logging*, enable **SNMP** v1/v2c and set a community (change `public`). **USW Flex and Ultra switches do not support SNMP** ([Ubiquiti documentation](https://help.ui.com/hc/en-us/articles/33502980942615-SNMP-Monitoring-in-UniFi-Network)). UniFi switches also announce their neighbours over LLDP, which the cockpit reads through the ESXi hosts. Without a UniFi gateway on the site, the page says so and the setting may not reach the switches: check with `snmpget -v2c -c 'community' switch-IP 1.3.6.1.2.1.1.5.0` (package `snmp`) before giving it to the assistant.
 - **Cisco**: `snmp-server community <community> RO` (ideally with an ACL limited to the monitoring host's IP).
 
 Then `./setup.sh --configure`: answer the SNMP question with the community, then the switch and firewall IPs. The **Switches** screen shows every port within 5 minutes.
