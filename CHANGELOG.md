@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+Not published yet: these changes will make the next release.
+
+- Setup screen: installing an agent is now four numbered steps (put the token in the commands, Windows, Linux, check), every command has a **Copy** button (it also works over plain HTTP), and the Linux command no longer needs `sudo`, which minimal Debian servers do not have.
+
 ## 1.2.0
 
 Secure by default, installed in five minutes, updated with one command.

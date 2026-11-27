@@ -300,7 +300,7 @@
   function setupSteps(d) {
     const host = window.NETCOCKPIT_DEMO ? "<your-monitoring-host>" : location.hostname;
     const dir = d.install_dir || (I18n.lang === "fr" ? "<dossier de NetCockpit>" : "<NetCockpit folder>");
-    const cmd = (c) => `<pre class="cmd">${esc(c)}</pre>`;
+    const cmd = (c) => `<div class="cmdbox"><pre class="cmd">${esc(c)}</pre><button class="copy" type="button">${esc(t("su.copy"))}</button></div>`;
     const conf = cmd(`cd ${dir} && ./setup.sh --configure`);
     const W = App.words();
     const S = [];
@@ -327,10 +327,11 @@
     add({ key: "agents", essential: true, title: t("su.ag.t"),
       state: !ag.total ? "todo" : ag.silent && ag.silent.length ? "warn" : "done",
       sum: !ag.total ? t("su.ag.none") : ag.silent && ag.silent.length ? t("su.ag.silent", { list: ag.silent.join(", "), host }) : t("su.ag.ok", { n: ag.alive }),
-      how: `<p>${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host} -Token '<AGENT_TOKEN>'`)}
-        <p>${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | sudo bash -s ${host} --token '<AGENT_TOKEN>'`)}
-        ${ag.token_view && !shownToken ? `<p><button class="ai" type="button" id="show-token">${esc(t("su.ag.show"))}</button></p>` : ""}
-        ${shownToken ? `<p class="muted">${esc(t("su.ag.shown"))}</p>` : `<p>${t("su.ag.token")}</p>${cmd(`grep AGENT_TOKEN= ${dir}/.env`)}`}<p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
+      how: `${ag.token_view && !shownToken ? `<p><b>1.</b> ${esc(t("su.ag.s1"))}</p><p><button class="ai" type="button" id="show-token">${esc(t("su.ag.show"))}</button></p>`
+            : shownToken ? `<p><b>1.</b> ${esc(t("su.ag.shown"))}</p>` : `<p><b>1.</b> ${t("su.ag.token")}</p>${cmd(`grep AGENT_TOKEN= ${dir}/.env`)}`}
+        <p><b>2.</b> ${t("su.ag.how")}</p>${cmd(`Set-ExecutionPolicy -Scope Process Bypass -Force\niwr http://${host}:8088/agents/windows/install.ps1 -OutFile $env:TEMP\\install.ps1 -UseBasicParsing\n& $env:TEMP\\install.ps1 -Server ${host} -Token '<AGENT_TOKEN>'`)}
+        <p><b>3.</b> ${t("su.ag.linux")}</p>${cmd(`curl -fsSL http://${host}:8088/agents/linux/install.sh | bash -s ${host} --token '<AGENT_TOKEN>'`)}
+        <p><b>4.</b> ${esc(t("su.ag.s4"))}</p><p class="muted">${t("su.ag.not")}</p>${window.NETCOCKPIT_DEMO ? `<p class="muted">${esc(t("su.demoCmd"))}</p>` : ""}` });
     // mise à jour depuis une version sans jeton : les agents déjà installés sont acceptés sans lui, le temps de les réinstaller
     if (ag.token === "optional") add({ key: "token", essential: true, title: t("su.tk.t"), state: "warn", sum: t("su.tk.s"),
       how: `<p>${t("su.tk.how")}</p>${cmd(`cd ${dir}\nsed -i 's/^AGENT_AUTH=.*/AGENT_AUTH=required/' .env\n./setup.sh`)}` });
@@ -386,6 +387,14 @@
         <div class="muted">${done === ess.length ? t("su.done") : t("su.intro")}</div>
         <div class="steps">${items}</div>`;
       if (shownToken) el.querySelectorAll("pre.cmd").forEach((p) => { p.textContent = p.textContent.split("<AGENT_TOKEN>").join(shownToken); });
+      el.querySelectorAll(".cmdbox .copy").forEach((b) => b.addEventListener("click", () => {
+        const pre = b.previousElementSibling, text = pre.textContent;
+        const done = () => { b.textContent = t("su.copied"); setTimeout(() => { b.textContent = t("su.copy"); }, 1500); };
+        // navigator.clipboard n'existe qu'en HTTPS ou sur localhost : en HTTP sur le réseau, sélection + execCommand
+        if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, () => {}); return; }
+        const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        try { if (document.execCommand("copy")) done(); } catch (e) { /* le texte reste sélectionné : Ctrl+C */ }
+      }));
       const sb = el.querySelector("#show-token");
       if (sb) sb.addEventListener("click", async () => {
         sb.disabled = true;
