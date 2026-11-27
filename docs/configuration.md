@@ -12,6 +12,7 @@ Written by the setup assistant (`./setup.sh --configure`), which covers the comm
 | `scan.interval_minutes` | Default 30. |
 | `scan.netbios` | NetBIOS name query (UDP 137). Gives Windows names **and MACs** across routers. |
 | `scan.ports` | TCP ports used to fingerprint devices (keep it short). |
+| `ignore_networks` | Networks seen but that are not a building (an isolated VM, the phone network): they stay on the map and are no longer flagged as not declared. `./setup.sh --configure` asks for them. |
 | `scan.exclude` | IPs never scanned (fragile or provider-owned devices). |
 | `names.dns_servers` | Internal DNS used for reverse lookups. Empty = domain controllers auto-detected (ports 53+88+389). |
 | `names.strip_domain` | Show `FILESRV01` instead of `filesrv01.example.local`. |

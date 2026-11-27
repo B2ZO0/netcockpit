@@ -74,6 +74,14 @@ def load():
                                                   5985, 8006, 8080, 8443, 9100]
     scan["exclude"] = [str(x) for x in _list(scan.get("exclude"))]
 
+    # Réseaux vus mais qui ne sont pas des bâtiments : restent sur la carte, ne sont plus signalés comme « à déclarer »
+    ignore = []
+    for n in _list(cfg.get("ignore_networks")):
+        try:
+            ignore.append(str(ipaddress.ip_network(str(n), strict=False)))
+        except ValueError:
+            log.warning("réseau à ignorer invalide : %s", n)
+
     # Sites (bâtiments) : chacun avec ses réseaux
     sites = []
     for s in _list(cfg.get("sites")):
@@ -105,6 +113,7 @@ def load():
         "site_word": {"one": str(word["one"]), "many": str(word.get("many") or word["one"])} if word.get("one") else None,
         "sites": sites,
         "scan": scan,
+        "ignore_networks": ignore,
         "names": names,
         "snmp": snmp,
         "traceroute_targets": [str(x) for x in _list(cfg.get("traceroute_targets"))],

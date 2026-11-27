@@ -41,6 +41,8 @@ T = {
         "rename": "Nom de ce {w}",
         "nets": "Réseaux de « {n} » (séparés par des virgules)",
         "more": "Ajouter un autre {w} ? Son nom (Entrée pour terminer) : ",
+        "ignq": "Réseaux à ignorer (vus mais pas un {w} : VM isolée, téléphones…), séparés par des virgules",
+        "h_ign": "L'écran Mise en route liste les réseaux vus mais pas déclarés. Ceux que tu mets ici restent sur la carte mais ne sont plus signalés. Aucun : Entrée.",
         "nets_req": "Réseaux de « {n} » (ex. 10.20.0.0/24) : ",
         "bad_net": "  Réseau invalide : {x} (exemple attendu : 10.20.0.0/24)",
         "dnsq": "Serveurs DNS internes (contrôleurs de domaine), séparés par des virgules",
@@ -93,6 +95,8 @@ T = {
         "rename": "Name of this {w}",
         "nets": "Networks of \"{n}\" (comma-separated)",
         "more": "Add another {w}? Its name (Enter to finish): ",
+        "ignq": "Networks to ignore (seen but not a {w}: an isolated VM, phones…), comma-separated",
+        "h_ign": "The Setup screen lists the networks seen but not declared. The ones you enter here stay on the map but are no longer flagged. None: press Enter.",
         "nets_req": "Networks of \"{n}\" (e.g. 10.20.0.0/24): ",
         "bad_net": "  Invalid network: {x} (expected something like 10.20.0.0/24)",
         "dnsq": "Internal DNS servers (domain controllers), comma-separated",
@@ -382,6 +386,11 @@ def main():
                 break
         sites.append({"name": name, "subnets": nets})
 
+    # Réseaux vus mais qui ne sont pas des bâtiments (VM isolée, VLAN des téléphones) : plus signalés
+    old_ign = [str(x) for x in (cfg.get("ignore_networks") or [])]
+    ask.hint("h_ign")
+    ign, _ = parse_nets(ask("ignq", ", ".join(old_ign), w=w), s)
+
     # DNS et passerelle
     old_dns = [str(x) for x in ((cfg.get("names") or {}).get("dns_servers") or [])]
     ask.hint("h_dns")
@@ -456,6 +465,10 @@ def main():
     # configuration finale (les autres sections de l'ancienne config sont gardées)
     cfg["site_word"] = {"one": one, "many": many}
     cfg["sites"] = [x for x in sites if x["subnets"]]     # vide = réseau local détecté au démarrage du cockpit
+    if ign:
+        cfg["ignore_networks"] = ign
+    else:
+        cfg.pop("ignore_networks", None)
     names = cfg.get("names") or {}
     names["dns_servers"] = dns
     names.setdefault("strip_domain", True)

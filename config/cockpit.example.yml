@@ -16,6 +16,10 @@ sites:
   - name: Site B
     subnets: [10.20.0.0/24]
 
+# Networks seen but that are not a building (an isolated VM, the phone network): they stay on the map
+# but are no longer flagged as "not declared yet".
+ignore_networks: []
+
 scan:
   enabled: true
   interval_minutes: 30

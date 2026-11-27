@@ -253,7 +253,7 @@ def undeclared(mdl):
             a = ipaddress.ip_address(ip)
         except ValueError:
             continue
-        if a.is_private:
+        if a.is_private and not any(a in ipaddress.ip_network(x) for x in CFG.get("ignore_networks") or []):
             k = str(ipaddress.ip_network(f"{ip}/24", strict=False))
             nets[k] = nets.get(k, 0) + 1
     return [{"subnet": k, "count": v} for k, v in sorted(nets.items(), key=lambda kv: -kv[1])][:8]
