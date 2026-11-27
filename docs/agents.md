@@ -39,6 +39,23 @@ What it does:
 
 **The easy way:** in the cockpit, open **Setup** (the flag), step "Install the agent on your servers", and click **Show the token in the commands**. Each command is then complete: copy the one for your server and paste it. The button appears when you are signed in with the cockpit password.
 
+### Several Windows servers at once (PowerShell remoting)
+
+From a machine of the domain, in PowerShell as a domain administrator. WinRM is on by default on domain-joined Windows Server 2012 and later; check a server with `Test-WSMan <name>`. Try one server first.
+
+```powershell
+$servers = 'SRV-DC01', 'SRV-DC02', 'SRV-APP01'     # your servers
+$nc = '<host>'; $token = '<AGENT_TOKEN>'
+Invoke-Command -ComputerName $servers -ArgumentList $nc, $token -ScriptBlock {
+  param($nc, $token)
+  Set-ExecutionPolicy -Scope Process Bypass -Force
+  Invoke-WebRequest "http://${nc}:8088/agents/windows/install.ps1" -OutFile "$env:TEMP\install.ps1" -UseBasicParsing
+  & "$env:TEMP\install.ps1" -Server $nc -Token $token
+}
+```
+
+Each server downloads Alloy from GitHub itself, as with a local install. Write `${nc}:8088` with braces: in PowerShell, `$nc:8088` would be read as a variable named `nc:8088`.
+
 ## Linux (Debian, Ubuntu, RHEL, Rocky, Alma)
 
 ```bash
