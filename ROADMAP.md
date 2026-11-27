@@ -14,40 +14,42 @@ A new piece lands every week as a pull request, with tests and docs. A version i
 
 | Weeks · Semaines | Version | Focus |
 |---|---|---|
-| Nov 2026 | **1.2** | Proxmox, one-command update that follows releases, agent install over HTTPS, security, ready-made Docker image |
-| Dec 2026 | **1.3** | Network diagram export (draw.io, SVG), install test in CI, light install, compatibility reports |
+| Nov 2026 | **1.2** *(released)* | Proxmox, one-command update that follows releases, agent token, security, ready-made Docker image |
+| Dec 2026 – Jan 2027 | **1.3** | Agent install over HTTPS, security follow-ups, network diagram export (draw.io, SVG), UniFi connector, accent colour, install test in CI |
 | Jan–Feb 2027 | **1.4** | Setup from the browser, doctor, backup and restore, printable network report |
 | Mar–Apr 2027 | **1.5** | Connectors: firewalls, NAS, UPS, SNMPv3, VLANs on links, what changed, Zabbix templates |
 | Later | **1.6** | Your cockpit: layout, map, icons, theme files, more languages |
 
-## 1.2 · Proxmox and painless updates *(in progress)*
+## 1.2 · Proxmox and painless updates *(released)*
 
 - [x] **Agents only push**: from the network, ports 9090 and 3100 only accept what agents send; Prometheus and Loki can only be read on the monitoring host or through Grafana. *Les agents ne font qu'envoyer : depuis le réseau, les ports 9090 et 3100 n'acceptent que les envois des agents ; Prometheus et Loki ne se consultent que sur la machine de supervision ou dans Grafana.*
 - [x] **Agent token**: agents send metrics and logs with a token created at install, so that only your servers can push. *Jeton d'agent : les agents envoient leurs métriques et leurs logs avec un jeton créé à l'installation, pour que seuls tes serveurs puissent envoyer.*
 - [x] **Pinned stack versions**: Prometheus, Loki, Grafana, Alertmanager, Alloy and the exporters use tested versions, moved forward by `./setup.sh --update`. *Versions de la pile épinglées : des versions testées, mises à jour par `./setup.sh --update`.*
 - [x] Notification and SNMP secrets readable only by the containers that use them. *Secrets de notification et SNMP lisibles uniquement par les conteneurs qui s'en servent.*
-- [ ] Cockpit container running as a non-root user; it already only keeps the raw-packet capability that discovery needs. *Conteneur du cockpit sous un utilisateur non root ; il ne garde déjà que la capacité « paquets bruts » nécessaire à la découverte.*
-- [ ] **SNMP community only where it is expected**: sent only to devices declared in the configuration or seen through LLDP/CDP, kept out of process arguments, and stored as a secret macro in Zabbix. *Communauté SNMP seulement là où elle est attendue : envoyée aux seuls équipements déclarés ou vus par LLDP/CDP, absente des arguments de processus, et rangée comme macro secrète dans Zabbix.*
-- [ ] Domain controllers found by the scan are used for name lookups only once confirmed in the configuration. *Les contrôleurs de domaine trouvés par le scan ne servent à la résolution des noms qu'une fois confirmés dans la configuration.*
-- [ ] Behind a reverse proxy, the sign-in limit counts each person, not the proxy (`COCKPIT_TRUSTED_PROXIES`). *Derrière un reverse proxy, la limite d'essais de connexion compte chaque personne et non le proxy.*
-- [ ] Released versions point to the cockpit image by its digest, and the Windows agent installs a pinned, checksum-verified Alloy. *Les versions publiées désignent l'image du cockpit par son empreinte, et l'agent Windows installe une version d'Alloy fixée et vérifiée.*
-- [ ] Discovery and VMware keep working when a scan result or vCenter answers unexpectedly (invalid characters, no answer). *La découverte et VMware continuent quand un scan ou vCenter répond de façon inattendue (caractères invalides, pas de réponse).*
 - [x] **Proxmox VE**: nodes, VMs, LXC containers and storages, with a read-only API token. *Proxmox VE : nœuds, VM, conteneurs LXC et stockages, avec un jeton en lecture seule.*
 - [x] **`./setup.sh --update`**: one command, settings and history kept. *Une commande, réglages et historique conservés.*
 - [x] Hypervisors detected automatically; the menu hides what you do not have. *Hyperviseurs détectés automatiquement ; le menu masque ce que tu n'as pas.*
 - [x] The VMware screen becomes a platform-neutral Virtualization screen. *L'écran VMware devient un écran Virtualisation.*
-- [ ] Feedback from real Proxmox clusters (versions 7, 8, 9) *(maintainer test, not code)*. *Retours sur de vrais clusters Proxmox (test du mainteneur).*
 - [x] Security: protected `/metrics`, Secure session cookie, optional vCenter TLS verification. *Sécurité : `/metrics` protégé, cookie sécurisé, vérification TLS de vCenter.*
 - [x] Ready-made Docker image on GitHub Container Registry: nothing to build on the host, faster install and update. *Image Docker prête à l'emploi : rien à compiler, installation et mise à jour plus rapides.*
 - [x] **Updates follow releases**: `./setup.sh --update` moves to the latest published version, never to work in progress (`--update --edge` for testers). It never goes backwards. *Les mises à jour suivent les versions publiées : `--update` installe la dernière version publiée, jamais le travail en cours (`--edge` pour les testeurs), et ne revient jamais en arrière.*
-- [ ] **Agent install over HTTPS**: install scripts and agent binaries served over HTTPS with the cockpit's certificate, and checked against a checksum before they run, so nobody on the network can swap them on the way. *Installation des agents en HTTPS : scripts et agents servis en HTTPS et vérifiés par une empreinte avant exécution, pour que personne sur le réseau ne puisse les remplacer en route.*
 
 ## 1.3 · Your network on paper
 
 The map becomes something you can hand over: an editable diagram. And NetCockpit runs on small machines.
 *La carte devient un document à remettre : un schéma modifiable. Et NetCockpit tourne sur de petites machines.*
 
+- **Moved from 1.2** *(hardening, finished before new features) · Reporté de la 1.2 (durcissement, terminé avant les nouveautés)*:
+  - [ ] Cockpit container running as a non-root user; it already only keeps the raw-packet capability that discovery needs. *Conteneur du cockpit sous un utilisateur non root ; il ne garde déjà que la capacité « paquets bruts » nécessaire à la découverte.*
+  - [ ] **SNMP community only where it is expected**: sent only to devices declared in the configuration or seen through LLDP/CDP, kept out of process arguments, and stored as a secret macro in Zabbix. *Communauté SNMP seulement là où elle est attendue : envoyée aux seuls équipements déclarés ou vus par LLDP/CDP, absente des arguments de processus, et rangée comme macro secrète dans Zabbix.*
+  - [ ] Domain controllers found by the scan are used for name lookups only once confirmed in the configuration. *Les contrôleurs de domaine trouvés par le scan ne servent à la résolution des noms qu'une fois confirmés dans la configuration.*
+  - [ ] Behind a reverse proxy, the sign-in limit counts each person, not the proxy (`COCKPIT_TRUSTED_PROXIES`). *Derrière un reverse proxy, la limite d'essais de connexion compte chaque personne et non le proxy.*
+  - [ ] Released versions point to the cockpit image by its digest, and the Windows agent installs a pinned, checksum-verified Alloy. *Les versions publiées désignent l'image du cockpit par son empreinte, et l'agent Windows installe une version d'Alloy fixée et vérifiée.*
+  - [ ] Discovery and VMware keep working when a scan result or vCenter answers unexpectedly (invalid characters, no answer). *La découverte et VMware continuent quand un scan ou vCenter répond de façon inattendue (caractères invalides, pas de réponse).*
+  - [ ] Feedback from real Proxmox clusters (versions 7, 8, 9) *(maintainer test, not code)*. *Retours sur de vrais clusters Proxmox (test du mainteneur).*
+  - [ ] **Agent install over HTTPS**: install scripts and agent binaries served over HTTPS with the cockpit's certificate, and checked against a checksum before they run, so nobody on the network can swap them on the way. *Installation des agents en HTTPS : scripts et agents servis en HTTPS et vérifiés par une empreinte avant exécution, pour que personne sur le réseau ne puisse les remplacer en route.*
 - [ ] **Network diagram export**: the topology as a draw.io file (editable) and SVG, by building. *Export du schéma réseau : la topologie en fichier draw.io (modifiable) et en SVG, par bâtiment.*
+- [ ] **UniFi connector**: switches, access points, every port (link, speed, PoE, what is plugged in) and the uplink tree, read from the UniFi Network controller with a local read-only account. Works without SNMP and without a UniFi gateway. *Connecteur UniFi : switchs, bornes, chaque port (lien, vitesse, PoE, appareil branché) et l'arborescence des uplinks, lus dans le contrôleur UniFi Network avec un compte local en lecture seule. Marche sans SNMP et sans passerelle UniFi.*
 - [ ] **Light install**: cockpit, scan and map only, for a Raspberry Pi or a small container; metrics, logs and Zabbix can be added later without reinstalling. *Installation légère : cockpit, scan et carte seulement, pour un Raspberry Pi ou un petit conteneur ; métriques, logs et Zabbix s'ajoutent plus tard sans réinstaller.*
 - [ ] **Install test on every change**: CI installs NetCockpit from scratch on a clean Debian and a clean Ubuntu, starts it and checks that the cockpit answers; shell scripts are linted. A change that breaks the install cannot be merged. *Test d'installation à chaque changement : la CI installe NetCockpit de zéro sur un Debian et un Ubuntu propres et vérifie que le cockpit répond. Un changement qui casse l'installation ne peut pas être fusionné.*
 - [ ] **Compatibility report**: `./setup.sh --report` prints what NetCockpit detected (hypervisors and versions, switches, SNMP), without addresses or names, ready to paste in an issue. *Rapport de compatibilité : ce que NetCockpit a détecté, sans adresses ni noms, prêt à coller dans un ticket.*

@@ -1,8 +1,17 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
-Not published yet: these changes will make the next release.
+Secure by default, installed in five minutes, updated with one command.
+
+- The cockpit asks for a password, agents send their data with a token, and from the network nobody can read or erase the metrics and logs any more.
+- A setup assistant detects your network, gateway, DNS and hypervisors, and the Setup screen walks you through what is left, with commands ready to paste.
+- `./setup.sh --update` moves to the latest published version, backs up your settings first and never goes backwards.
+- Proxmox VE (experimental), next to VMware.
+
+**Upgrading from 1.1.0**: run `git pull && ./setup.sh` once (1.1.0 has no `--update`); from now on, `./setup.sh --update`. Sign in again once. Then reinstall the agent on each server with the command from the Setup screen (it now carries the token, and Linux servers get their real name back), and when every agent has the token, set `AGENT_AUTH=required` in `.env` and run `./setup.sh`.
+
+### All changes
 
 - Fix: an IP phone that announces itself over CDP/LLDP (Yealink "T54W…", Polycom, Snom…) and reaches an ESXi host or a server through a small switch was shown as a switch, with the host plugged into its "WAN PORT". It is now an IP phone, and it is no longer taken for the host's uplink.
 - Fix: reinstalling an agent under another name (as the agent fix above does for Linux servers) no longer raises a critical "no longer sends data" alert for the old name during 24 h: a server still sending from the same IP address is not silent.

@@ -13,23 +13,22 @@ print(f"""**Your whole infrastructure, live, in one cockpit.** English · Franç
 
 ![NetCockpit](https://raw.githubusercontent.com/B2ZO0/netcockpit/main/docs/images/demo.gif)
 
-### What's new in {version}
-
 {m.group(1).strip()}
 
-### Try it in one minute
+### Try it
+
+Online demo, nothing to install: https://b2zo0.github.io/netcockpit/
+Install on a Debian or Ubuntu VM (2 vCPU, 4 GB RAM, 30 GB disk):
 
 ```bash
 git clone https://github.com/B2ZO0/netcockpit.git && cd netcockpit
-docker compose -f docker-compose.demo.yml up --build   # http://localhost:8088
+./setup.sh
 ```
 
-### Upgrade
+### Update
 
 ```bash
-git pull && ./setup.sh
+./setup.sh --update
 ```
 
-Your `.env` and `config/cockpit.yml` are never overwritten, and `setup.sh` backs them up to `backups/` first.
-
-⭐ If NetCockpit saves you time, a star helps other admins find it.""")
+Your `.env` and `config/cockpit.yml` are never overwritten, and `setup.sh` backs them up to `backups/` first.""")
