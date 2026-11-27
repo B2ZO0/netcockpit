@@ -272,3 +272,9 @@ class AgentTokenEndpoint(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WindowsInstallerEncoding(unittest.TestCase):
+    def test_utf8_bom_so_windows_powershell_shows_accents(self):
+        # Windows PowerShell 5.1 reads a script without BOM as ANSI: "Téléchargement" became "TÃ©lÃ©chargement"
+        self.assertTrue((ROOT / "agents" / "windows" / "install.ps1").read_bytes().startswith(b"\xef\xbb\xbf"))

@@ -1,4 +1,4 @@
-<#
+﻿<#
   Installe l'agent Grafana Alloy (métriques + journaux d'événements) sur Windows Server 2016+ / Windows 10+.
   L'agent POUSSE ses données vers la supervision : aucun port à ouvrir sur le serveur.
 
