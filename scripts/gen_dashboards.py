@@ -388,8 +388,8 @@ def build_switches():
            "includeAll": True, "multi": True, "current": {"text": ["All"], "value": ["$__all"]}}
     D = Dash("switchs", "Supervision · Switchs et ports (SNMP)", ["réseau", "snmp"], [var], time_from="now-6h")
     D.add({"type": "text", "title": "", "options": {"mode": "markdown", "content":
-           "Ce tableau se remplit dès que le prestataire donne un **accès SNMP en lecture seule** : renseigne `SNMP_COMMUNITY` dans `.env` "
-           "et les IP des équipements dans `config/cockpit.yml` (`snmp.devices`), puis relance `./setup.sh`. "
+           "Ce tableau se remplit dès que tes switchs répondent en **SNMP v2c, en lecture seule** (à activer sur les switchs, ou à demander à qui gère ton réseau) : "
+           "lance `./setup.sh --configure` et donne la communauté et les IP des équipements. "
            "Le détail port par port (qui est branché où) est dans le **cockpit**, vue *Switchs*."}}, 24, 3)
     D.add(stat("Équipements SNMP qui répondent", [q('count(up{job="snmp"} == 1) or vector(0)', instant=True)], color_mode="none"), 6, 4, newrow=True)
     D.add(stat("Ports actifs", [q('count(ifOperStatus{job="snmp", instance=~"$switch"} == 1) or vector(0)', instant=True)], color_mode="none"), 6, 4)

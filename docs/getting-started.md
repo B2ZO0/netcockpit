@@ -34,7 +34,7 @@ apt update && apt install -y curl git unzip python3
 curl -fsSL https://get.docker.com | sh
 ```
 
-> Tell your network provider before the first scan: a ping and a few ports every 30 minutes, so they do not mistake it for an attack.
+> If someone else manages your network or security (a provider, a security team), tell them before the first scan: a ping and a few ports every 30 minutes, so they do not mistake it for an attack.
 
 ## 2. Install NetCockpit
 

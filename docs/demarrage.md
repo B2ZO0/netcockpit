@@ -34,7 +34,7 @@ apt update && apt install -y curl git unzip python3
 curl -fsSL https://get.docker.com | sh
 ```
 
-> Préviens ton prestataire réseau avant le premier scan : un ping et quelques ports toutes les 30 minutes, pour qu'il ne le prenne pas pour une attaque.
+> Si quelqu'un d'autre gère ton réseau ou ta sécurité (prestataire, équipe sécurité), préviens-le avant le premier scan : un ping et quelques ports toutes les 30 minutes, pour qu'il ne le prenne pas pour une attaque.
 
 ## 2. Installer NetCockpit
 
@@ -207,7 +207,7 @@ Discord ou email : renseigne `DISCORD_WEBHOOK_URL` ou `ALERT_EMAIL_TO` et `SMTP_
 
 Sans rien faire, le cockpit reconnaît les switchs vus par les ESXi (CDP/LLDP) et par les serveurs Linux équipés de l'agent. Pour la **carte complète port par port** (qui est branché où, trafic, erreurs), il faut un accès **SNMP en lecture seule** :
 
-- **Switchs gérés par un prestataire** : demande-lui une communauté SNMP v2c en lecture seule, autorisée depuis l'IP de la VM.
+- **Switchs gérés par quelqu'un d'autre (prestataire)** : demande-lui une communauté SNMP v2c en lecture seule, autorisée depuis l'IP de la VM.
 - **Ubiquiti UniFi** : dans *UniFi Network → Settings → CyberSecure → Traffic Logging*, active **SNMP** en version v1/v2c et choisis une communauté (change `public`). Les switchs **USW Flex et Ultra ne gèrent pas le SNMP** ([documentation Ubiquiti](https://help.ui.com/hc/en-us/articles/33502980942615-SNMP-Monitoring-in-UniFi-Network)). Les switchs UniFi annoncent aussi leurs voisins en LLDP, ce que le cockpit lit via les ESXi. Sans passerelle UniFi sur le site, la page l'indique et le réglage peut ne pas arriver aux switchs : vérifie avec `snmpget -v2c -c 'communauté' IP-du-switch 1.3.6.1.2.1.1.5.0` (paquet `snmp`) avant de le donner à l'assistant.
 - **Cisco** : `snmp-server community <communauté> RO` (avec une ACL limitée à l'IP de la VM, c'est mieux).
 

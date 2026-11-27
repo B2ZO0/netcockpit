@@ -6,7 +6,7 @@
 
 ### Your whole infrastructure, live, in one cockpit.
 
-**Auto-discovered topology, VMware, switches port by port, alerts, logs and optional AI diagnosis,<br>for IT teams whose switches and firewalls are managed by someone else.**
+**Auto-discovered topology, VMware, switches port by port, alerts, logs and optional AI diagnosis,<br>for IT teams of any size, whether you run the switches yourself or someone else does.**
 
 [![CI](https://github.com/B2ZO0/netcockpit/actions/workflows/ci.yml/badge.svg)](https://github.com/B2ZO0/netcockpit/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/B2ZO0/netcockpit?color=8a6cff&label=release)](https://github.com/B2ZO0/netcockpit/releases)
@@ -29,9 +29,9 @@
 
 ## Why NetCockpit?
 
-Many companies outsource their network. The provider manages the switches, the firewall and the routers, and the internal IT team has **no admin access** to them. Classic tools then show a flat list of IP addresses, and the network map stays a Visio file nobody updates.
+Most IT teams juggle several tools (a hypervisor console, a switch controller, a monitoring server, a spreadsheet of IP addresses), and the network map is a Visio file nobody updates. In many companies the switches and the firewall are even managed by a provider, and the internal team has **no admin access** to them.
 
-NetCockpit **combines every source you *do* have access to**: network scan, Active Directory DNS, NetBIOS, traceroute, vCenter or ESXi, server agents, and SNMP as soon as your provider opens it. It builds a **real, live, hierarchical map** of your infrastructure, with the problems drawn on it, and tells you in one sentence whether everything is fine.
+NetCockpit **combines every source you *do* have access to**: network scan, Active Directory DNS, NetBIOS, traceroute, vCenter or ESXi, server agents, and SNMP when your switches allow it. With full access you get everything; without admin access to the network, it still works. It builds a **real, live, hierarchical map** of your infrastructure, with the problems drawn on it, and tells you in one sentence whether everything is fine.
 
 It does not replace Prometheus, Grafana or Zabbix: it **ships them, configures them, and adds the piece they lack**, a cockpit that understands your sites, your VMware and your network without anyone drawing anything.
 
@@ -118,10 +118,10 @@ flowchart LR
 |---|---|---|
 | Scan | Every live device, open ports, vendor (MAC, local subnet) | Nothing |
 | DNS / NetBIOS | Machine names, Windows MACs even on remote sites | Your DNS servers in the config |
-| Traceroute | Gateway → provider router → ISP → Internet | Nothing |
+| Traceroute | Gateway → routers → ISP → Internet | Nothing |
 | vCenter / ESXi | Hosts, VMs, datastores, alarms, **switch and port of each host NIC** | A read-only account |
 | Agents | Resources, logs, switch and port of physical Linux servers | One command per server |
-| SNMP | Complete port-by-port topology, traffic, errors | Read-only community from your provider |
+| SNMP | Complete port-by-port topology, traffic, errors | A read-only community, set on your switches (or asked from whoever manages them) |
 
 ## 🚀 Installation
 
@@ -171,7 +171,9 @@ Testers can follow the main branch with `./setup.sh --update --edge` (not on a p
 
 Your `.env` and `config/cockpit.yml` are **never versioned and never overwritten** (the repository only ships `config/cockpit.example.yml`), history lives in Docker volumes, and `setup.sh` copies your settings to `backups/<date>/` before every run. Details in [Upgrading](docs/installation.md#upgrading-your-settings-are-never-lost).
 
-## 📨 What to ask your network provider
+## 📨 If someone else manages your network
+
+If you manage your switches and firewall yourself, these are the settings to turn on. If a provider manages them, this is what to ask for:
 
 1. **Read-only SNMP v2c** on switches, firewall and routers, from the monitoring host's IP: full port-by-port map, traffic and errors.
 2. **Syslog forwarding** to the monitoring host, port 514.

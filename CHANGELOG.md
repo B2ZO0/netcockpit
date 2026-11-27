@@ -4,6 +4,7 @@
 
 Not published yet: these changes will make the next release.
 
+- Wording: NetCockpit no longer assumes a provider manages your network. The README, the setup assistant, the Setup and Switches screens, the Grafana switch dashboard and the AI diagnosis now speak to every team: turn SNMP on on your switches, or ask whoever manages them. The Switches screen points to `./setup.sh --configure` instead of editing `config/cockpit.yml` by hand.
 - Setup screen: installing an agent is now four numbered steps (put the token in the commands, Windows, Linux, check), every command has a **Copy** button (it also works over plain HTTP), and the Linux command no longer needs `sudo`, which minimal Debian servers do not have.
 
 ## 1.2.0

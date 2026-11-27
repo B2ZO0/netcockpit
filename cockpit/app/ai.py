@@ -18,7 +18,7 @@ SYSTEM = (
     "Structure : ### Diagnostic (cause la plus probable, et pourquoi d'après les données), "
     "### Vérifications (3 à 6 actions concrètes, avec commandes Windows/Linux/ESXi si utile), "
     "### Impact (ce qui est touché). N'invente aucune donnée absente ; dis-le quand il manque une information. "
-    "L'équipe n'a pas d'accès aux switchs/firewalls gérés par un prestataire : propose quoi demander au prestataire si besoin."
+    "Selon les cas, l'équipe gère elle-même switchs et firewall, ou ils sont gérés par un tiers : quand une vérification se fait sur un équipement réseau, donne-la, et précise quoi demander si c'est un tiers qui le gère."
 )
 
 

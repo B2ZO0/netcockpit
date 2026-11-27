@@ -117,7 +117,7 @@ class Zabbix:
                 body["interfaces"] = [{"type": 1, "main": 1, "useip": 1, "ip": "127.0.0.1", "dns": "", "port": "10050"}]
                 self.call("host.create", body)
 
-        # Découverte SNMP des équipements réseau (utile dès que le prestataire ouvre le SNMP)
+        # Découverte SNMP des équipements réseau (utile dès que les équipements répondent en SNMP)
         if cfg["snmp"]["community"]:
             subnets = ",".join(n for s in cfg["sites"] for n in s["subnets"])
             r = self.call("drule.get", {"output": ["druleid"], "filter": {"name": "Équipements SNMP"}})

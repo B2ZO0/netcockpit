@@ -6,7 +6,7 @@
 
 ### Toute ton infrastructure, en direct, dans un seul cockpit.
 
-**Topologie découverte automatiquement, VMware, switchs port par port, alertes, logs et diagnostic IA en option,<br>pour les équipes informatiques dont les switchs et firewalls sont gérés par un prestataire.**
+**Topologie découverte automatiquement, VMware, switchs port par port, alertes, logs et diagnostic IA en option,<br>pour les équipes informatiques de toutes tailles, que tu gères tes switchs toi-même ou que quelqu'un d'autre s'en charge.**
 
 [![CI](https://github.com/B2ZO0/netcockpit/actions/workflows/ci.yml/badge.svg)](https://github.com/B2ZO0/netcockpit/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/github/v/release/B2ZO0/netcockpit?color=8a6cff&label=version)](https://github.com/B2ZO0/netcockpit/releases)
@@ -29,9 +29,9 @@
 
 ## Pourquoi NetCockpit ?
 
-Beaucoup d'entreprises ont externalisé leur réseau. Le prestataire gère les switchs, le firewall et les routeurs, et l'équipe informatique interne n'a **aucun accès administrateur** dessus. Les outils classiques n'affichent alors qu'une liste d'adresses IP, et le schéma réseau reste un fichier Visio que personne ne met à jour.
+La plupart des équipes informatiques jonglent entre plusieurs outils (la console de l'hyperviseur, le contrôleur des switchs, un serveur de supervision, un tableur d'adresses IP), et le schéma réseau reste un fichier Visio que personne ne met à jour. Dans beaucoup d'entreprises, les switchs et le firewall sont même gérés par un prestataire, et l'équipe interne n'a **aucun accès administrateur** dessus.
 
-NetCockpit **croise toutes les sources auxquelles tu as accès** : scan réseau, DNS Active Directory, NetBIOS, traceroute, vCenter ou ESXi, agents sur les serveurs, et SNMP dès que le prestataire l'ouvre. Il en tire une **vraie carte hiérarchique de l'infrastructure, mise à jour en direct**, avec les problèmes affichés dessus, et te dit en une phrase si tout va bien.
+NetCockpit **croise toutes les sources auxquelles tu as accès** : scan réseau, DNS Active Directory, NetBIOS, traceroute, vCenter ou ESXi, agents sur les serveurs, et SNMP quand tes switchs le permettent. Avec tous les accès, tu as tout ; sans accès administrateur au réseau, ça marche quand même. Il en tire une **vraie carte hiérarchique de l'infrastructure, mise à jour en direct**, avec les problèmes affichés dessus, et te dit en une phrase si tout va bien.
 
 Il ne remplace ni Prometheus, ni Grafana, ni Zabbix : il **les installe, les configure, et ajoute ce qui leur manque**, un cockpit qui comprend tes sites, ton VMware et ton réseau sans que personne n'ait rien à dessiner.
 
@@ -118,10 +118,10 @@ flowchart LR
 |---|---|---|
 | Scan | Tous les appareils actifs, ports ouverts, constructeur (MAC, réseau local) | Rien |
 | DNS / NetBIOS | Noms des machines, MAC des PC Windows même sur un site distant | Tes serveurs DNS dans la config |
-| Traceroute | Passerelle → routeur du prestataire → opérateur → Internet | Rien |
+| Traceroute | Passerelle → routeurs → opérateur → Internet | Rien |
 | vCenter / ESXi | Hôtes, VM, datastores, alarmes, **switch et port de chaque carte réseau des hôtes** | Un compte en lecture seule |
 | Agents | Ressources, logs, switch et port des serveurs Linux physiques | Une commande par serveur |
-| SNMP | Topologie complète port par port, trafic, erreurs | Une communauté en lecture seule donnée par le prestataire |
+| SNMP | Topologie complète port par port, trafic, erreurs | Une communauté en lecture seule, réglée sur tes switchs (ou demandée à qui les gère) |
 
 ## 🚀 Installation
 
@@ -171,7 +171,9 @@ Les testeurs peuvent suivre la branche principale avec `./setup.sh --update --ed
 
 Ton `.env` et ton `config/cockpit.yml` ne sont **jamais versionnés ni écrasés** (le dépôt ne contient que le modèle `config/cockpit.example.yml`), l'historique vit dans les volumes Docker, et `setup.sh` copie tes réglages dans `backups/<date>/` avant chaque lancement. Détails dans [Upgrading](docs/installation.md#upgrading-your-settings-are-never-lost).
 
-## 📨 Ce qu'il est utile de demander au prestataire réseau
+## 📨 Si quelqu'un d'autre gère ton réseau
+
+Si tu gères toi-même tes switchs et ton firewall, voici les réglages à activer. Si c'est un prestataire, voici quoi lui demander :
 
 1. Un accès **SNMP v2c en lecture seule** sur les switchs, le firewall et les routeurs, depuis l'IP de la supervision : carte complète port par port, trafic et erreurs.
 2. L'**envoi des logs syslog** vers la supervision, sur le port 514.

@@ -1,6 +1,6 @@
 """Topologie des switchs par SNMP (lecture seule) : ports, LLDP/CDP, table des MAC, ARP.
 
-Utilisé seulement si une communauté SNMP est fournie (accès en lecture demandé au prestataire)."""
+Utilisé seulement si une communauté SNMP est fournie (lecture seule, réglée sur les switchs ou demandée à qui gère le réseau)."""
 import logging
 import re
 import subprocess
